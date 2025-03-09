@@ -355,9 +355,3 @@ for cluster_index in range(3):
     symbol_index.to_csv(f"./data_kr/clustered_data/cluster_{cluster_index}/symbol_index.csv",encoding='utf-8-sig')
 
 exit()
-
-
-
-
-
-

@@ -35,44 +35,64 @@ class Utils:
         
         return cagr
 
-    def get_start_price(self,price,date):
-        str_date = datetime.strptime(date,"%Y-%m-%d")
-        try:
-            out = price.loc[date]['Close']
-        except:
-            start_date = str_date + timedelta(1)
-            out = self.get_start_price(price,datetime.strftime(start_date,"%Y-%m-%d"))
-        return out
+    def get_date_range(self,year, quarter, ticker):
+        # 쿼터 시작일 설정
+        if quarter == "Q1":
+            start_date_str = f"{year}-01-01"
+        elif quarter == "Q2":
+            start_date_str = f"{year}-04-01"
+        elif quarter == "Q3":
+            start_date_str = f"{year}-07-01"
+        elif quarter == "Q4":
+            start_date_str = f"{year}-10-01"
+        else:
+            raise ValueError("쿼터는 'Q1', 'Q2', 'Q3', 'Q4' 중 하나여야 합니다.")
 
-    def get_end_price(self,price,date):
-        str_date = datetime.strptime(date,"%Y-%m-%d")
-        end_date = str_date - timedelta(1)
-        try:
-            out = price.loc[datetime.strftime(end_date,"%Y-%m-%d")]['Close']
-        except:
-            out = self.get_end_price(price,datetime.strftime(end_date,"%Y-%m-%d"))
-        return out
+        quarter_start = datetime.strptime(start_date_str, "%Y-%m-%d")
+
+        # CSV 파일 읽기
+        file_path = f"./data_kr/price/{ticker}.csv"
+        df = pd.read_csv(file_path)
+
+        # Date 컬럼을 datetime 형식으로 변환 후 정렬
+        df['날짜'] = pd.to_datetime(df['날짜'])
+        df.sort_values(by='날짜', inplace=True)
+
+        # 기준일 이후에 데이터가 존재할 때까지 날짜를 증가시킴
+        current_date = quarter_start
+        while True:
+            # 날짜만 비교하기 위해 .dt.date 사용
+            matching_rows = df[df['날짜'].dt.date == current_date.date()]
+            if not matching_rows.empty:
+                # 해당 날짜의 첫 거래일의 시가 반환
+                return current_date.strftime("%Y-%m-%d")
+            current_date += timedelta(days=1)
+            # 데이터 범위를 넘어가는 경우 예외 발생
+            if current_date > df['날짜'].max():
+                print(f"{ticker}의 데이터에서 {quarter_start} 이후의 거래일을 찾을 수 없습니다.")
+                return 0
     
     def get_portfolio_memory(self,stocks,strdate,next_strdate,fs,next_fs): # 포트폴리오 수익률 계산
 
         if len(stocks) == 0: return []
         
         df_total_price = pd.DataFrame()
+
+        year_now, quarter_now = strdate.split('_')
+        year_next, quarter_next = next_strdate.split('_')
         for ticker in stocks: # stocks 리스트에 있는 종목들의 주가 데이터를 가져옴
-            row = fs.index[fs['symbol']==ticker][0]
+            row = fs.index[fs['code'].astype(str)==str(ticker)][0]
 
-            if ticker == "BRK.B":
-                ticker = "BRK-B"
-            elif ticker == "BF.B":
-                ticker = "BF-B"
-
-            start_date = fs['Filing Date'][row]
-            if next_strdate != '2024-06-30':
-                next_filing_date = next_fs['Filing Date'][row]
+            start_date = fs[(fs["year"].astype(str)== year_now)&(fs["quarter"].astype(str)==quarter_now)].iloc[row]
+            if next_strdate != '2025_Q1':
+                next_filing_date = next_fs[(next_fs["year"].astype(str)== year_next)&(next_fs["quarter"].astype(str)==quarter_next)].iloc[row]
             else:
-                next_filing_date = '2024-07-31'
-
-            price = pd.read_csv(f"./data/price/{ticker}.csv",index_col=[0])['Close'].loc[start_date:next_filing_date]
+                next_filing_date = '2025_Q1'
+            ticker_str = str(ticker).zfill(6)
+            start_date = self.get_date_range(year_now, quarter_now, ticker_str)
+            end_date = self.get_date_range(year_next, quarter_next, ticker_str)
+            price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv",index_col=[0])['종가'].loc[
+                    start_date:end_date]
 
             df_total_price = pd.concat([df_total_price,price],axis=1,join='outer')
 
@@ -85,48 +105,17 @@ class Utils:
         daily_change = df_pf.pct_change().dropna()
         # 일일 변동률(%)을 계산하여 반환
         return daily_change.values.tolist()
-    
-    def get_portfolio_memory_v(self,stocks,strdate,next_strdate): # 비슷한 방식이지만 timedelta(4)을 더해서 특정 기간 이후의 데이터를 확인
 
-        if len(stocks) == 0: return []
-        
-        df_total_price = pd.DataFrame()
-        for ticker in stocks:
-            row = fs.index[fs['symbol']==ticker][0]
-
-            if ticker == "BRK.B":
-                ticker = "BRK-B"
-            elif ticker == "BF.B":
-                ticker = "BF-B"
-
-            price = pd.read_csv(f"./data/price/{ticker}.csv",index_col=[0])['Close'].loc[strdate+timedelta(40):next_strdate+timedelta(40)] # 40일 후의 날짜를 계산
-
-            df_total_price = pd.concat([df_total_price,price],axis=1,join='outer')
-
-            df_total_price.sort_index(inplace=True)
-
-        df_total_price = df_total_price.fillna(method='ffill').fillna(method='bfill').sum(axis=1)
-
-        df_pf = df_total_price/df_total_price.iloc[0]
-
-        daily_change = df_pf.pct_change().dropna()
-
-        return daily_change.values.tolist()
-
-        
-
-        # return_ratio =
 
             
 if __name__ == "__main__":
     ut = Utils()
-    stocks = ['J','PWR','CSX','ADP']
-    strdate = '2010-06-30'
-    next_strdate = '2010-09-30'
+    stocks = [33780, 11170, 35420, 36570, 5490, 18880]
+    strdate = '2020_Q3'
+    next_strdate = '2020_Q4'
 
-    fs = pd.read_csv(f"./data/date_regression/{strdate}.csv")
-    if next_strdate != '2024-06-30':
-        next_fs = pd.read_csv(f"./data/date_regression/{next_strdate}.csv")
+    fs = pd.read_csv(f"./data_kr/date_regression/{strdate}.csv")
+    next_fs = pd.read_csv(f"./data_kr/date_regression/{next_strdate}.csv")
 
     mem = ut.get_portfolio_memory(stocks,strdate,next_strdate,fs,next_fs)
 

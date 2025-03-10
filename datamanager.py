@@ -12,12 +12,7 @@ class DataManager:
         self.sector_list = pd.read_csv("./data_kr/symbol.csv")["sector"].tolist()
         self.cluster_list = ["cluster_" + str(i) for i in range(3)]  # 클러스터 번호 부여
 
-        self.phase_list = {"p1": [0, 12, 16, 20],
-                           "p2": [4, 16, 20, 24],
-                           "p3": [8, 20, 24, 28],
-                           "p4": [12, 24, 28, 32],
-                           "p5": [16, 28, 32, 36]
-                           }
+        self.phase_list = {"p1": [1, 15, 19, 23], "p2": [5, 19, 23, 27], "p3": [9, 23, 27, 31], "p4": [13, 27, 31, 35]}
 
     def create_date_list(self):
         # 예시: merged 폴더의 파일 이름이 "2015_Q1.csv", "2015_Q2.csv" 등이라면
@@ -86,22 +81,22 @@ class DataManager:
             for pno in range(train_start, valid_start):
                 strdate = self.pno2date(pno)  # 예: "2015_Q1"
                 fp = f"./data_kr/date_sector/{sector}/{strdate}.csv"
-                fs_data = pd.read_csv(fp, index_col=0)
-                #fs_data.drop(["Date", "symbol", "Filing Date"], axis=1, inplace=True)
+                fs_data = pd.read_csv(fp)
+                # fs_data.drop(["Date", "symbol", "Filing Date"], axis=1, inplace=True)
                 train_data = pd.concat([train_data, fs_data], axis=0)
 
             for pno in range(valid_start, test_start):
                 strdate = self.pno2date(pno)
                 fp = f"./data_kr/date_sector/{sector}/{strdate}.csv"
-                fs_data = pd.read_csv(fp, index_col=0)
-                #fs_data.drop(["Date", "symbol", "Filing Date"], axis=1, inplace=True)
+                fs_data = pd.read_csv(fp)
+                # fs_data.drop(["Date", "symbol", "Filing Date"], axis=1, inplace=True)
                 valid_data = pd.concat([valid_data, fs_data], axis=0)
 
             for pno in range(test_start, test_end):
                 strdate = self.pno2date(pno)
                 fp = f"./data_kr/date_sector/{sector}/{strdate}.csv"
-                fs_data = pd.read_csv(fp, index_col=0)
-                #fs_data.drop(["Date", "symbol", "Filing Date"], axis=1, inplace=True)
+                fs_data = pd.read_csv(fp)
+                # fs_data.drop(["Date", "symbol", "Filing Date"], axis=1, inplace=True)
                 test_data = pd.concat([test_data, fs_data], axis=0)
 
             return train_data, valid_data, test_data
@@ -114,53 +109,52 @@ class DataManager:
 
             for pno in range(train_start, valid_start):
                 strdate = self.pno2date(pno)
-                fp = f"./data_kr/f{self.features_n}_cluster/{sector}/{strdate}.csv"
-                fs_data = pd.read_csv(fp, index_col=0)
-                #fs_data.drop(["Date", "symbol", "Filing Date"], axis=1, inplace=True)
+                fs_data = pd.read_csv(f"./data_kr/clustered_data/{sector}/{strdate}.csv",index_col=[0])
+                fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 train_list.append(fs_data)
 
             for pno in range(valid_start, test_start):
                 strdate = self.pno2date(pno)
-                fp = f"./data_kr/f{self.features_n}_cluster/{sector}/{strdate}.csv"
-                fs_data = pd.read_csv(fp, index_col=0)
-                fs_data.drop(["Date", "symbol", "Filing Date"], axis=1, inplace=True)
+                fs_data = pd.read_csv(f"./data_kr/clustered_data/{sector}/{strdate}.csv", index_col=[0])
+                fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 valid_list.append(fs_data)
 
             for pno in range(test_start, test_end):
                 strdate = self.pno2date(pno)
-                fp = f"./data_kr/f{self.features_n}_cluster/{sector}/{strdate}.csv"
-                fs_data = pd.read_csv(fp, index_col=0)
-                fs_data.drop(["Date", "symbol", "Filing Date"], axis=1, inplace=True)
+                fs_data = pd.read_csv(f"./data_kr/clustered_data/{sector}/{strdate}.csv", index_col=[0])
+                fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 test_list.append(fs_data)
 
             return np.array(train_list), np.array(valid_list), np.array(test_list)
 
         # 기본: numpy 배열 형태로 반환 (cluster=False, pandas_format=False)
-        train_list = []
-        valid_list = []
-        test_list = []
+        train_data = []
+        valid_data = []
+        test_data = []
 
         for pno in range(train_start, valid_start):
             strdate = self.pno2date(pno)  # 예: "2015_Q1"
-            fp = f"./data_kr/date_sector/{sector}/{strdate}.csv"
-            fs_data = pd.read_csv(fp, index_col=0)
-            # fs_data.drop(["Date", "symbol", "Filing Date"], axis=1, inplace=True)
-            train_data = pd.concat([train_data, fs_data], axis=0)
+            fs_data = pd.read_csv(f"./data_kr/clustered_data/{sector}/{strdate}.csv",index_col=[0])
+            fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
+            train_data.append(fs_data)
 
         for pno in range(valid_start, test_start):
             strdate = self.pno2date(pno)
-            fp = f"./data_kr/date_sector/{sector}/{strdate}.csv"
-            fs_data = pd.read_csv(fp, index_col=0)
-            # fs_data.drop(["Date", "symbol", "Filing Date"], axis=1, inplace=True)
-            valid_data = pd.concat([valid_data, fs_data], axis=0)
+            fs_data = pd.read_csv(f"./data_kr/clustered_data/{sector}/{strdate}.csv",index_col=[0])
+            fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
+            valid_data.append(fs_data)
 
         for pno in range(test_start, test_end):
             strdate = self.pno2date(pno)
-            fp = f"./data_kr/date_sector/{sector}/{strdate}.csv"
-            fs_data = pd.read_csv(fp, index_col=0)
-            # fs_data.drop(["Date", "symbol", "Filing Date"], axis=1, inplace=True)
-            test_data = pd.concat([test_data, fs_data], axis=0)
+            fs_data = pd.read_csv(f"./data_kr/clustered_data/{sector}/{strdate}.csv",index_col=[0])
+            fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
+            test_data.append(fs_data)
 
-        return np.array(train_list), np.array(valid_list), np.array(test_list)
+        train_data = np.array(train_data)
+        valid_data = np.array(valid_data)
+        test_data = np.array(test_data)
+
+        return train_data, valid_data, test_data
+
 
 

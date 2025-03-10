@@ -5,7 +5,7 @@ import time
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-api_key = 'b012f6449b6311cfff3d575a691816a80fef5b69'
+api_key = ''
 dart = OpenDartReader(api_key)
 
 kospi_50_file = './data_kr/kospi_50.txt'

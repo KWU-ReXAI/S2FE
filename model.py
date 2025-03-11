@@ -150,7 +150,7 @@ class MyModel(nn.Module):
         self.valid_models = {}
         self.sector_models = {}
 
-    def trainSectorModelsWithValid(self): # 훈련 데이터뿐만 아니라 검증 데이터도 포함하여 학습
+    def trainSectorModelsWithValid(self):
         for sector in self.topK_sectors:
             train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
             train_data = np.concatenate((train_data, valid_data), axis=0)
@@ -209,7 +209,6 @@ class MyModel(nn.Module):
 
         ## 백테스팅 진행
         pf_mem = []  # 각 날짜별 포트폴리오 수익률 기록
-        self.moneyHistory = [1]  # 투자 금액의 변화를 기록
         num_of_stock = []  # 매일 선택된 주식 개수 저장
 
         if verbose: print(f"\n------[{self.phase}]------")
@@ -222,7 +221,6 @@ class MyModel(nn.Module):
 
             stocks = pd.Series()  # 모든 섹터에서 선택된 주식을 저장
             real_last_topK_stock = []  # 최종적으로 선택된 상위 주식 저장
-            clustered_stocks = {}
 
             if use_all == "Sector" or use_all == "SectorAll":  # SectorAll or Sector일 경우
                 for sector in self.topK_sectors:  # 선택된 섹터별로 종목을 추천
@@ -268,7 +266,7 @@ class MyModel(nn.Module):
             if use_all == "SectorAll" and agg == 'avg':  # SectorAll 모드에서
                 real_last_topK_stock = stocks.sort_values(ascending=False).index.to_list()[:self.final_stock_k]
                 # 개별 섹터와 전체 섹터 모델의 예측값 평균을 사용하여 종목을 결정
-            clustered_stocks_list.append([f"Test Phase of {idx}"] + real_last_topK_stock)
+            clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)
             idx += 1
             self.final_stock_k = len(real_last_topK_stock)  # 최종적으로 선택된 주식 개수를 저장
 

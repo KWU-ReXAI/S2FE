@@ -123,18 +123,9 @@ for sector in sector_list:
             print(f"Error occurred in phase {phase}: {e}")
 
 '''
-
-import os
 import pandas as pd
-
-# 디렉토리 경로 설정
-directory_path = "./data_kr/clustered_data/ALL/"
-
-# 디렉토리 내의 모든 CSV 파일 목록 가져오기
-csv_files = [f for f in os.listdir(directory_path) if f.endswith(".csv")]
-
-# 각 파일의 shape 출력
-for file in csv_files:
-    file_path = os.path.join(directory_path, file)
-    df = pd.read_csv(file_path)  # CSV 파일 읽기
-    print(f"{file}: {df.shape}")  # 파일명과 shape 출력
+import numpy as np
+import FinanceDataReader as fdr
+df_sector = fdr.StockListing("S&P500")[["Sector","Symbol"]]  # S&P 종목 리스트
+df_sector.to_csv(f"./data_kr/sector_US_check.csv",
+                                  encoding='utf-8-sig')

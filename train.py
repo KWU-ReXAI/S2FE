@@ -2,7 +2,7 @@ import argparse
 import pandas as pd
 import torch
 import warnings
-
+import matplotlib.pyplot as plt
 from datamanager import DataManager
 from model import MyModel
 from tqdm import tqdm
@@ -54,4 +54,28 @@ for phase in tqdm(DM.phase_list): # 각 phase 별로 모델 학습 및 평가
 
     mymodel.save_models(f"{dir}/{args.result_name}_{args.testNum}_{phase}")
 
-pd.DataFrame(result).to_csv(f"{dir}/train_result_file.csv") # 결과 저장
+result_df = pd.DataFrame(result)
+
+# 각 행(CAGR, Sharpe Ratio, MDD)에 대해 모든 phase의 평균을 계산하여 "Average"라는 열(column) 추가
+result_df["Average"] = result_df.mean(axis=1)
+plt.rcParams['font.family'] = 'Malgun Gothic'
+# 음수 기호 깨짐 방지
+plt.rcParams['axes.unicode_minus'] = False
+# 그래프에는 "Average" 열은 제외하도록 함
+plot_columns = [col for col in result_df.columns if col != "Average"]
+
+plt.figure(figsize=(10, 6))
+# 각 평가 지표(CAGR, Sharpe Ratio, MDD)를 개별 선으로 그립니다.
+for indicator in result_df.index:
+    plt.plot(plot_columns, result_df.loc[indicator, plot_columns],
+             marker='o', label=indicator)
+
+plt.xlabel("Phase")
+plt.ylabel("평가 지표 값")
+plt.title("Phase 별 평가 지표 변화")
+plt.legend()
+plt.grid(True)
+plt.savefig(f"{dir}/train_result_graph.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
+
+# CSV 파일로 저장 (평균 열 포함)
+result_df.to_csv(f"{dir}/train_result_file.csv", encoding='utf-8-sig')

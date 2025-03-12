@@ -209,9 +209,10 @@ class MyModel(nn.Module):
 
         ## 백테스팅 진행
         pf_mem = []  # 각 날짜별 포트폴리오 수익률 기록
+        pf_mem_ks = []
         num_of_stock = []  # 매일 선택된 주식 개수 저장
 
-        if verbose: print(f"\n------[{self.phase}]------")
+        if verbose: print(f"\n------[{self.phase}]------",flush=True)
 
         for pno in range(test_start, test_end):  # test_start ~ end 기간동안 매일 반복 실행
             # 각 날짜마다 주식을 선택하고 수익률을 계산
@@ -270,7 +271,7 @@ class MyModel(nn.Module):
             idx += 1
             self.final_stock_k = len(real_last_topK_stock)  # 최종적으로 선택된 주식 개수를 저장
 
-            if verbose: print(real_last_topK_stock)  # 선택된 최종 종목을 출력
+            if verbose: print(real_last_topK_stock,flush=True)  # 선택된 최종 종목을 출력
             if isTest:
                 pd.DataFrame(clustered_stocks_list).to_csv(f"./result/{dir}/test_selected_stocks_{self.phase}_{testNum}.csv", index=False)
             if not isTest:
@@ -282,22 +283,28 @@ class MyModel(nn.Module):
             fs = pd.read_csv(f"./data_kr/date_regression/{strdate}.csv")  # 현재 날짜의 주가 데이터
             if next_strdate != '2025_Q1':
                 next_fs = pd.read_csv(f"./data_kr/date_regression/{next_strdate}.csv")  # 다음 날짜의 주가 데이터
-
-            daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate, fs, next_fs)
+            ks50_stock = ["KS50"]
+            daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate)
+            daily_change_KOSPI = self.Utils.get_portfolio_memory(ks50_stock,strdate,next_strdate)
             # 매일의 포트폴리오 수익률 계산
             # 선택된 주식 리스트, 현재 및 다음 날짜의 주가 데이터 이용
-
             pf_mem.extend(daily_change)  # 매일 수익률을 리스트에 추가: 각 날짜별 수익률 저장
+            pf_mem_ks.extend(daily_change_KOSPI)
+
 
         return_ratio = np.prod(np.array(pf_mem) + 1) - 1
         mdd = self.Utils.get_MDD(np.array(pf_mem) + 1)
         sharpe = self.Utils.get_sharpe_ratio(pf_mem)
 
-        if verbose:
-            print(f"MDD: {mdd}, Sharpe: {sharpe}, CAGR: {return_ratio}")
-            print("----------------------")
+        return_ratio_ks = np.prod(np.array(pf_mem_ks) + 1) - 1
+        mdd_ks = self.Utils.get_MDD(np.array(pf_mem_ks) + 1)
+        sharpe_ks = self.Utils.get_sharpe_ratio(pf_mem_ks)
 
-        return return_ratio, sharpe, mdd, num_of_stock
+        if verbose:
+            print(f"\nMDD: {mdd}, Sharpe: {sharpe}, CAGR: {return_ratio}",flush=True)
+            print("----------------------",flush=True)
+
+        return return_ratio, sharpe, mdd,num_of_stock, return_ratio_ks, sharpe_ks, mdd_ks
 
     def save(obj):
         return (obj.__class__, obj.__dict__)

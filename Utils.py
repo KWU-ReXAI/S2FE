@@ -72,7 +72,7 @@ class Utils:
                 print(f"{ticker}의 데이터에서 {quarter_start} 이후의 거래일을 찾을 수 없습니다.")
                 return 0
     
-    def get_portfolio_memory(self,stocks,strdate,next_strdate,fs,next_fs): # 포트폴리오 수익률 계산
+    def get_portfolio_memory(self,stocks,strdate,next_strdate): # 포트폴리오 수익률 계산
 
         if len(stocks) == 0: return []
         
@@ -81,14 +81,10 @@ class Utils:
         year_now, quarter_now = strdate.split('_')
         year_next, quarter_next = next_strdate.split('_')
         for ticker in stocks: # stocks 리스트에 있는 종목들의 주가 데이터를 가져옴
-            row = fs.index[fs['code'].astype(str)==str(ticker)][0]
-
-            start_date = fs[(fs["year"].astype(str)== year_now)&(fs["quarter"].astype(str)==quarter_now)].iloc[row]
-            if next_strdate != '2025_Q1':
-                next_filing_date = next_fs[(next_fs["year"].astype(str)== year_next)&(next_fs["quarter"].astype(str)==quarter_next)].iloc[row]
+            if ticker != "KS50":
+                ticker_str = str(ticker).zfill(6)
             else:
-                next_filing_date = '2025_Q1'
-            ticker_str = str(ticker).zfill(6)
+                ticker_str = ticker  # 또는 필요한 경우 다른 형식으로 변환
             start_date = self.get_date_range(year_now, quarter_now, ticker_str)
             end_date = self.get_date_range(year_next, quarter_next, ticker_str)
             price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv",index_col=[0])['종가'].loc[
@@ -99,9 +95,7 @@ class Utils:
             df_total_price.sort_index(inplace=True)
 
         df_total_price = df_total_price.fillna(method='ffill').fillna(method='bfill').sum(axis=1)
-
-        df_pf = df_total_price/df_total_price.iloc[0] # 포트폴리오 기준일을 1로 정규화
-
+        df_pf = df_total_price/df_total_price.iloc[0]
         daily_change = df_pf.pct_change().dropna()
         # 일일 변동률(%)을 계산하여 반환
         return daily_change.values.tolist()

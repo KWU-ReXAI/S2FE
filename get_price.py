@@ -8,7 +8,7 @@ import os
 # symbol.csv 파일에서 종목 코드를 문자열로 읽고, 6자리로 맞춥니다.
 symbol_df = pd.read_csv('./data_kr/symbol.csv', encoding='utf-8-sig', dtype={'code': str})
 ticker_list = symbol_df['code'].astype(str).str.zfill(6)
-
+ticker_list = {"KS200"}
 os.makedirs('./data_kr/price', exist_ok=True)
 
 start_date = '2015-01-01'

@@ -9,7 +9,7 @@ class DataManager:
     def __init__(self, features_n):
         self.features_n = features_n
         self.ticker_list = sorted(pd.read_csv("./data_kr/symbol.csv")["code"].tolist())
-        self.sector_list = pd.read_csv("./data_kr/symbol.csv")["sector"].tolist()
+        self.sector_list = list(set(pd.read_csv("./data_kr/symbol.csv")["sector"]))
         self.cluster_list = ["cluster_" + str(i) for i in range(3)]  # 클러스터 번호 부여
 
         self.phase_list = {"p1": [1, 15, 19, 23], "p2": [5, 19, 23, 27], "p3": [9, 23, 27, 31], "p4": [13, 27, 31, 35]}
@@ -67,12 +67,39 @@ class DataManager:
         except IndexError:
             raise ValueError(f"pno {pno}은 date_list의 범위를 벗어났습니다. date_list 길이: {len(self.date_list)}")
 
-    def data_phase(self, sector: str, phase: str, pandas_format=False, cluster=False):
+    def data_phase(self, sector: str, phase: str, pandas_format=False, cluster=False, isall=False):
         train_start = self.phase_list[phase][0]
         valid_start = self.phase_list[phase][1]
         test_start = self.phase_list[phase][2]
         test_end = self.phase_list[phase][3]
 
+        if isall:
+            train_data = pd.DataFrame()
+            valid_data = pd.DataFrame()
+            test_data = pd.DataFrame()
+
+            for pno in range(train_start, valid_start):
+                strdate = self.pno2date(pno)  # 예: "2015_Q1"
+                fp = f"./data_kr/financial_with_Label/{sector}/{strdate}.csv"
+                fs_data = pd.read_csv(fp)
+                fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
+                train_data = pd.concat([train_data, fs_data], axis=0)
+
+            for pno in range(valid_start, test_start):
+                strdate = self.pno2date(pno)
+                fp = f"./data_kr/financial_with_Label/{sector}/{strdate}.csv"
+                fs_data = pd.read_csv(fp)
+                fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
+                valid_data = pd.concat([valid_data, fs_data], axis=0)
+
+            for pno in range(test_start, test_end):
+                strdate = self.pno2date(pno)
+                fp = f"./data_kr/financial_with_Label/{sector}/{strdate}.csv"
+                fs_data = pd.read_csv(fp)
+                fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
+                test_data = pd.concat([test_data, fs_data], axis=0)
+
+            return train_data, valid_data, test_data
         if pandas_format:
             train_data = pd.DataFrame()
             valid_data = pd.DataFrame()

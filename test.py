@@ -1,6 +1,6 @@
 import os
 os.environ["PYTHONWARNINGS"] = "ignore"
-
+import math
 import warnings
 warnings.filterwarnings('ignore')
 import matplotlib.pyplot as plt
@@ -14,6 +14,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
 parser.add_argument('--train_dir',type=str,nargs='?',default="train_result_dir") # 결과 파일명
 parser.add_argument('--test_dir',type=str,nargs='?',default="test_result_dir") # 결과 디렉토리 명
+parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 args = parser.parse_args()
 DM = DataManager(6) # 특징 개수 4개로 설정하여 데이터 매니저 초기화
 DM.create_date_list()
@@ -28,7 +29,7 @@ dir = f"./result"
 
 use_all_list =["All","Sector","SectorAll"] # 모델 평가 방식
 all_results={}
-for K in range(1,7): # 한번만 실행
+for K in range(1,args.testNum+1): # 한번만 실행
     print(f"\nTest for Train_Model_{K}",flush=True)
     list_num_stocks = [] # 각 실험에서 선택된 주식 개수를 저장할 리스트
     for m in range(2,3): # 20번 실행
@@ -54,8 +55,11 @@ num_tests = len(tests)
 plt.rcParams['font.family'] = 'Malgun Gothic' # 음수 기호 깨짐 방지
 plt.rcParams['axes.unicode_minus'] = False
 # 6개의 테스트에 대해 2행 3열의 서브플롯 생성 (테스트 수에 맞게 조정)
-fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(15, 10))
-axs = axs.flatten()
+rows = math.ceil(math.sqrt(num_tests))
+cols = math.ceil(num_tests / rows)
+
+fig, axs = plt.subplots(nrows=rows, ncols=cols, figsize=(cols * 5, rows * 5))
+axs = axs.flatten() if num_tests > 1 else [axs]  # 테스트가 하나면 리스트로 변환
 
 # 각 테스트별로 그래프 그리기
 for i, test in enumerate(tests):

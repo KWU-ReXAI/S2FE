@@ -55,33 +55,11 @@ class MultiLayerPerceptron(nn.Module):
                 loss.backward()
                 optimizer.step()
 
-class BaggingModel:
-    def __init__(self, n_modules, input_size, hidden_size):
-        self.n_modules = n_modules
-        self.models = []
-
-        for i in range(n_modules):
-            self.models.append(MultiLayerPerceptron(input_size, hidden_size, 'cpu'))
-
-    def fit(self, X:torch.Tensor, y, epochs = 200, lr = 0.015):
-        num_samples = int(X.shape[0] * 0.8)
-        for i in range(self.n_modules):
-            index = torch.randperm(X.shape[0])[:num_samples]
-            sample_X = X[index]
-            sample_y = y[index]
-            self.models[i].fit(sample_X,sample_y,lr,epochs)
-
-    def predict(self, X):
-        outputs = [model(X).unsqueeze(0) for model in self.models]
-        result = torch.cat(outputs, dim=0).mean(dim=0)
-        return result.cpu().detach().numpy().squeeze()
-
 class AggregationModel:
     def __init__(self, n_input, n_rules, hidden_layer, device, aggregate = ""):
         self.mlp = MultiLayerPerceptron(n_input, hidden_layer, device)
         self.rf = RandomForestRegressor()
         self.device = device
-
 
     def fit(self, X, y, epochs_mlp, epochs_anfis, lr_mlp, lr_anfis):
         data = DataLoader(TensorDataset(X, y), batch_size = 64, shuffle = True)
@@ -149,6 +127,30 @@ class MyModel(nn.Module):
 
         self.valid_models = {}
         self.sector_models = {}
+
+    def recordParameter(self):
+        file_path = "./result/parameter.csv"
+        new_data = [
+            {"Parameter": "feature_n", "Value": self.feature_n},
+            {"Parameter": "valid_stock_k", "Value": self.valid_stock_k},
+            {"Parameter": "valid_sector_k", "Value": self.valid_sector_k},
+            {"Parameter": "each_sector_stock_k", "Value": self.each_sector_stock_k},
+            {"Parameter": "final_stock_k", "Value": self.final_stock_k},
+            {"Parameter": "ensemble", "Value": self.ensemble},
+            {"Parameter": "clustering", "Value": self.clustering},
+            {"Parameter": "epochs_MLP", "Value": self.epochs_MLP},
+            {"Parameter": "lr_MLP", "Value": self.lr_MLP},
+            {"Parameter": "hidden", "Value": self.hidden},
+            {"Parameter": "epochs_anfis", "Value": self.epochs_anfis},
+            {"Parameter": "lr_anfis", "Value": self.lr_anfis},
+            {"Parameter": "n_rules", "Value": self.n_rules}
+        ]
+        try:
+            df = pd.read_csv(file_path)
+        except FileNotFoundError:
+            df = pd.DataFrame(columns=["Parameter", "Value"])
+        df = pd.concat([df, pd.DataFrame(new_data)], ignore_index=True)
+        df.to_csv(file_path, index=False)
 
     def trainSectorModelsWithValid(self):
         for sector in self.topK_sectors:
@@ -283,7 +285,7 @@ class MyModel(nn.Module):
             fs = pd.read_csv(f"./data_kr/date_regression/{strdate}.csv")  # 현재 날짜의 주가 데이터
             if next_strdate != '2025_Q1':
                 next_fs = pd.read_csv(f"./data_kr/date_regression/{next_strdate}.csv")  # 다음 날짜의 주가 데이터
-            ks50_stock = ["KS50"]
+            ks50_stock = ["KS200"]
             daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate)
             daily_change_KOSPI = self.Utils.get_portfolio_memory(ks50_stock,strdate,next_strdate)
             # 매일의 포트폴리오 수익률 계산

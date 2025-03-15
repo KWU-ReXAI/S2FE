@@ -49,3 +49,4 @@ for filename in os.listdir(folder_path):
 
         print(f"{filename} 파일 처리가 완료되었습니다.")
 '''
+

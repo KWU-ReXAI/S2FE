@@ -161,5 +161,96 @@ def save_sector_codes():
         print(f"섹터 '{sector}'에 속하는 code {len(sector_code_df)}개를 '{output_file}'에 저장했습니다.")
 
 
+def print_csv_shapes(folder_path):
+    """
+    주어진 폴더 내의 모든 .csv 파일의 shape을 출력하는 함수입니다.
+
+    Parameters:
+    folder_path (str): .csv 파일들이 있는 폴더의 경로입니다.
+    """
+    # 폴더 내의 모든 파일을 확인합니다.
+    for file_name in os.listdir(folder_path):
+        if file_name.endswith('.csv'):
+            file_path = os.path.join(folder_path, file_name)
+            try:
+                df = pd.read_csv(file_path)
+                print(f"{file_name}의 shape: {df.shape}")
+            except Exception as e:
+                print(f"{file_name} 파일을 읽는 중 에러 발생: {e}")
+
+
+import pandas as pd
+
+
+def compare_code_and_columns(file1, file2):
+    """
+    두 CSV 파일을 불러와서 'code' 컬럼 값을 비교하고, 컬럼 리스트의 차이를 확인하는 함수입니다.
+
+    Parameters:
+        file1 (str): 첫 번째 CSV 파일 경로.
+        file2 (str): 두 번째 CSV 파일 경로.
+    """
+    # 파일 불러오기
+    try:
+        df1 = pd.read_csv(file1)
+        df2 = pd.read_csv(file2)
+    except Exception as e:
+        print(f"파일을 불러오는 도중 오류가 발생했습니다: {e}")
+        return
+
+    # 'code' 컬럼 존재 여부 확인
+    if 'code' not in df1.columns:
+        print(f"첫 번째 파일({file1})에 'code' 컬럼이 존재하지 않습니다.")
+    if 'code' not in df2.columns:
+        print(f"두 번째 파일({file2})에 'code' 컬럼이 존재하지 않습니다.")
+
+    # 두 파일 모두 'code' 컬럼이 있는 경우 비교 수행
+    if 'code' in df1.columns and 'code' in df2.columns:
+        code_set1 = set(df1['code'])
+        code_set2 = set(df2['code'])
+
+        diff1 = code_set1 - code_set2
+        diff2 = code_set2 - code_set1
+
+        print("첫 번째 파일에만 있는 'code' 값:")
+        print(diff1)
+        print("\n두 번째 파일에만 있는 'code' 값:")
+        print(diff2)
+
+    # 컬럼 리스트 비교
+    cols1 = set(df1.columns)
+    cols2 = set(df2.columns)
+
+    cols_only_in_file1 = cols1 - cols2
+    cols_only_in_file2 = cols2 - cols1
+
+    print("\n첫 번째 파일에만 있는 컬럼:")
+    print(cols_only_in_file1)
+    print("\n두 번째 파일에만 있는 컬럼:")
+    print(cols_only_in_file2)
+
+
+def remove_specific_codes(file_path):
+    # 제거할 code 값들
+    codes_to_remove = {68870, 86790, 71050, 6800, 4990, 30, 88350, 810, 24110, 138930,
+                       5940, 32830, 5830, 29780, 105560, 2270, 16360, 37620, 3450, 55550}
+
+    # CSV 파일 읽기
+    df = pd.read_csv(file_path)
+
+    # code 컬럼이 codes_to_remove에 포함되지 않은 행만 남김
+    df_filtered = df[~df['code'].isin(codes_to_remove)]
+
+    # 다시 같은 파일로 저장
+    df_filtered.to_csv(file_path, index=False)
+
+    print(f"Filtered data saved to {file_path}")
+
+# 사용 예시
+# compare_code_and_columns("path/to/first_file.csv", "path/to/second_file.csv")
+
+# 198: symbol
+#12 18 13 5 29 5 7 1 13 22 33 14 4 2 1
 if __name__ == "__main__":
-    save_sector_codes()
+    compare_code_and_columns("./data_kr/date_sector/Conglomerate/2019_Q1.csv", "./data_kr/date_sector/Conglomerate/2020_Q2.csv")
+    print_csv_shapes("./data_kr/date_sector/Transportation")

@@ -81,7 +81,7 @@ class Utils:
         year_now, quarter_now = strdate.split('_')
         year_next, quarter_next = next_strdate.split('_')
         for ticker in stocks: # stocks 리스트에 있는 종목들의 주가 데이터를 가져옴
-            if ticker != "KS50":
+            if ticker != "KS200":
                 ticker_str = str(ticker).zfill(6)
             else:
                 ticker_str = ticker  # 또는 필요한 경우 다른 형식으로 변환

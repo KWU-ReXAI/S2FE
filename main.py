@@ -1,131 +1,78 @@
-'''
-import os
 import pandas as pd
-
-# CSV 파일 경로
-csv_path = "./data_kr/symbol.csv"
-
-# 폴더 경로
-folder_path = "./data_kr/merged"
-
-# CSV 파일 읽기
-df = pd.read_csv(csv_path)
-
-# code 컬럼 값을 6자리 문자열로 변환 (숫자인 경우 앞에 0을 채움)
-valid_codes = set(df["code"].astype(str).str.zfill(6))
-
-# 파일 리스트 가져오기
-if os.path.exists(folder_path):
-    for file_name in os.listdir(folder_path):
-        file_full_path = os.path.join(folder_path, file_name)
-
-        # 파일명이 "6자리 숫자.csv" 형식인지 확인
-        if file_name.endswith(".csv") and len(file_name) == 10 and file_name[:6].isdigit():
-            code = file_name[:6]  # 파일명의 코드 부분 추출
-
-            if code not in valid_codes:
-                print(f"Deleting file: {file_full_path}")
-                os.remove(file_full_path)  # 파일 삭제
-
 import os
-import pandas as pd
 
-# 데이터가 저장된 폴더 경로
-merged_folder = "./data_kr/merged"
-output_folder = "./data_kr/sector"
-symbol_file = "./data_kr/symbol.csv"
-date_sector_folder = "./data_kr/date_sector"
+class DataManager:
+    def __init__(self, features_n):
+        self.features_n = features_n
+        self.ticker_list = sorted(pd.read_csv("./data_kr/symbol.csv")["code"].tolist())
+        self.sector_list = pd.read_csv("./data_kr/symbol.csv")["sector"].tolist()
+        self.cluster_list = ["cluster_" + str(i) for i in range(3)]  # 클러스터 번호 부여
 
-# symbol.csv 로드
-symbol_df = pd.read_csv(symbol_file)
-symbol_df["code"] = symbol_df["code"].astype(str).str.zfill(6)  # 코드 값을 6자리로 변환
+        self.phase_list = {"p1": [1, 15, 19, 23], "p2": [5, 19, 23, 27], "p3": [9, 23, 27, 31], "p4": [13, 27, 31, 35]}
 
-# sector 별 코드 리스트 저장
-for sector, group in symbol_df.groupby("sector"):
-    sector_folder = os.path.join(date_sector_folder, sector)
-    os.makedirs(sector_folder, exist_ok=True)
-    output_file = os.path.join(sector_folder, "sector_code.csv")
-    group[["code"]].to_csv(output_file, index=False, encoding='utf-8-sig')
+    def create_date_list(self):
+        # 예시: merged 폴더의 파일 이름이 "2015_Q1.csv", "2015_Q2.csv" 등이라면
+        files = os.listdir("./data_kr/date_regression")
+        dates = [f.replace(".csv", "") for f in files if f.endswith(".csv")]
+        dates = sorted(dates)  # 날짜 순으로 정렬 (적절한 정렬 기준을 적용)
+        self.date_list = dates
+        return dates
 
-# 모든 CSV 파일 확인
-for file_name in os.listdir(merged_folder):
-    if file_name.endswith(".csv"):  # CSV 파일만 처리
-        file_path = os.path.join(merged_folder, file_name)
-        df = pd.read_csv(file_path)
+    def get_sector_list(self):
+        return self.sector_list
+    def get_ticker_list(self):
+        return self.ticker_list
 
-        # sector, code 컬럼이 있는지 확인
-        if "sector" in df.columns and "code" in df.columns:
-            df["code"] = df["code"].astype(str).str.zfill(6)  # 코드 값을 6자리로 변환
+    def date2quarter(date_str):
+        year, month, _ = map(int, date_str.split("-"))  # "2023-07-15" → (2023, 7, 15)
 
-            for (sector, code), group in df.groupby(["sector", "code"]):
-                sector_folder = os.path.join(output_folder, sector)
-                os.makedirs(sector_folder, exist_ok=True)
-                output_file = os.path.join(sector_folder, f"{code}.csv")
+        # 월에 따라 분기 결정
+        if 1 <= month <= 3:
+            quarter = "Q1"
+        elif 4 <= month <= 6:
+            quarter = "Q2"
+        elif 7 <= month <= 9:
+            quarter = "Q3"
+        else:
+            quarter = "Q4"
 
-                # 파일이 이미 존재하면 추가 (append)
-                if os.path.exists(output_file):
-                    group.to_csv(output_file, mode='a', header=False, index=False, encoding='utf-8-sig')
-                else:
-                    group.to_csv(output_file, mode='w', header=True, index=False, encoding='utf-8-sig')
+        return f"{year}_{quarter}"
 
-print("Data successfully split and saved by sector and company.")
+    def quarter2date(quarter_str):
+        year, q = quarter_str.split("_")  # "2018_Q3" → ["2018", "Q3"]
+        year = int(year)
 
+        # 분기별 시작 & 종료 날짜 설정
+        quarter_dict = {
+            "Q1": ("01-01", "03-31"),
+            "Q2": ("04-01", "06-30"),
+            "Q3": ("07-01", "09-30"),
+            "Q4": ("10-01", "12-31"),
+        }
 
-import os
-import pandas as pd
-import numpy as np
-from datamanager import DataManager
+        if q in quarter_dict:
+            start_date = f"{year}-{quarter_dict[q][0]}"  # 시작일
+            end_date = f"{year}-{quarter_dict[q][1]}"  # 종료일
+            return start_date, end_date
+        else:
+            raise ValueError("Invalid quarter format. Use YYYY_QX (e.g., 2018_Q3)")
 
-# 사용할 phase_list 정의
-phase_list = {"p1": [0, 12, 16, 19],
-              "p2": [4, 16, 20, 23],
-              "p3": [8, 20, 24, 27],
-              "p4": [12, 24, 28, 31],
-              "p5": [16, 28, 32, 35],
-              }
+    def pno2date(self, pno: int) -> str:
+        try:
+            return self.date_list[pno]
+        except IndexError:
+            raise ValueError(f"pno {pno}은 date_list의 범위를 벗어났습니다. date_list 길이: {len(self.date_list)}")
 
-# DataManager 인스턴스 생성
-features_n = 6  # 사용할 feature 개수
-sector_list = ['Chemistry','Medicine_Production', 'Food', 'etc', 'Distribution',
-                'IT_Service', 'Electronics', 'Communication',
-                'Transportation', 'Metal', 'Machines']
-dm = DataManager(features_n)
+# phase_list의 모든 pno 값을 pno2date에 적용하여 출력하는 코드
+dm = DataManager(features_n=3)
 dm.create_date_list()
 
-file = pd.read_csv(f"./data_kr/date_sector/IT_Service/2015_Q4.csv")
-# 모든 phase에 대해 data_phase 함수 실행
-
-for sector in sector_list:
-    print(f"\nSector: {sector}")
-    for phase in phase_list.keys():
-        print(f"\nTesting phase: {phase}")
-
-        # data_phase 실행 (pandas 형식)
+# phase_list에 포함된 모든 pno 값을 변환
+for phase, pno_list in dm.phase_list.items():
+    print(f"Phase: {phase}")
+    for pno in pno_list:
         try:
-            train_data1, valid_data1, test_data1 = dm.data_phase(sector, phase, pandas_format=True)
-
-            print(f"Train Data Shape ({phase}): {train_data1.shape}")
-            print(f"Validation Data Shape ({phase}): {valid_data1.shape}")
-            print(f"Test Data Shape ({phase}): {test_data1.shape}")
-
-        except Exception as e:
-            print(f"Error occurred in phase {phase}: {e}")
-
-        # data_phase 실행 (numpy 형식)
-        try:
-            train_data, valid_data, test_data = dm.data_phase(sector, phase, pandas_format=False)
-
-            print(f"Train Data Shape ({phase}): {train_data.shape}")
-            print(f"Validation Data Shape ({phase}): {valid_data.shape}")
-            print(f"Test Data Shape ({phase}): {test_data.shape}")
-
-        except Exception as e:
-            print(f"Error occurred in phase {phase}: {e}")
-
-'''
-import pandas as pd
-import numpy as np
-import FinanceDataReader as fdr
-df_sector = fdr.StockListing("S&P500")[["Sector","Symbol"]]  # S&P 종목 리스트
-df_sector.to_csv(f"./data_kr/sector_US_check.csv",
-                                  encoding='utf-8-sig')
+            date = dm.pno2date(pno)
+            print(f"  pno {pno} -> {date}")
+        except ValueError as e:
+            print(f"  Error for pno {pno}: {e}")

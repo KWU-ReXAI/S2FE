@@ -34,6 +34,13 @@ result_ks = {}
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+file_path = "./result/parameter.csv"
+os.makedirs(os.path.dirname(file_path), exist_ok=True)
+df = pd.DataFrame(columns=["Parameter"," ", "Value"])
+df.to_csv(file_path, index=False)
+recordmodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
+                          args.final_stock_k, " ", device, args.ensemble, args.clustering)
+recordmodel.recordParameter()
 
 for trainNum in range(0, args.testNum):
     dir = f"./result/{args.dir_name}_{trainNum+1}"  # 결과를 저장할 디렉토리 생성
@@ -91,9 +98,10 @@ for trainNum in range(0, args.testNum):
     plt.savefig(f"{dir}/train_result_graph.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
 
     # CSV 파일로 저장 (평균 열 포함)
-    result_df.to_csv(f"{dir}/train_result_file.csv", encoding='utf-8-sig')
+    result_df.to_csv(f"{dir}/train_result_file_{trainNum+1}.csv", encoding='utf-8-sig')
 
 result_df_ks = pd.DataFrame(result_ks)
+result_df_ks["Average"] = result_df_ks.mean(axis=1)
 plot_columns = [col for col in result_df_ks.columns if col != "Average"]
 plt.figure(figsize=(10, 6))
     # 각 평가 지표(CAGR, Sharpe Ratio, MDD)를 개별 선으로 그립니다.

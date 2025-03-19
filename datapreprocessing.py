@@ -492,7 +492,7 @@ elif args.isall == "all":
         df_col[sector] = select_col
 
         df_processed_data = pd.concat(
-            [df_processing_data.iloc[:, :4], df_processing_data[select_col], df_processing_data.iloc[:, -2:]], axis=1)
+            [df_processing_data.iloc[:, :4], df_processing_data[select_col], df_processing_data.iloc[:, -1:]], axis=1)
 
         start_year = 2015
         start_quarter = 4

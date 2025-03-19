@@ -129,7 +129,7 @@ class MyModel(nn.Module):
         self.sector_models = {}
 
     def recordParameter(self):
-        file_path = "./result/parameter.csv"
+        file_path = "./result/train_parameter.csv"
         new_data = [
             {"Parameter": "feature_n", "Value": self.feature_n},
             {"Parameter": "valid_stock_k", "Value": self.valid_stock_k},

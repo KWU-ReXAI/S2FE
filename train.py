@@ -33,8 +33,7 @@ result = {}
 result_ks = {}
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-file_path = "./result/parameter.csv"
+file_path = "./result/train_parameter.csv"
 os.makedirs(os.path.dirname(file_path), exist_ok=True)
 df = pd.DataFrame(columns=["Parameter"," ", "Value"])
 df.to_csv(file_path, index=False)
@@ -78,7 +77,6 @@ for trainNum in range(0, args.testNum):
 
     result_df = pd.DataFrame(result)
     result_df["Average"] = result_df.mean(axis=1)
-    plt.rcParams['font.family'] = 'Malgun Gothic'
     # 음수 기호 깨짐 방지
     plt.rcParams['axes.unicode_minus'] = False
     # 그래프에는 "Average" 열은 제외하도록 함
@@ -91,8 +89,8 @@ for trainNum in range(0, args.testNum):
                  marker='o', label=indicator)
 
     plt.xlabel("Phase")
-    plt.ylabel("평가 지표 값")
-    plt.title("Phase 별 평가 지표 변화")
+    plt.ylabel("Evaluation indicator values")
+    plt.title("Changes in evaluation indicators by phase")
     plt.legend()
     plt.grid(True)
     plt.savefig(f"{dir}/train_result_graph.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
@@ -109,8 +107,8 @@ for indicator in result_df_ks.index:
     plt.plot(plot_columns, result_df_ks.loc[indicator, plot_columns],marker='o', label=indicator)
 
 plt.xlabel("Phase")
-plt.ylabel("평가 지표 값")
-plt.title("Phase 별 평가 지표 변화(KOSPI50)")
+plt.ylabel("Evaluation indicator values")
+plt.title("Changes in evaluation indicators by phase")
 plt.legend()
 plt.grid(True)
 plt.savefig(f"./result/result_KOSPI_graph.png", dpi=300, bbox_inches="tight", pad_inches=0.1)

@@ -1,0 +1,17 @@
+﻿Parameter, ,Value
+feature_n,,6
+valid_stock_k,,5
+valid_sector_k,,2
+each_sector_stock_k,,5
+final_stock_k,,10
+ensemble,,S3CE
+clustering,,True
+epochs_MLP,,200
+lr_MLP,,0.001
+hidden,,128
+epochs_anfis,,200
+lr_anfis,,0.01
+n_rules,,10
+inter_n,,0.2
+aggregate,,avg
+Impute,,KNNImputer(n_neighbors=5)

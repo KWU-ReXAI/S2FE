@@ -24,7 +24,7 @@ device = torch.device('cpu')
 
 inter_n = 0.2
 agg = "inter"
-Impute = "SoftImpute"
+Impute = "KNNImputer(n_neighbors=5)"
 phase_list = DM.phase_list.keys()
 new_data = [{"Parameter": "inter_n", "Value": inter_n},{"Parameter": "aggregate", "Value": agg},
             {"Parameter": "Impute", "Value": Impute}]
@@ -118,7 +118,6 @@ for i, metric in enumerate(metrics):
 plt.subplots_adjust(bottom=0.4, wspace=0.3)
 plt.tight_layout(rect=[0, 0.05, 1, 1])
 plt.savefig(f"{dir}/test_result_dir/test_result_graph.png")
-plt.show()
 
 
 

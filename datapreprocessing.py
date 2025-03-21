@@ -11,6 +11,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 from tqdm import tqdm
 from datetime import datetime, timedelta
 from fancyimpute import SoftImpute
+from sklearn.impute import KNNImputer, SimpleImputer
 from sklearn.ensemble import RandomForestRegressor
 import argparse
 parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
@@ -20,6 +21,14 @@ args = parser.parse_args()
 
 ks200_price = pd.read_csv("./data_kr/price/KS200.csv")
 df_col = {}
+
+#imputer = SoftImpute(verbose=False)
+imputer = SimpleImputer(strategy='median')
+#imputer = KNNImputer(n_neighbors=5)
+
+#impute = SoftImpute(verbose=False)
+impute = SimpleImputer(strategy='median')
+#impute = KNNImputer(n_neighbors=5)
 
 def quarter2date(year, quarter):
     if quarter == "Q1":
@@ -137,10 +146,8 @@ def get_end_price(year, quarter, ticker):
 
 
 if args.isall == "False":
-    cluster_list = [['Healthcare', 'Energy_&_Utilities', 'Technology', 'Telecommunications_&_Media', 'Consumer_Goods_&_Retail', 'Agriculture_&_Food', 'Automotive_&_Parts']
-        , ['Financials', 'Industrials_&_Machinery', 'Transportation', 'Construction_&_Real_Estate']
-        , ['Trading_&_Logistics', 'Conglomerate', 'Materials_&_Chemicals', 'Consumer_Services']]
-    for cluster_index in range(3):
+    cluster_list = [['Automotive_&_Parts', 'Construction_&_Real_Estate', 'Consumer_Services', 'Trading_&_Logistics', 'Transportation'], ['Consumer_Goods_&_Retail', 'Financials', 'Healthcare', 'Industrials_&_Machinery', 'Telecommunications_&_Media'], ['Materials_&_Chemicals', 'Technology', 'Energy_&_Utilities'], ['Agriculture_&_Food', 'Conglomerate']]
+    for cluster_index in range(4):
         sector_list = cluster_list[cluster_index]
         clustered_ticker_list = []
 
@@ -167,7 +174,6 @@ if args.isall == "False":
             ticker_str = str(ticker).zfill(6)
             df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv", index_col=[0])
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
-            impute = SoftImpute(verbose=False)
             ###
             for col in df_data.columns[4:]:
                 df_data[col] = df_data[col].astype(str).str.replace(',', '')
@@ -271,9 +277,6 @@ if args.isall == "False":
         # df_processing_data.iloc[:, 4:-2] = df_processing_data.iloc[:, 4:-2].replace([-np.inf, np.inf], 0.0)
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
-        # SoftImpute 초기화
-        imputer = SoftImpute(verbose=False)
-
         # Feature Matrix (X) Imputation
         X_imputed = imputer.fit_transform(df_processing_data.iloc[:, 4:-2])
         df_processing_data.iloc[:, 4:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[4:-2],
@@ -362,7 +365,6 @@ elif args.isall == "all":
             ticker_str = str(ticker).zfill(6)
             df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv", index_col=[0])
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
-            impute = SoftImpute(verbose=False)
             ###
             for col in df_data.columns[4:]:
                 df_data[col] = df_data[col].astype(str).str.replace(',', '')
@@ -450,7 +452,7 @@ elif args.isall == "all":
 
                 label.append(relative_return)
 
-            #df_data["Label"] = label
+            df_data["Label"] = label
             df_data["Code"] = ticker_str
 
             if df_processing_data.empty:
@@ -466,8 +468,6 @@ elif args.isall == "all":
         # df_processing_data.iloc[:, 4:-2] = df_processing_data.iloc[:, 4:-2].replace([-np.inf, np.inf], 0.0)
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
-        # SoftImpute 초기화
-        imputer = SoftImpute(verbose=False)
 
         # Feature Matrix (X) Imputation
         X_imputed = imputer.fit_transform(df_processing_data.iloc[:, 4:-2])
@@ -484,11 +484,11 @@ elif args.isall == "all":
 
         feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[4:-2]).sort_values(
             ascending=False)
-        feature_importance[:6].to_csv(
+        feature_importance[:3].to_csv(
             f"./data_kr/financial_with_Label/{sector_list[0]}/{cluster_index}_feature_imp.csv",
             encoding='utf-8-sig')
 
-        select_col = feature_importance.index[:6]
+        select_col = feature_importance.index[:3]
         df_col[sector] = select_col
 
         df_processed_data = pd.concat(
@@ -555,8 +555,6 @@ else:
             ticker_str = str(ticker).zfill(6)
             df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv", index_col=[0])
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
-            impute = SoftImpute(verbose=False)
-
             ###
             for col in df_data.columns[4:]:
                 df_data[col] = df_data[col].astype(str).str.replace(',', '')
@@ -661,8 +659,6 @@ else:
         # df_processing_data.iloc[:, 4:-2] = df_processing_data.iloc[:, 4:-2].replace([-np.inf, np.inf], 0.0)
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
-        # SoftImpute 초기화
-        imputer = SoftImpute(verbose=False)
 
         # Feature Matrix (X) Imputation
         X_imputed = imputer.fit_transform(df_processing_data.iloc[:, 4:-2])

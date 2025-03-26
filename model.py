@@ -112,11 +112,11 @@ class MyModel(nn.Module):
         self.clustering = clustering  # 섹터 군집화 활성화 여부
 
         self.epochs_MLP = 200  # MLP 학습 epoch
-        self.lr_MLP = 0.001  # MLP 학습 rate
+        self.lr_MLP = 0.001  # 0.001
         self.hidden = 128  # MLP 은닉층 크기
 
         self.epochs_anfis = 200
-        self.lr_anfis = 0.01
+        self.lr_anfis = 0.01 #0.01
         self.n_rules = 10
 
         self.device = device

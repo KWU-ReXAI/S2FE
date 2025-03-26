@@ -22,13 +22,79 @@ args = parser.parse_args()
 ks200_price = pd.read_csv("./data_kr/price/KS200.csv")
 df_col = {}
 
-#imputer = SoftImpute(verbose=False)
-imputer = SimpleImputer(strategy='median')
+imputer = SoftImpute(verbose=False)
+#imputer = SimpleImputer(strategy='median')
 #imputer = KNNImputer(n_neighbors=5)
 
-#impute = SoftImpute(verbose=False)
-impute = SimpleImputer(strategy='median')
+impute = SoftImpute(verbose=False)
+#impute = SimpleImputer(strategy='median')
 #impute = KNNImputer(n_neighbors=5)
+
+n_features = 10
+
+def merge_year_quarter_from_csv(csv_path, drop_cols=None, total_option=False):
+    if drop_cols is None:
+        drop_cols = []
+
+    # CSV 파일 읽기
+    df = pd.read_csv(csv_path)
+    #df = df.fillna(0)
+
+    # total_option이 True이고 "관계" 컬럼이 존재한다면, "관계" 값이 "계"인 행 제거
+    if total_option and "이름" in df.columns:
+        df = df[df["이름"] != "계"]
+
+    # drop_cols에 지정된 컬럼 제거 (존재하지 않는 컬럼은 무시)
+    df = df.drop(columns=drop_cols, errors='ignore')
+
+    # '연도'와 '분기' 컬럼의 타입을 적절하게 변환
+    df['연도'] = df['연도'].astype(int)
+    df['분기'] = df['분기'].astype(str)
+
+    # '연도'와 '분기'를 제외한 나머지 컬럼들을 숫자형으로 변환 (쉼표 제거 후)
+    for col in df.columns:
+        if col not in ['연도', '분기']:
+            df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', ''), errors='coerce')
+
+    # 그룹화에 사용할 각 열의 평균을 계산할 딕셔너리 생성 ('연도', '분기' 제외)
+    agg_dict = {col: 'mean' for col in df.columns if col not in ['연도', '분기']}
+
+    # '연도'와 '분기'별로 그룹화하여 평균 계산
+    grouped = df.groupby(['연도', '분기'], as_index=False).agg(agg_dict)
+
+    # 2015_Q4부터 2024_Q3까지 모든 연도-분기 조합 생성
+    all_pairs = []
+    for year in range(2015, 2025):  # 2015 ~ 2024년 반복
+        if year == 2015:
+            quarters = ['Q4']
+        elif year == 2024:
+            quarters = ['Q1', 'Q2', 'Q3']
+        else:
+            quarters = ['Q1', 'Q2', 'Q3', 'Q4']
+        for q in quarters:
+            all_pairs.append((year, q))
+
+    full_index_df = pd.DataFrame(all_pairs, columns=['연도', '분기'])
+
+    merged = pd.merge(full_index_df, grouped, on=['연도','분기'], how='left')
+    merged.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+
+    return merged
+
+def concat_k_features(code):
+    df_small = merge_year_quarter_from_csv(f"./data_kr/k_features/소액주주/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시'],False)
+    df_total = merge_year_quarter_from_csv(f"./data_kr/k_features/주식총수/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시'],False)
+    df_prime = merge_year_quarter_from_csv(f"./data_kr/k_features/주요주주_소유보고/{code}.csv",['접수번호','법인구분','회사코드','회사명','대표보고자','발행 회사 관계 임원(등기여부)','발행 회사 관계 임원 직위','발행 회사 관계 주요 주주','결제일시'],False)
+    df_jeungja = merge_year_quarter_from_csv(f"./data_kr/k_features/증자/{code}.csv",['접수번호','법인구분','고유번호','회사코드','회사명','증자일자','증자방식','증자주식종류','구분','결제일시'],False)
+    df_employee = merge_year_quarter_from_csv(f"./data_kr/k_features/직원현황/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명', '직원 수','총 급여액','비고', '결제일시'],False)
+    df_maximum = merge_year_quarter_from_csv(f"./data_kr/k_features/최대주주/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명','주식종류','이름','관계', '비고', '결제일시'],True)
+    df_maximum_change = merge_year_quarter_from_csv(f"./data_kr/k_features/최대주주변동/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명','변동일','최대주주명','보유 주식 수','변동원인', '비고','기타', '결제일시'],False)
+
+    dfs = [df_small,df_total,df_prime,df_jeungja,df_employee,df_maximum,df_maximum_change]
+    df_concated = pd.concat(dfs,axis=1)
+
+    return df_concated
+
 
 def quarter2date(year, quarter):
     if quarter == "Q1":
@@ -45,6 +111,7 @@ def quarter2date(year, quarter):
     quarter_start = datetime.strptime(start_date_str, "%Y-%m-%d")
 
     return quarter_start
+
 def get_start_price(year, quarter, ticker):
     """
     지정한 연도와 쿼터의 시작일 이후 가장 가까운 거래일의 시가(Open)를 반환합니다.
@@ -146,7 +213,9 @@ def get_end_price(year, quarter, ticker):
 
 
 if args.isall == "False":
-    cluster_list = [['Automotive_&_Parts', 'Construction_&_Real_Estate', 'Consumer_Services', 'Trading_&_Logistics', 'Transportation'], ['Consumer_Goods_&_Retail', 'Financials', 'Healthcare', 'Industrials_&_Machinery', 'Telecommunications_&_Media'], ['Materials_&_Chemicals', 'Technology', 'Energy_&_Utilities'], ['Agriculture_&_Food', 'Conglomerate']]
+    cluster_list = [['Agriculture_&_Food', 'Industrials_&_Machinery', 'Trading_&_Logistics', 'Transportation'], ['Healthcare', 'Automotive_&_Parts', 'Conglomerate', 'Materials_&_Chemicals'], ['Construction_&_Real_Estate', 'Telecommunications_&_Media'], ['Consumer_Goods_&_Retail', 'Consumer_Services', 'Energy_&_Utilities', 'Financials', 'Technology']]
+
+
     for cluster_index in range(4):
         sector_list = cluster_list[cluster_index]
         clustered_ticker_list = []
@@ -172,18 +241,23 @@ if args.isall == "False":
             if ticker == "code":
                 continue
             ticker_str = str(ticker).zfill(6)
-            df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv", index_col=[0])
+            df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
+            df_kfeature = concat_k_features(ticker_str)
+
+            df_data = pd.concat([df_data, df_kfeature], axis=1)
+
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
             ###
-            for col in df_data.columns[4:]:
+            for col in df_data.columns[5:]:
                 df_data[col] = df_data[col].astype(str).str.replace(',', '')
                 df_data[col] = df_data[col].replace('-', np.nan).astype(float)
             ###
-            df_data.iloc[:, 4:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 4:]))
+            df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
+            #df_data = pd.concat([df_data.iloc[:,:5],pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))])
 
-            df_pct_change = (-df_data.iloc[:, 4:].pct_change(fill_method=None))
+            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
             df_pct_change.columns = [col + "변화율" for col in df_pct_change.columns]
-            df_data = pd.concat([df_data.iloc[:, :4], df_pct_change], axis=1)
+            df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
             df_data.replace([-np.inf, np.inf], 0.0, inplace=True)
 
@@ -200,17 +274,17 @@ if args.isall == "False":
             df_data = df_data.iloc[::-1].reset_index(drop=True)
             for i in range(0, len(df_data) - 1):
 
-                start_price = get_start_price(df_data.iloc[i + 1, 2], df_data.iloc[i + 1, 3], ticker_str)
-                end_price = get_end_price(df_data.iloc[i, 2], df_data.iloc[i, 3], ticker_str)
+                start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str)
+                end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i + 1, 2], df_data.iloc[i + 1, 3], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i, 2], df_data.iloc[i, 3], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], "KS200")
+                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
 
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
                 else:
                     relative_return = (end_price - start_price) / start_price - (
-                                ks200_end_price - ks200_start_price) / ks200_start_price
+                            ks200_end_price - ks200_start_price) / ks200_start_price
 
                 past_return.append(relative_return)
 
@@ -222,14 +296,12 @@ if args.isall == "False":
             stock_date = datetime.strptime(df_price.index[0], "%Y-%m-%d")
 
             label = []
-            start_date = '2024-07-01'
-            end_date = '2024-09-30'
 
-            start_price = get_start_price(df_data.iloc[1, 2], df_data.iloc[1, 3], ticker_str)
-            end_price = get_end_price(df_data.iloc[0, 2], df_data.iloc[0, 3], ticker_str)
+            start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str)
+            end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str)
 
-            ks200_start_price = get_start_price(df_data.iloc[1, 2], df_data.iloc[1, 3], "KS200")
-            ks200_end_price = get_end_price(df_data.iloc[0, 2], df_data.iloc[0, 3], "KS200")
+            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], "KS200")
+            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], "KS200")
             if start_price == 0 or ks200_start_price == 0:
                 relative_return = 0.0
             else:
@@ -239,25 +311,25 @@ if args.isall == "False":
             label.append(relative_return)
 
             for i in range(1, len(df_data)):
-                start_year = df_data.iloc[i, 2]
-                end_year = df_data.iloc[i - 1, 2]
-                start_quarter = df_data.iloc[i, 3]
-                end_quarter = df_data.iloc[i - 1, 3]
+                start_year = df_data.iloc[i, 3]
+                end_year = df_data.iloc[i - 1, 3]
+                start_quarter = df_data.iloc[i, 4]
+                end_quarter = df_data.iloc[i - 1, 4]
 
                 start_date = quarter2date(start_year, start_quarter)
                 if start_date < stock_date:
                     label.append(0.0)
                     continue
-                start_price = get_start_price(df_data.iloc[i, 2], df_data.iloc[i, 3], ticker_str)
-                end_price = get_end_price(df_data.iloc[i - 1, 2], df_data.iloc[i - 1, 3], ticker_str)
+                start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
+                end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i, 2], df_data.iloc[i, 3], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i - 1, 2], df_data.iloc[i - 1, 3], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
+                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], "KS200")
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
                 else:
                     relative_return = (end_price - start_price) / start_price - (
-                                ks200_end_price - ks200_start_price) / ks200_start_price
+                            ks200_end_price - ks200_start_price) / ks200_start_price
 
                 label.append(relative_return)
 
@@ -278,8 +350,8 @@ if args.isall == "False":
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
         # Feature Matrix (X) Imputation
-        X_imputed = imputer.fit_transform(df_processing_data.iloc[:, 4:-2])
-        df_processing_data.iloc[:, 4:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[4:-2],
+        X_imputed = imputer.fit_transform(df_processing_data.iloc[:, 5:-2])
+        df_processing_data.iloc[:, 5:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
                                                         index=df_processing_data.index)
 
         # Target (y) Imputation
@@ -288,19 +360,19 @@ if args.isall == "False":
                                                          index=df_processing_data.index)
 
         rgr = RandomForestRegressor()
-        rgr.fit(df_processing_data.iloc[:, 4:-2], df_processing_data.iloc[:, -2:-1])
+        rgr.fit(df_processing_data.iloc[:, 5:-2], df_processing_data.iloc[:, -2:-1])
 
-        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[4:-2]).sort_values(
+        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[5:-2]).sort_values(
             ascending=False)
-        feature_importance[:6].to_csv(
+        feature_importance[:n_features].to_csv(
             f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
             encoding='utf-8-sig')
 
-        select_col = feature_importance.index[:6]
+        select_col = feature_importance.index[:n_features]
         df_col[sector] = select_col
 
         df_processed_data = pd.concat(
-            [df_processing_data.iloc[:, :4], df_processing_data[select_col], df_processing_data.iloc[:, -2:]], axis=1)
+            [df_processing_data.iloc[:, 1:5], df_processing_data[select_col], df_processing_data.iloc[:, -2:]], axis=1)
 
         start_year = 2015
         start_quarter = 4
@@ -344,8 +416,6 @@ elif args.isall == "all":
         df_processing_data = pd.DataFrame()
 
         for sector in sector_list:
-            if isinstance(sector, list):  # sector가 리스트라면
-                sector = sector[0]  # 리스트의 첫 번째 요소(문자열)만 사용
             ticker_list = pd.read_csv(f'./data_kr/date_sector/{sector}/sector_code.csv')
             clustered_ticker_list.extend(ticker_list["code"].to_list())
 
@@ -363,18 +433,22 @@ elif args.isall == "all":
             if ticker == "code":
                 continue
             ticker_str = str(ticker).zfill(6)
-            df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv", index_col=[0])
+            df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
+            df_kfeature = concat_k_features(ticker_str)
+
+            df_data = pd.concat([df_data, df_kfeature], axis=1)
+
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
             ###
-            for col in df_data.columns[4:]:
+            for col in df_data.columns[5:]:
                 df_data[col] = df_data[col].astype(str).str.replace(',', '')
                 df_data[col] = df_data[col].replace('-', np.nan).astype(float)
             ###
-            df_data.iloc[:, 4:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 4:]))
+            df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
 
-            df_pct_change = (-df_data.iloc[:, 4:].pct_change(fill_method=None))
+            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
             df_pct_change.columns = [col + "변화율" for col in df_pct_change.columns]
-            df_data = pd.concat([df_data.iloc[:, :4], df_pct_change], axis=1)
+            df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
             df_data.replace([-np.inf, np.inf], 0.0, inplace=True)
 
@@ -391,11 +465,11 @@ elif args.isall == "all":
             df_data = df_data.iloc[::-1].reset_index(drop=True)
             for i in range(0, len(df_data) - 1):
 
-                start_price = get_start_price(df_data.iloc[i + 1, 2], df_data.iloc[i + 1, 3], ticker_str)
-                end_price = get_end_price(df_data.iloc[i, 2], df_data.iloc[i, 3], ticker_str)
+                start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str)
+                end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i + 1, 2], df_data.iloc[i + 1, 3], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i, 2], df_data.iloc[i, 3], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], "KS200")
+                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
 
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
@@ -406,21 +480,19 @@ elif args.isall == "all":
                 past_return.append(relative_return)
 
             past_return.append(0)
-            #df_data["Relative Return"] = past_return
+            df_data["Relative Return"] = past_return
 
             df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv", index_col=[0])
             df_ks200 = pd.read_csv(f"./data_kr/price/KS200.csv", index_col=[0])
             stock_date = datetime.strptime(df_price.index[0], "%Y-%m-%d")
 
             label = []
-            start_date = '2024-07-01'
-            end_date = '2024-09-30'
 
-            start_price = get_start_price(df_data.iloc[1, 2], df_data.iloc[1, 3], ticker_str)
-            end_price = get_end_price(df_data.iloc[0, 2], df_data.iloc[0, 3], ticker_str)
+            start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str)
+            end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str)
 
-            ks200_start_price = get_start_price(df_data.iloc[1, 2], df_data.iloc[1, 3], "KS200")
-            ks200_end_price = get_end_price(df_data.iloc[0, 2], df_data.iloc[0, 3], "KS200")
+            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], "KS200")
+            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], "KS200")
             if start_price == 0 or ks200_start_price == 0:
                 relative_return = 0.0
             else:
@@ -430,20 +502,20 @@ elif args.isall == "all":
             label.append(relative_return)
 
             for i in range(1, len(df_data)):
-                start_year = df_data.iloc[i, 2]
-                end_year = df_data.iloc[i - 1, 2]
-                start_quarter = df_data.iloc[i, 3]
-                end_quarter = df_data.iloc[i - 1, 3]
+                start_year = df_data.iloc[i, 3]
+                end_year = df_data.iloc[i - 1, 3]
+                start_quarter = df_data.iloc[i, 4]
+                end_quarter = df_data.iloc[i - 1, 4]
 
                 start_date = quarter2date(start_year, start_quarter)
                 if start_date < stock_date:
                     label.append(0.0)
                     continue
-                start_price = get_start_price(df_data.iloc[i, 2], df_data.iloc[i, 3], ticker_str)
-                end_price = get_end_price(df_data.iloc[i - 1, 2], df_data.iloc[i - 1, 3], ticker_str)
+                start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
+                end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i, 2], df_data.iloc[i, 3], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i - 1, 2], df_data.iloc[i - 1, 3], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
+                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], "KS200")
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
                 else:
@@ -468,10 +540,9 @@ elif args.isall == "all":
         # df_processing_data.iloc[:, 4:-2] = df_processing_data.iloc[:, 4:-2].replace([-np.inf, np.inf], 0.0)
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
-
         # Feature Matrix (X) Imputation
-        X_imputed = imputer.fit_transform(df_processing_data.iloc[:, 4:-2])
-        df_processing_data.iloc[:, 4:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[4:-2],
+        X_imputed = imputer.fit_transform(df_processing_data.iloc[:, 5:-2])
+        df_processing_data.iloc[:, 5:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
                                                         index=df_processing_data.index)
 
         # Target (y) Imputation
@@ -480,19 +551,19 @@ elif args.isall == "all":
                                                          index=df_processing_data.index)
 
         rgr = RandomForestRegressor()
-        rgr.fit(df_processing_data.iloc[:, 4:-2], df_processing_data.iloc[:, -2:-1])
+        rgr.fit(df_processing_data.iloc[:, 5:-2], df_processing_data.iloc[:, -2:-1])
 
-        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[4:-2]).sort_values(
+        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[5:-2]).sort_values(
             ascending=False)
-        feature_importance[:3].to_csv(
+        feature_importance[:n_features].to_csv(
             f"./data_kr/financial_with_Label/{sector_list[0]}/{cluster_index}_feature_imp.csv",
             encoding='utf-8-sig')
 
-        select_col = feature_importance.index[:3]
+        select_col = feature_importance.index[:n_features]
         df_col[sector] = select_col
 
         df_processed_data = pd.concat(
-            [df_processing_data.iloc[:, :4], df_processing_data[select_col], df_processing_data.iloc[:, -1:]], axis=1)
+            [df_processing_data.iloc[:, 1:5], df_processing_data[select_col], df_processing_data.iloc[:, -2:]], axis=1)
 
         start_year = 2015
         start_quarter = 4
@@ -528,8 +599,8 @@ else:
          'Transportation', 'Financials', 'Energy_&_Utilities', 'Trading_&_Logistics', 'Conglomerate',
         'Technology', 'Telecommunications_&_Media']
     ]
-    for index in range(1):
-        sector_list = cluster_list[index]
+    for cluster_index in range(1):
+        sector_list = cluster_list[cluster_index]
         clustered_ticker_list = []
 
         df_sector_stocks = pd.DataFrame()
@@ -553,19 +624,22 @@ else:
             if ticker == "code":
                 continue
             ticker_str = str(ticker).zfill(6)
-            df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv", index_col=[0])
+            df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
+            df_kfeature = concat_k_features(ticker_str)
+
+            df_data = pd.concat([df_data, df_kfeature], axis=1)
+
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
             ###
-            for col in df_data.columns[4:]:
+            for col in df_data.columns[5:]:
                 df_data[col] = df_data[col].astype(str).str.replace(',', '')
                 df_data[col] = df_data[col].replace('-', np.nan).astype(float)
             ###
+            df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
 
-            df_data.iloc[:, 4:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 4:]))
-
-            df_pct_change = (-df_data.iloc[:, 4:].pct_change(fill_method=None))
+            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
             df_pct_change.columns = [col + "변화율" for col in df_pct_change.columns]
-            df_data = pd.concat([df_data.iloc[:, :4], df_pct_change], axis=1)
+            df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
             df_data.replace([-np.inf, np.inf], 0.0, inplace=True)
 
@@ -574,7 +648,6 @@ else:
             df_data = df_data[
                 ~(df_data['year'].astype(str).str.contains('2015') & df_data['quarter'].astype(str).str.contains('Q4'))
             ]
-            df_data2 = df_data
 
             # 시장초과수익률 계산
             df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv", index_col=[0])
@@ -583,17 +656,17 @@ else:
             df_data = df_data.iloc[::-1].reset_index(drop=True)
             for i in range(0, len(df_data) - 1):
 
-                start_price = get_start_price(df_data.iloc[i + 1, 2], df_data.iloc[i + 1, 3], ticker_str)
-                end_price = get_end_price(df_data.iloc[i, 2], df_data.iloc[i, 3], ticker_str)
+                start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str)
+                end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i + 1, 2], df_data.iloc[i + 1, 3], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i, 2], df_data.iloc[i, 3], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], "KS200")
+                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
 
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
                 else:
                     relative_return = (end_price - start_price) / start_price - (
-                                ks200_end_price - ks200_start_price) / ks200_start_price
+                            ks200_end_price - ks200_start_price) / ks200_start_price
 
                 past_return.append(relative_return)
 
@@ -605,14 +678,12 @@ else:
             stock_date = datetime.strptime(df_price.index[0], "%Y-%m-%d")
 
             label = []
-            start_date = '2024-07-01'
-            end_date = '2024-09-30'
 
-            start_price = get_start_price(df_data.iloc[1, 2], df_data.iloc[1, 3], ticker_str)
-            end_price = get_end_price(df_data.iloc[0, 2], df_data.iloc[0, 3], ticker_str)
+            start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str)
+            end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str)
 
-            ks200_start_price = get_start_price(df_data.iloc[1, 2], df_data.iloc[1, 3], "KS200")
-            ks200_end_price = get_end_price(df_data.iloc[0, 2], df_data.iloc[0, 3], "KS200")
+            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], "KS200")
+            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], "KS200")
             if start_price == 0 or ks200_start_price == 0:
                 relative_return = 0.0
             else:
@@ -622,25 +693,25 @@ else:
             label.append(relative_return)
 
             for i in range(1, len(df_data)):
-                start_year = df_data.iloc[i, 2]
-                end_year = df_data.iloc[i - 1, 2]
-                start_quarter = df_data.iloc[i, 3]
-                end_quarter = df_data.iloc[i - 1, 3]
+                start_year = df_data.iloc[i, 3]
+                end_year = df_data.iloc[i - 1, 3]
+                start_quarter = df_data.iloc[i, 4]
+                end_quarter = df_data.iloc[i - 1, 4]
 
                 start_date = quarter2date(start_year, start_quarter)
                 if start_date < stock_date:
                     label.append(0.0)
                     continue
-                start_price = get_start_price(df_data.iloc[i, 2], df_data.iloc[i, 3], ticker_str)
-                end_price = get_end_price(df_data.iloc[i - 1, 2], df_data.iloc[i - 1, 3], ticker_str)
+                start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
+                end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i, 2], df_data.iloc[i, 3], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i - 1, 2], df_data.iloc[i - 1, 3], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
+                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], "KS200")
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
                 else:
                     relative_return = (end_price - start_price) / start_price - (
-                                ks200_end_price - ks200_start_price) / ks200_start_price
+                            ks200_end_price - ks200_start_price) / ks200_start_price
 
                 label.append(relative_return)
 
@@ -654,15 +725,15 @@ else:
 
         if os.path.isdir(f"./data_kr/clustered_data/ALL") == False:
             os.mkdir(f"./data_kr/clustered_data/ALL")
-        df_processing_data.to_csv(f"./data_kr/clustered_data/ALL/cluster_check.csv", encoding='utf-8-sig')
+        df_processing_data.to_csv(f"./data_kr/clustered_data/ALL/cluster_check.csv",
+                                  encoding='utf-8-sig')
 
         # df_processing_data.iloc[:, 4:-2] = df_processing_data.iloc[:, 4:-2].replace([-np.inf, np.inf], 0.0)
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
-
         # Feature Matrix (X) Imputation
-        X_imputed = imputer.fit_transform(df_processing_data.iloc[:, 4:-2])
-        df_processing_data.iloc[:, 4:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[4:-2],
+        X_imputed = imputer.fit_transform(df_processing_data.iloc[:, 5:-2])
+        df_processing_data.iloc[:, 5:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
                                                         index=df_processing_data.index)
 
         # Target (y) Imputation
@@ -671,17 +742,20 @@ else:
                                                          index=df_processing_data.index)
 
         rgr = RandomForestRegressor()
-        rgr.fit(df_processing_data.iloc[:, 4:-2], df_processing_data.iloc[:, -2:-1])
+        rgr.fit(df_processing_data.iloc[:, 5:-2], df_processing_data.iloc[:, -2:-1])
 
-        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[4:-2]).sort_values(
+        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[5:-2]).sort_values(
             ascending=False)
-        feature_importance[:6].to_csv(f"./data_kr/clustered_data/ALL/ALL_feature_imp.csv", encoding='utf-8-sig')
+        feature_importance[:n_features].to_csv(
+            f"./data_kr/clustered_data/ALL/ALL_feature_imp.csv",
+            encoding='utf-8-sig')
 
-        select_col = feature_importance.index[:6]
+        select_col = feature_importance.index[:n_features]
         df_col[sector] = select_col
 
         df_processed_data = pd.concat(
-            [df_processing_data.iloc[:, :4], df_processing_data[select_col], df_processing_data.iloc[:, -2:]], axis=1)
+            [df_processing_data.iloc[:, 1:5], df_processing_data[select_col], df_processing_data.iloc[:, -2:]], axis=1)
+
 
         start_year = 2015
         start_quarter = 4

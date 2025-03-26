@@ -22,9 +22,9 @@ DM = DataManager(6) # 특징 개수 4개로 설정하여 데이터 매니저 초
 DM.create_date_list()
 device = torch.device('cpu')
 
-inter_n = 0.2
+inter_n = 0.1
 agg = "inter"
-Impute = "KNNImputer(n_neighbors=5)"
+Impute = "SoftImpute"
 phase_list = DM.phase_list.keys()
 new_data = [{"Parameter": "inter_n", "Value": inter_n},{"Parameter": "aggregate", "Value": agg},
             {"Parameter": "Impute", "Value": Impute}]

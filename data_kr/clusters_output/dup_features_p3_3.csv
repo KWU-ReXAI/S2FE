@@ -1,3 +1,9 @@
-,Agriculture_&_Food,Conglomerate
-Agriculture_&_Food,0.0,2.0
-Conglomerate,0.0,0.0
+,Consumer_Goods_&_Retail,Consumer_Services,Energy_&_Utilities,Healthcare,Materials_&_Chemicals,Technology,Telecommunications_&_Media,Trading_&_Logistics
+Consumer_Goods_&_Retail,0.0,8.0,6.0,8.0,8.0,7.0,6.0,6.0
+Consumer_Services,0.0,0.0,8.0,6.0,7.0,7.0,7.0,6.0
+Energy_&_Utilities,0.0,0.0,0.0,7.0,7.0,8.0,7.0,7.0
+Healthcare,0.0,0.0,0.0,0.0,8.0,5.0,8.0,6.0
+Materials_&_Chemicals,0.0,0.0,0.0,0.0,0.0,7.0,8.0,9.0
+Technology,0.0,0.0,0.0,0.0,0.0,0.0,8.0,7.0
+Telecommunications_&_Media,0.0,0.0,0.0,0.0,0.0,0.0,0.0,7.0
+Trading_&_Logistics,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0

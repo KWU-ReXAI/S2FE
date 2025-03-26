@@ -18,7 +18,7 @@ with open(symbol_file, 'r', encoding='utf-8-sig') as f:
         parts = line.strip().split(',')
         if len(parts) >= 3:
             code, name, sector = parts[0], parts[1], parts[2]
-            stock_info[code] = {"name": name, "sector": sector}
+            stock_info[code.zfill(6)] = {"name": name, "sector": sector}
 
 # 사용할 분기 목록 (영어로 표기)
 quarter_list = ["Q1", "Q2", "Q3", "Q4"]

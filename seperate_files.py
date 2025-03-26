@@ -252,5 +252,4 @@ def remove_specific_codes(file_path):
 # 198: symbol
 #12 18 13 5 29 5 7 1 13 22 33 14 4 2 1
 if __name__ == "__main__":
-    compare_code_and_columns("./data_kr/date_sector/Conglomerate/2019_Q1.csv", "./data_kr/date_sector/Conglomerate/2020_Q2.csv")
-    print_csv_shapes("./data_kr/date_sector/Transportation")
+    save_sector_codes()

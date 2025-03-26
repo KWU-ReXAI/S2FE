@@ -6,7 +6,7 @@ class FinDataLoader:
         self.path = path
         self.stock_list = {}
         
-        with open(f"{path}/kospi_50.txt", 'r') as f:
+        with open(f"{path}/kospi_200.txt", 'r',encoding='utf-8 sig') as f:
             for line in f:
                 code, name, sector = line.strip().split(',')
                 self.stock_list[code] = name

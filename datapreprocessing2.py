@@ -85,15 +85,15 @@ def merge_year_quarter_from_csv(csv_path, drop_cols=None, total_option=False):
     return merged
 
 def concat_k_features(code):
-    df_small = merge_year_quarter_from_csv(f"./data_kr/k_features/소액주주/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시'],False)
-    #df_total = merge_year_quarter_from_csv(f"./data_kr/k_features/주식총수/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시'],False)
+    df_small = merge_year_quarter_from_csv(f"./data_kr/k_features/소액주주/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시','주주 수'],False)
+    df_total = merge_year_quarter_from_csv(f"./data_kr/k_features/주식총수/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시'],False)
     df_prime = merge_year_quarter_from_csv(f"./data_kr/k_features/주요주주_소유보고/{code}.csv",['접수번호','법인구분','회사코드','회사명','대표보고자','발행 회사 관계 임원(등기여부)','발행 회사 관계 임원 직위','발행 회사 관계 주요 주주','결제일시'],False)
-    #df_jeungja = merge_year_quarter_from_csv(f"./data_kr/k_features/증자/{code}.csv",['접수번호','법인구분','고유번호','회사코드','회사명','증자일자','증자방식','증자주식종류','구분','결제일시'],False)
+    df_jeungja = merge_year_quarter_from_csv(f"./data_kr/k_features/증자/{code}.csv",['접수번호','법인구분','고유번호','회사코드','회사명','증자일자','증자방식','증자주식종류','구분','결제일시'],False)
     df_employee = merge_year_quarter_from_csv(f"./data_kr/k_features/직원현황/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명', '직원 수','총 급여액','비고', '결제일시'],False)
     df_maximum = merge_year_quarter_from_csv(f"./data_kr/k_features/최대주주/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명','주식종류','이름','관계', '비고', '결제일시'],True)
-    #df_maximum_change = merge_year_quarter_from_csv(f"./data_kr/k_features/최대주주변동/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명','변동일','최대주주명','보유 주식 수','변동원인', '비고','기타', '결제일시'],False)
+    df_maximum_change = merge_year_quarter_from_csv(f"./data_kr/k_features/최대주주변동/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명','변동일','최대주주명','보유 주식 수','변동원인', '비고','기타', '결제일시'],False)
 
-    dfs = [df_small,df_prime,df_employee,df_maximum]
+    dfs = [df_small,df_prime,df_employee,df_maximum,df_total,df_jeungja,df_maximum_change]
     df_concated = pd.concat(dfs,axis=1)
     return df_concated
 
@@ -215,7 +215,10 @@ def get_end_price(year, quarter, ticker):
 
 
 if args.isall == "False":
-    cluster_list = [['Agriculture_&_Food', 'Industrials_&_Machinery', 'Transportation'], ['Automotive_&_Parts', 'Financials'], ['Conglomerate', 'Construction_&_Real_Estate'], ['Consumer_Goods_&_Retail', 'Consumer_Services', 'Energy_&_Utilities', 'Healthcare', 'Materials_&_Chemicals', 'Technology', 'Telecommunications_&_Media', 'Trading_&_Logistics']]
+    cluster_list = [['건설', '금속', '음식료·담배'], ['기계·장비', '비금속', '섬유·의류', '오락·문화', '일반서비스', '제약'],
+                    ['기타금융', '운송·창고', '운송장비·부품', '유통', '전기·가스', '전기·전자', '종이·목재', '통신', '화학'], ['IT 서비스', '기타제조']]
+
+
 
     for cluster_index in range(4):
         sector_list = cluster_list[cluster_index]
@@ -415,12 +418,9 @@ if args.isall == "False":
     exit()
 elif args.isall == "cluster":
     cluster_list = [
-        ['Agriculture_&_Food'], ['Consumer_Goods_&_Retail'], ['Consumer_Services'], ['Healthcare'],
-         ['Automotive_&_Parts'], ['Construction_&_Real_Estate'], ['Industrials_&_Machinery'], ['Materials_&_Chemicals'],
-         ['Transportation'], ['Financials'], ['Energy_&_Utilities'], ['Trading_&_Logistics'], ['Conglomerate'],
-         ['Technology'], ['Telecommunications_&_Media']
-    ]
-    for cluster_index in range(15):
+        ['유통'], ['음식료·담배'], ['제약'] ,['운송·창고'], ['기타금융'] ,['화학'] ,['운송장비·부품'] ,['비금속'] ,['전기·전자'] ,['금속'] ,['건설']
+         ,['섬유·의류'] ,['전기·가스'] ,['종이·목재'] ,['일반서비스'] ,['통신'] ,['기계·장비'] ,['IT 서비스'] ,['오락·문화'] ,['기타제조']]
+    for cluster_index in range(20):
         sector_list = cluster_list[cluster_index]
         clustered_ticker_list = []
 
@@ -617,12 +617,8 @@ elif args.isall == "cluster":
 
     exit()
 elif args.isall == "True":
-    cluster_list = [
-        ['Agriculture_&_Food', 'Consumer_Goods_&_Retail', 'Consumer_Services', 'Healthcare',
-        'Automotive_&_Parts', 'Construction_&_Real_Estate', 'Industrials_&_Machinery', 'Materials_&_Chemicals',
-         'Transportation', 'Financials', 'Energy_&_Utilities', 'Trading_&_Logistics', 'Conglomerate',
-        'Technology', 'Telecommunications_&_Media']
-    ]
+    cluster_list = [['유통', '음식료·담배', '제약', '운송·창고', '기타금융', '화학', '운송장비·부품', '비금속' ,'전기·전자', '금속', '건설'
+         ,'섬유·의류' ,'전기·가스', '종이·목재', '일반서비스', '통신', '기계·장비', 'IT 서비스', '오락·문화', '기타제조']]
     for cluster_index in range(1):
         sector_list = cluster_list[cluster_index]
         clustered_ticker_list = []

@@ -88,7 +88,7 @@ for phase in DM.phase_list:
 
 '''
 for phase in DM.phase_list:
-    dup_features = np.zeros((15, 15))
+    dup_features = np.zeros((20, 20))
     for sector in sector_list:
         df_data, _, _ = DM.data_phase(sector, phase, True,isall=True)
         sector_features = df_data.columns[:-1]

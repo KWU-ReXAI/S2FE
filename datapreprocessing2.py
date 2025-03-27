@@ -22,18 +22,16 @@ args = parser.parse_args()
 ks200_price = pd.read_csv("./data_kr/price/KS200.csv")
 df_col = {}
 df_col_k = {}
-
-imputer = SoftImpute(verbose=False)
-#imputer = SimpleImputer(strategy='median')
-#imputer = KNNImputer(n_neighbors=5)
+df_col_m = {}
 
 impute = SoftImpute(verbose=False)
 #impute = SimpleImputer(strategy='median')
 #impute = KNNImputer(n_neighbors=5)
 
-# f: 재무제표 / k: 기업특징
+# f: 재무제표 / k: 기업특징 / m: 거시경제지표
 n_features_f = 5
 n_features_k = 5
+n_features_m = 5
 
 def merge_year_quarter_from_csv(csv_path, drop_cols=None, total_option=False):
     if drop_cols is None:
@@ -215,8 +213,7 @@ def get_end_price(year, quarter, ticker):
 
 
 if args.isall == "False":
-    cluster_list = [['건설', '금속', '음식료·담배'], ['기계·장비', '비금속', '섬유·의류', '오락·문화', '일반서비스', '제약'],
-                    ['기타금융', '운송·창고', '운송장비·부품', '유통', '전기·가스', '전기·전자', '종이·목재', '통신', '화학'], ['IT 서비스', '기타제조']]
+    cluster_list =[['IT 서비스'], ['건설', '운송·창고', '전기·가스', '전기·전자', '제약', '화학'], ['금속', '기계·장비'], ['종이·목재', '통신', '기타금융']]
 
 
 
@@ -247,8 +244,9 @@ if args.isall == "False":
             ticker_str = str(ticker).zfill(6)
             df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
             df_kfeature = concat_k_features(ticker_str)
-
-            df_data = pd.concat([df_data, df_kfeature], axis=1)
+            df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
+            df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+            df_data = pd.concat([df_data, df_macro,df_kfeature], axis=1)
 
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
             ###
@@ -354,12 +352,12 @@ if args.isall == "False":
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
         # Feature Matrix (X) Imputation
-        X_imputed = imputer.fit_transform(df_processing_data.iloc[:, 5:19])
+        X_imputed = impute.fit_transform(df_processing_data.iloc[:, 5:19])
         df_processing_data.iloc[:, 5:19] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:19],
                                                         index=df_processing_data.index)
 
         # Target (y) Imputation
-        y_imputed = imputer.fit_transform(df_processing_data.iloc[:, -2:-1])
+        y_imputed = impute.fit_transform(df_processing_data.iloc[:, -2:-1])
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
@@ -375,9 +373,22 @@ if args.isall == "False":
         select_col = feature_importance.index[:n_features_f]
         df_col[sector] = select_col
 
+        rgr_m = RandomForestRegressor()
+        rgr_m.fit(df_processing_data.iloc[:, 19:25], df_processing_data.iloc[:, -2:-1])
+        feature_importance_m = pd.Series(rgr_m.feature_importances_,
+                                         index=df_processing_data.columns[19:25]).sort_values(
+            ascending=False)
+        feature_importance_m[:n_features_m].to_csv(
+            f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_M_feature_imp.csv",
+            encoding='utf-8-sig')
+
+        select_col_m = feature_importance_m.index[:n_features_m]
+        df_col_m[sector] = select_col_m
+
+
         rgr_k = RandomForestRegressor()
-        rgr_k.fit(df_processing_data.iloc[:, 19:-2], df_processing_data.iloc[:, -2:-1])
-        feature_importance_k = pd.Series(rgr_k.feature_importances_, index=df_processing_data.columns[19:-2]).sort_values(
+        rgr_k.fit(df_processing_data.iloc[:, 25:-3], df_processing_data.iloc[:, -2:-1])
+        feature_importance_k = pd.Series(rgr_k.feature_importances_, index=df_processing_data.columns[25:-3]).sort_values(
             ascending=False)
         feature_importance_k[:n_features_k].to_csv(
             f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_K_feature_imp.csv",
@@ -387,7 +398,7 @@ if args.isall == "False":
         df_col_k[sector] = select_col_k
 
         df_processed_data = pd.concat(
-            [df_processing_data.iloc[:, 1:5], df_processing_data[select_col], df_processing_data[select_col_k],df_processing_data.iloc[:,-2:]], axis=1)
+            [df_processing_data.iloc[:, 1:5], df_processing_data.iloc[:,-3:-2], df_processing_data[select_col], df_processing_data[select_col_m], df_processing_data[select_col_k],df_processing_data.iloc[:,-2:]], axis=1)
 
         start_year = 2015
         start_quarter = 4
@@ -447,8 +458,10 @@ elif args.isall == "cluster":
             ticker_str = str(ticker).zfill(6)
             df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
             df_kfeature = concat_k_features(ticker_str)
+            df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
+            df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+            df_data = pd.concat([df_data, df_macro, df_kfeature], axis=1)
 
-            df_data = pd.concat([df_data, df_kfeature], axis=1)
 
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
             ###
@@ -553,12 +566,12 @@ elif args.isall == "cluster":
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
         # Feature Matrix (X) Imputation
-        X_imputed = imputer.fit_transform(df_processing_data.iloc[:, 5:19])
+        X_imputed = impute.fit_transform(df_processing_data.iloc[:, 5:19])
         df_processing_data.iloc[:, 5:19] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:19],
                                                         index=df_processing_data.index)
 
         # Target (y) Imputation
-        y_imputed = imputer.fit_transform(df_processing_data.iloc[:, -2:-1])
+        y_imputed = impute.fit_transform(df_processing_data.iloc[:, -2:-1])
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
@@ -574,10 +587,23 @@ elif args.isall == "cluster":
         select_col = feature_importance.index[:n_features_f]
         df_col[sector] = select_col
 
+        rgr_m = RandomForestRegressor()
+        rgr_m.fit(df_processing_data.iloc[:, 19:25], df_processing_data.iloc[:, -2:-1])
+        feature_importance_m = pd.Series(rgr_m.feature_importances_,
+                                         index=df_processing_data.columns[19:25]).sort_values(
+            ascending=False)
+        feature_importance_m[:n_features_m].to_csv(
+            f"./data_kr/financial_with_Label/{sector_list[0]}/{sector_list[0]}_M_feature_imp.csv",
+            encoding='utf-8-sig')
+
+        select_col_m = feature_importance_m.index[:n_features_m]
+        df_col_m[sector] = select_col_m
+
         rgr_k = RandomForestRegressor()
-        rgr_k.fit(df_processing_data.iloc[:, 19:-2], df_processing_data.iloc[:, -2:-1])
+        rgr_k.fit(df_processing_data.iloc[:, 25:-3], df_processing_data.iloc[:, -2:-1])
         feature_importance_k = pd.Series(rgr_k.feature_importances_,
-                                         index=df_processing_data.columns[19:-2]).sort_values(ascending=False)
+                                         index=df_processing_data.columns[25:-3]).sort_values(
+            ascending=False)
         feature_importance_k[:n_features_k].to_csv(
             f"./data_kr/financial_with_Label/{sector_list[0]}/{sector_list[0]}_K_feature_imp.csv",
             encoding='utf-8-sig')
@@ -586,8 +612,9 @@ elif args.isall == "cluster":
         df_col_k[sector] = select_col_k
 
         df_processed_data = pd.concat(
-            [df_processing_data.iloc[:, 1:5], df_processing_data[select_col], df_processing_data[select_col_k],
-             df_processing_data.iloc[:, -2:]], axis=1)
+            [df_processing_data.iloc[:, 1:5], df_processing_data.iloc[:, -3:-2], df_processing_data[select_col],
+             df_processing_data[select_col_m], df_processing_data[select_col_k], df_processing_data.iloc[:, -2:]],
+            axis=1)
 
         start_year = 2015
         start_quarter = 4
@@ -646,8 +673,9 @@ elif args.isall == "True":
             ticker_str = str(ticker).zfill(6)
             df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
             df_kfeature = concat_k_features(ticker_str)
-
-            df_data = pd.concat([df_data, df_kfeature], axis=1)
+            df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
+            df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+            df_data = pd.concat([df_data, df_macro, df_kfeature], axis=1)
 
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
             ###
@@ -752,12 +780,12 @@ elif args.isall == "True":
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
         # Feature Matrix (X) Imputation
-        X_imputed = imputer.fit_transform(df_processing_data.iloc[:, 5:19])
+        X_imputed = impute.fit_transform(df_processing_data.iloc[:, 5:19])
         df_processing_data.iloc[:, 5:19] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:19],
                                                         index=df_processing_data.index)
 
         # Target (y) Imputation
-        y_imputed = imputer.fit_transform(df_processing_data.iloc[:, -2:-1])
+        y_imputed = impute.fit_transform(df_processing_data.iloc[:, -2:-1])
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
@@ -773,10 +801,23 @@ elif args.isall == "True":
         select_col = feature_importance.index[:n_features_f]
         df_col[sector] = select_col
 
+        rgr_m = RandomForestRegressor()
+        rgr_m.fit(df_processing_data.iloc[:, 19:25], df_processing_data.iloc[:, -2:-1])
+        feature_importance_m = pd.Series(rgr_m.feature_importances_,
+                                         index=df_processing_data.columns[19:25]).sort_values(
+            ascending=False)
+        feature_importance_m[:n_features_m].to_csv(
+            f"./data_kr/clustered_data/ALL/ALL_M_feature_imp.csv",
+            encoding='utf-8-sig')
+
+        select_col_m = feature_importance_m.index[:n_features_m]
+        df_col_m[sector] = select_col_m
+
         rgr_k = RandomForestRegressor()
-        rgr_k.fit(df_processing_data.iloc[:, 19:-2], df_processing_data.iloc[:, -2:-1])
+        rgr_k.fit(df_processing_data.iloc[:, 25:-3], df_processing_data.iloc[:, -2:-1])
         feature_importance_k = pd.Series(rgr_k.feature_importances_,
-                                         index=df_processing_data.columns[19:-2]).sort_values(ascending=False)
+                                         index=df_processing_data.columns[25:-3]).sort_values(
+            ascending=False)
         feature_importance_k[:n_features_k].to_csv(
             f"./data_kr/clustered_data/ALL/ALL_K_feature_imp.csv",
             encoding='utf-8-sig')
@@ -785,8 +826,9 @@ elif args.isall == "True":
         df_col_k[sector] = select_col_k
 
         df_processed_data = pd.concat(
-            [df_processing_data.iloc[:, 1:5], df_processing_data[select_col], df_processing_data[select_col_k],
-             df_processing_data.iloc[:, -2:]], axis=1)
+            [df_processing_data.iloc[:, 1:5], df_processing_data.iloc[:, -3:-2], df_processing_data[select_col],
+             df_processing_data[select_col_m], df_processing_data[select_col_k], df_processing_data.iloc[:, -2:]],
+            axis=1)
 
 
         start_year = 2015

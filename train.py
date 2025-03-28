@@ -42,6 +42,7 @@ recordmodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, 
 recordmodel.recordParameter()
 
 for trainNum in range(0, args.testNum):
+    print(f"\nTrain for Train_Model_{trainNum+1}")
     dir = f"./result/{args.dir_name}_{trainNum+1}"  # 결과를 저장할 디렉토리 생성
     if os.path.isdir(dir) == False:
         os.mkdir(dir)

@@ -29,9 +29,9 @@ impute = SoftImpute(verbose=False)
 #impute = KNNImputer(n_neighbors=5)
 
 # f: 재무제표 / k: 기업특징 / m: 거시경제지표
-n_features_f = 5
+n_features_f = 2
 n_features_k = 5
-n_features_m = 5
+n_features_m = 2
 
 def merge_year_quarter_from_csv(csv_path, drop_cols=None, total_option=False):
     if drop_cols is None:
@@ -213,7 +213,7 @@ def get_end_price(year, quarter, ticker):
 
 
 if args.isall == "False":
-    cluster_list =[['IT 서비스'], ['건설', '운송·창고', '전기·가스', '전기·전자', '제약', '화학'], ['금속', '기계·장비'], ['종이·목재', '통신', '기타금융']]
+    cluster_list =[['IT 서비스', '건설', '금속', '운송장비·부품'], ['기타금융', '비금속', '섬유·의류', '오락·문화', '운송·창고', '유통', '음식료·담배', '일반서비스', '제약', '종이·목재', '통신', '화학'], ['기계·장비', '전기·전자'], ['기타제조', '전기·가스']]
 
 
 
@@ -258,7 +258,7 @@ if args.isall == "False":
             #df_data = pd.concat([df_data.iloc[:,:5],pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))])
 
             df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
-            df_pct_change.columns = [col + "변화율" for col in df_pct_change.columns]
+            df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
             df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
             df_data.replace([-np.inf, np.inf], 0.0, inplace=True)
@@ -352,8 +352,8 @@ if args.isall == "False":
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
         # Feature Matrix (X) Imputation
-        X_imputed = impute.fit_transform(df_processing_data.iloc[:, 5:19])
-        df_processing_data.iloc[:, 5:19] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:19],
+        X_imputed = impute.fit_transform(df_processing_data.iloc[:, 5:-2])
+        df_processing_data.iloc[:, 5:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
                                                         index=df_processing_data.index)
 
         # Target (y) Imputation
@@ -472,7 +472,7 @@ elif args.isall == "cluster":
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
 
             df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
-            df_pct_change.columns = [col + "변화율" for col in df_pct_change.columns]
+            df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
             df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
             df_data.replace([-np.inf, np.inf], 0.0, inplace=True)
@@ -566,8 +566,8 @@ elif args.isall == "cluster":
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
         # Feature Matrix (X) Imputation
-        X_imputed = impute.fit_transform(df_processing_data.iloc[:, 5:19])
-        df_processing_data.iloc[:, 5:19] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:19],
+        X_imputed = impute.fit_transform(df_processing_data.iloc[:, 5:-2])
+        df_processing_data.iloc[:, 5:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
                                                         index=df_processing_data.index)
 
         # Target (y) Imputation
@@ -686,7 +686,7 @@ elif args.isall == "True":
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
 
             df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
-            df_pct_change.columns = [col + "변화율" for col in df_pct_change.columns]
+            df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
             df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
             df_data.replace([-np.inf, np.inf], 0.0, inplace=True)
@@ -780,8 +780,8 @@ elif args.isall == "True":
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
         # Feature Matrix (X) Imputation
-        X_imputed = impute.fit_transform(df_processing_data.iloc[:, 5:19])
-        df_processing_data.iloc[:, 5:19] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:19],
+        X_imputed = impute.fit_transform(df_processing_data.iloc[:, 5:-2])
+        df_processing_data.iloc[:, 5:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
                                                         index=df_processing_data.index)
 
         # Target (y) Imputation

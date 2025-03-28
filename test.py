@@ -22,7 +22,7 @@ DM = DataManager(6) # 특징 개수 4개로 설정하여 데이터 매니저 초
 DM.create_date_list()
 device = torch.device('cpu')
 
-inter_n = 0.1
+inter_n = 3
 agg = "inter"
 Impute = "SoftImpute"
 phase_list = DM.phase_list.keys()

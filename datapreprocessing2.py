@@ -33,13 +33,20 @@ n_features_f = 2
 n_features_k = 5
 n_features_m = 2
 
+def add_prefix_to_columns(df, prefix, exclude_cols=None):
+    if exclude_cols is None:
+        exclude_cols = []
+    new_columns = {col: (f"{prefix}{col}" if col not in exclude_cols else col) for col in df.columns}
+    return df.rename(columns=new_columns)
+
+
 def merge_year_quarter_from_csv(csv_path, drop_cols=None, total_option=False):
     if drop_cols is None:
         drop_cols = []
 
     # CSV 파일 읽기
     df = pd.read_csv(csv_path)
-    #df = df.fillna(0)
+    # df = df.fillna(0)
 
     # total_option이 True이고 "관계" 컬럼이 존재한다면, "관계" 값이 "계"인 행 제거
     if total_option and "이름" in df.columns:
@@ -77,21 +84,26 @@ def merge_year_quarter_from_csv(csv_path, drop_cols=None, total_option=False):
 
     full_index_df = pd.DataFrame(all_pairs, columns=['연도', '분기'])
 
-    merged = pd.merge(full_index_df, grouped, on=['연도','분기'], how='left')
+    # 기존 데이터와 결합
+    merged = pd.merge(full_index_df, grouped, on=['연도', '분기'], how='left')
+
+    # 존재하지 않는 값 최근 값으로 채우기
+    merged.ffill(inplace=True)
+
     merged.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
 
     return merged
 
 def concat_k_features(code):
-    df_small = merge_year_quarter_from_csv(f"./data_kr/k_features/소액주주/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시','주주 수'],False)
+    df_small = merge_year_quarter_from_csv(f"./data_kr/k_features/소액주주/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시','주주 수','주주 비율','보유 주식 비율'],False)
     df_total = merge_year_quarter_from_csv(f"./data_kr/k_features/주식총수/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시'],False)
     df_prime = merge_year_quarter_from_csv(f"./data_kr/k_features/주요주주_소유보고/{code}.csv",['접수번호','법인구분','회사코드','회사명','대표보고자','발행 회사 관계 임원(등기여부)','발행 회사 관계 임원 직위','발행 회사 관계 주요 주주','결제일시'],False)
     df_jeungja = merge_year_quarter_from_csv(f"./data_kr/k_features/증자/{code}.csv",['접수번호','법인구분','고유번호','회사코드','회사명','증자일자','증자방식','증자주식종류','구분','결제일시'],False)
     df_employee = merge_year_quarter_from_csv(f"./data_kr/k_features/직원현황/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명', '직원 수','총 급여액','비고', '결제일시'],False)
     df_maximum = merge_year_quarter_from_csv(f"./data_kr/k_features/최대주주/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명','주식종류','이름','관계', '비고', '결제일시'],True)
-    df_maximum_change = merge_year_quarter_from_csv(f"./data_kr/k_features/최대주주변동/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명','변동일','최대주주명','보유 주식 수','변동원인', '비고','기타', '결제일시'],False)
 
-    dfs = [df_small,df_prime,df_employee,df_maximum,df_total,df_jeungja,df_maximum_change]
+
+    dfs = [df_small,df_prime,df_employee,df_maximum,df_total,df_jeungja]
     df_concated = pd.concat(dfs,axis=1)
     return df_concated
 
@@ -213,9 +225,7 @@ def get_end_price(year, quarter, ticker):
 
 
 if args.isall == "False":
-    cluster_list =[['IT 서비스', '건설', '금속', '운송장비·부품'], ['기타금융', '비금속', '섬유·의류', '오락·문화', '운송·창고', '유통', '음식료·담배', '일반서비스', '제약', '종이·목재', '통신', '화학'], ['기계·장비', '전기·전자'], ['기타제조', '전기·가스']]
-
-
+    cluster_list =[['IT 서비스'], ['기타금융', '비금속', '섬유·의류', '오락·문화', '운송·창고', '유통', '음식료·담배', '일반서비스', '제약', '종이·목재', '통신', '화학'], ['기계·장비', '전기·전자'], ['기타제조', '전기·가스']]
 
     for cluster_index in range(4):
         sector_list = cluster_list[cluster_index]
@@ -234,10 +244,15 @@ if args.isall == "False":
                 ticker_str = str(ticker).zfill(6)
                 df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv")
                 df_tmp = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                df_sector_stocks = pd.concat([df_sector_stocks, df_tmp])
+                df_kfeature_tmp = concat_k_features(ticker_str)
+                df_macro_tmp = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
+                df_macro_tmp.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+                df_concat = pd.concat([df_tmp, df_macro_tmp, df_kfeature_tmp], axis=1)
+                df_sector_stocks = pd.concat([df_sector_stocks, df_concat])
 
         nan_ratio = df_sector_stocks.isna().mean()
         over_50_columns = nan_ratio[nan_ratio >= 0.5].index.to_list()
+
         for ticker in tqdm(clustered_ticker_list):
             if ticker == "code":
                 continue
@@ -246,7 +261,14 @@ if args.isall == "False":
             df_kfeature = concat_k_features(ticker_str)
             df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
             df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+            df_data = add_prefix_to_columns(df_data, "F_", exclude_cols=["year", "quarter","code","name","sector"])
+            df_kfeature = add_prefix_to_columns(df_kfeature, "K_", exclude_cols=["연도", "분기"])
+            df_macro = add_prefix_to_columns(df_macro, "M_", exclude_cols=["연도", "분기"])
             df_data = pd.concat([df_data, df_macro,df_kfeature], axis=1)
+
+            base_cols = ['code', 'name', 'year', 'quarter', 'sector']
+            feature_cols = df_data.filter(regex="^(F_|M_|K_)").columns.tolist()
+            final_cols = base_cols + feature_cols
 
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
             ###
@@ -352,6 +374,14 @@ if args.isall == "False":
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
         # Feature Matrix (X) Imputation
+
+        base_cols = ['code', 'name','year','quarter','sector']  # 예시로 기본 정보 열을 지정합니다.
+        feature_cols = df_processing_data.filter(regex="^(F_|M_|K_)").columns.tolist()
+        final_cols = base_cols + feature_cols + ['Relative Return','Label', 'Code']
+
+        # 최종 DataFrame 재정렬
+        df_processing_data = df_processing_data[final_cols]
+
         X_imputed = impute.fit_transform(df_processing_data.iloc[:, 5:-2])
         df_processing_data.iloc[:, 5:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
                                                         index=df_processing_data.index)
@@ -361,44 +391,46 @@ if args.isall == "False":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
+        # 재무제표 피쳐 중요도 계산 (접두어 'F_' 사용)
+        financial_cols = df_processing_data.filter(regex="^F_").columns
         rgr = RandomForestRegressor()
-        rgr.fit(df_processing_data.iloc[:, 5:19], df_processing_data.iloc[:, -2:-1])
-
-        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[5:19]).sort_values(
-            ascending=False)
+        rgr.fit(df_processing_data[financial_cols], df_processing_data.iloc[:, -2:-1])
+        feature_importance = pd.Series(rgr.feature_importances_, index=financial_cols).sort_values(ascending=False)
         feature_importance[:n_features_f].to_csv(
             f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
-            encoding='utf-8-sig')
-
+            encoding='utf-8-sig'
+        )
         select_col = feature_importance.index[:n_features_f]
         df_col[sector] = select_col
 
+        # 거시경제 피쳐 중요도 계산 (접두어 'M_' 사용)
+        macro_cols = df_processing_data.filter(regex="^M_").columns
         rgr_m = RandomForestRegressor()
-        rgr_m.fit(df_processing_data.iloc[:, 19:25], df_processing_data.iloc[:, -2:-1])
-        feature_importance_m = pd.Series(rgr_m.feature_importances_,
-                                         index=df_processing_data.columns[19:25]).sort_values(
-            ascending=False)
+        rgr_m.fit(df_processing_data[macro_cols], df_processing_data.iloc[:, -2:-1])
+        feature_importance_m = pd.Series(rgr_m.feature_importances_, index=macro_cols).sort_values(ascending=False)
         feature_importance_m[:n_features_m].to_csv(
             f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_M_feature_imp.csv",
-            encoding='utf-8-sig')
-
+            encoding='utf-8-sig'
+        )
         select_col_m = feature_importance_m.index[:n_features_m]
         df_col_m[sector] = select_col_m
 
-
+        # 기업특징 피쳐 중요도 계산 (접두어 'K_' 사용)
+        k_feature_cols = df_processing_data.filter(regex="^K_").columns
         rgr_k = RandomForestRegressor()
-        rgr_k.fit(df_processing_data.iloc[:, 25:-3], df_processing_data.iloc[:, -2:-1])
-        feature_importance_k = pd.Series(rgr_k.feature_importances_, index=df_processing_data.columns[25:-3]).sort_values(
-            ascending=False)
+        rgr_k.fit(df_processing_data[k_feature_cols], df_processing_data.iloc[:, -2:-1])
+        feature_importance_k = pd.Series(rgr_k.feature_importances_, index=k_feature_cols).sort_values(ascending=False)
         feature_importance_k[:n_features_k].to_csv(
             f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_K_feature_imp.csv",
-            encoding='utf-8-sig')
-
+            encoding='utf-8-sig'
+        )
         select_col_k = feature_importance_k.index[:n_features_k]
         df_col_k[sector] = select_col_k
 
         df_processed_data = pd.concat(
             [df_processing_data.iloc[:, 1:5], df_processing_data.iloc[:,-3:-2], df_processing_data[select_col], df_processing_data[select_col_m], df_processing_data[select_col_k],df_processing_data.iloc[:,-2:]], axis=1)
+
+        df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|K_)', '', regex=True)
 
         start_year = 2015
         start_quarter = 4
@@ -448,7 +480,12 @@ elif args.isall == "cluster":
                 ticker_str = str(ticker).zfill(6)
                 df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv")
                 df_tmp = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                df_sector_stocks = pd.concat([df_sector_stocks, df_tmp])
+                df_kfeature_tmp = concat_k_features(f"{ticker_str}")
+                df_macro_tmp = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
+                df_macro_tmp.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+
+                df_concat = pd.concat([df_tmp, df_macro_tmp, df_kfeature_tmp], axis=1)
+                df_sector_stocks = pd.concat([df_sector_stocks, df_concat])
 
         nan_ratio = df_sector_stocks.isna().mean()
         over_50_columns = nan_ratio[nan_ratio >= 0.5].index.to_list()
@@ -460,8 +497,14 @@ elif args.isall == "cluster":
             df_kfeature = concat_k_features(ticker_str)
             df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
             df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+            df_data = add_prefix_to_columns(df_data, "F_", exclude_cols=["year", "quarter", "code", "name", "sector"])
+            df_kfeature = add_prefix_to_columns(df_kfeature, "K_", exclude_cols=["연도", "분기"])
+            df_macro = add_prefix_to_columns(df_macro, "M_", exclude_cols=["연도", "분기"])
             df_data = pd.concat([df_data, df_macro, df_kfeature], axis=1)
 
+            base_cols = ['code', 'name', 'year', 'quarter', 'sector']
+            feature_cols = df_data.filter(regex="^(F_|M_|K_)").columns.tolist()
+            final_cols = base_cols + feature_cols
 
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
             ###
@@ -470,6 +513,7 @@ elif args.isall == "cluster":
                 df_data[col] = df_data[col].replace('-', np.nan).astype(float)
             ###
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
+            # df_data = pd.concat([df_data.iloc[:,:5],pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))])
 
             df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
             df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
@@ -566,6 +610,14 @@ elif args.isall == "cluster":
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
         # Feature Matrix (X) Imputation
+
+        base_cols = ['code', 'name', 'year', 'quarter', 'sector']  # 예시로 기본 정보 열을 지정합니다.
+        feature_cols = df_processing_data.filter(regex="^(F_|M_|K_)").columns.tolist()
+        final_cols = base_cols + feature_cols + ['Relative Return', 'Label', 'Code']
+
+        # 최종 DataFrame 재정렬
+        df_processing_data = df_processing_data[final_cols]
+
         X_imputed = impute.fit_transform(df_processing_data.iloc[:, 5:-2])
         df_processing_data.iloc[:, 5:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
                                                         index=df_processing_data.index)
@@ -575,11 +627,11 @@ elif args.isall == "cluster":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
+        # 재무제표 피쳐 중요도 계산 (접두어 'F_' 사용)
+        financial_cols = df_processing_data.filter(regex="^F_").columns
         rgr = RandomForestRegressor()
-        rgr.fit(df_processing_data.iloc[:, 5:19], df_processing_data.iloc[:, -2:-1])
-
-        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[5:19]).sort_values(
-            ascending=False)
+        rgr.fit(df_processing_data[financial_cols], df_processing_data.iloc[:, -2:-1])
+        feature_importance = pd.Series(rgr.feature_importances_, index=financial_cols).sort_values(ascending=False)
         feature_importance[:n_features_f].to_csv(
             f"./data_kr/financial_with_Label/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
             encoding='utf-8-sig')
@@ -587,11 +639,11 @@ elif args.isall == "cluster":
         select_col = feature_importance.index[:n_features_f]
         df_col[sector] = select_col
 
+        # 거시경제 피쳐 중요도 계산 (접두어 'M_' 사용)
+        macro_cols = df_processing_data.filter(regex="^M_").columns
         rgr_m = RandomForestRegressor()
-        rgr_m.fit(df_processing_data.iloc[:, 19:25], df_processing_data.iloc[:, -2:-1])
-        feature_importance_m = pd.Series(rgr_m.feature_importances_,
-                                         index=df_processing_data.columns[19:25]).sort_values(
-            ascending=False)
+        rgr_m.fit(df_processing_data[macro_cols], df_processing_data.iloc[:, -2:-1])
+        feature_importance_m = pd.Series(rgr_m.feature_importances_, index=macro_cols).sort_values(ascending=False)
         feature_importance_m[:n_features_m].to_csv(
             f"./data_kr/financial_with_Label/{sector_list[0]}/{sector_list[0]}_M_feature_imp.csv",
             encoding='utf-8-sig')
@@ -599,11 +651,11 @@ elif args.isall == "cluster":
         select_col_m = feature_importance_m.index[:n_features_m]
         df_col_m[sector] = select_col_m
 
+        # 기업특징 피쳐 중요도 계산 (접두어 'K_' 사용)
+        k_feature_cols = df_processing_data.filter(regex="^K_").columns
         rgr_k = RandomForestRegressor()
-        rgr_k.fit(df_processing_data.iloc[:, 25:-3], df_processing_data.iloc[:, -2:-1])
-        feature_importance_k = pd.Series(rgr_k.feature_importances_,
-                                         index=df_processing_data.columns[25:-3]).sort_values(
-            ascending=False)
+        rgr_k.fit(df_processing_data[k_feature_cols], df_processing_data.iloc[:, -2:-1])
+        feature_importance_k = pd.Series(rgr_k.feature_importances_, index=k_feature_cols).sort_values(ascending=False)
         feature_importance_k[:n_features_k].to_csv(
             f"./data_kr/financial_with_Label/{sector_list[0]}/{sector_list[0]}_K_feature_imp.csv",
             encoding='utf-8-sig')
@@ -615,6 +667,8 @@ elif args.isall == "cluster":
             [df_processing_data.iloc[:, 1:5], df_processing_data.iloc[:, -3:-2], df_processing_data[select_col],
              df_processing_data[select_col_m], df_processing_data[select_col_k], df_processing_data.iloc[:, -2:]],
             axis=1)
+
+        df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|K_)', '', regex=True)
 
         start_year = 2015
         start_quarter = 4
@@ -663,10 +717,15 @@ elif args.isall == "True":
                 ticker_str = str(ticker).zfill(6)
                 df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv")
                 df_tmp = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                df_sector_stocks = pd.concat([df_sector_stocks, df_tmp])
+                df_kfeature_tmp = concat_k_features(ticker_str)
+                df_macro_tmp = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
+                df_macro_tmp.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+                df_concat = pd.concat([df_tmp, df_macro_tmp, df_kfeature_tmp], axis=1)
+                df_sector_stocks = pd.concat([df_sector_stocks, df_concat])
 
         nan_ratio = df_sector_stocks.isna().mean()
         over_50_columns = nan_ratio[nan_ratio >= 0.5].index.to_list()
+
         for ticker in tqdm(clustered_ticker_list):
             if ticker == "code":
                 continue
@@ -675,7 +734,14 @@ elif args.isall == "True":
             df_kfeature = concat_k_features(ticker_str)
             df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
             df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+            df_data = add_prefix_to_columns(df_data, "F_", exclude_cols=["year", "quarter", "code", "name", "sector"])
+            df_kfeature = add_prefix_to_columns(df_kfeature, "K_", exclude_cols=["연도", "분기"])
+            df_macro = add_prefix_to_columns(df_macro, "M_", exclude_cols=["연도", "분기"])
             df_data = pd.concat([df_data, df_macro, df_kfeature], axis=1)
+
+            base_cols = ['code', 'name', 'year', 'quarter', 'sector']
+            feature_cols = df_data.filter(regex="^(F_|M_|K_)").columns.tolist()
+            final_cols = base_cols + feature_cols
 
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
             ###
@@ -684,6 +750,7 @@ elif args.isall == "True":
                 df_data[col] = df_data[col].replace('-', np.nan).astype(float)
             ###
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
+            # df_data = pd.concat([df_data.iloc[:,:5],pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))])
 
             df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
             df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
@@ -780,6 +847,14 @@ elif args.isall == "True":
         # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
 
         # Feature Matrix (X) Imputation
+
+        base_cols = ['code', 'name', 'year', 'quarter', 'sector']  # 예시로 기본 정보 열을 지정합니다.
+        feature_cols = df_processing_data.filter(regex="^(F_|M_|K_)").columns.tolist()
+        final_cols = base_cols + feature_cols + ['Relative Return', 'Label', 'Code']
+
+        # 최종 DataFrame 재정렬
+        df_processing_data = df_processing_data[final_cols]
+
         X_imputed = impute.fit_transform(df_processing_data.iloc[:, 5:-2])
         df_processing_data.iloc[:, 5:-2] = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
                                                         index=df_processing_data.index)
@@ -789,11 +864,11 @@ elif args.isall == "True":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
+        # 재무제표 피쳐 중요도 계산 (접두어 'F_' 사용)
+        financial_cols = df_processing_data.filter(regex="^F_").columns
         rgr = RandomForestRegressor()
-        rgr.fit(df_processing_data.iloc[:, 5:19], df_processing_data.iloc[:, -2:-1])
-
-        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[5:19]).sort_values(
-            ascending=False)
+        rgr.fit(df_processing_data[financial_cols], df_processing_data.iloc[:, -2:-1])
+        feature_importance = pd.Series(rgr.feature_importances_, index=financial_cols).sort_values(ascending=False)
         feature_importance[:n_features_f].to_csv(
             f"./data_kr/clustered_data/ALL/ALL_feature_imp.csv",
             encoding='utf-8-sig')
@@ -801,27 +876,25 @@ elif args.isall == "True":
         select_col = feature_importance.index[:n_features_f]
         df_col[sector] = select_col
 
+        # 거시경제 피쳐 중요도 계산 (접두어 'M_' 사용)
+        macro_cols = df_processing_data.filter(regex="^M_").columns
         rgr_m = RandomForestRegressor()
-        rgr_m.fit(df_processing_data.iloc[:, 19:25], df_processing_data.iloc[:, -2:-1])
-        feature_importance_m = pd.Series(rgr_m.feature_importances_,
-                                         index=df_processing_data.columns[19:25]).sort_values(
-            ascending=False)
+        rgr_m.fit(df_processing_data[macro_cols], df_processing_data.iloc[:, -2:-1])
+        feature_importance_m = pd.Series(rgr_m.feature_importances_, index=macro_cols).sort_values(ascending=False)
         feature_importance_m[:n_features_m].to_csv(
             f"./data_kr/clustered_data/ALL/ALL_M_feature_imp.csv",
             encoding='utf-8-sig')
-
         select_col_m = feature_importance_m.index[:n_features_m]
         df_col_m[sector] = select_col_m
 
+        # 기업특징 피쳐 중요도 계산 (접두어 'K_' 사용)
+        k_feature_cols = df_processing_data.filter(regex="^K_").columns
         rgr_k = RandomForestRegressor()
-        rgr_k.fit(df_processing_data.iloc[:, 25:-3], df_processing_data.iloc[:, -2:-1])
-        feature_importance_k = pd.Series(rgr_k.feature_importances_,
-                                         index=df_processing_data.columns[25:-3]).sort_values(
-            ascending=False)
+        rgr_k.fit(df_processing_data[k_feature_cols], df_processing_data.iloc[:, -2:-1])
+        feature_importance_k = pd.Series(rgr_k.feature_importances_, index=k_feature_cols).sort_values(ascending=False)
         feature_importance_k[:n_features_k].to_csv(
             f"./data_kr/clustered_data/ALL/ALL_K_feature_imp.csv",
             encoding='utf-8-sig')
-
         select_col_k = feature_importance_k.index[:n_features_k]
         df_col_k[sector] = select_col_k
 
@@ -830,6 +903,7 @@ elif args.isall == "True":
              df_processing_data[select_col_m], df_processing_data[select_col_k], df_processing_data.iloc[:, -2:]],
             axis=1)
 
+        df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|K_)', '', regex=True)
 
         start_year = 2015
         start_quarter = 4

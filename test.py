@@ -1,25 +1,43 @@
 import os
+import sys
 os.environ["PYTHONWARNINGS"] = "ignore"
-
+import math
 import warnings
 warnings.filterwarnings('ignore')
-
+import matplotlib.pyplot as plt
 from datamanager import DataManager
 import pandas as pd
-import numpy as np
 from tqdm import tqdm
 import torch
 import joblib
 import argparse
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
 parser.add_argument('--train_dir',type=str,nargs='?',default="train_result_dir") # 결과 파일명
 parser.add_argument('--test_dir',type=str,nargs='?',default="test_result_dir") # 결과 디렉토리 명
+parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 args = parser.parse_args()
-DM = DataManager(4) # 특징 개수 4개로 설정하여 데이터 매니저 초기화
+DM = DataManager(6) # 특징 개수 4개로 설정하여 데이터 매니저 초기화
+DM.create_date_list()
 device = torch.device('cpu')
 
+inter_n = 3
+agg = "inter"
+Impute = "SoftImpute"
 phase_list = DM.phase_list.keys()
+new_data = [{"Parameter": "inter_n", "Value": inter_n},{"Parameter": "aggregate", "Value": agg},
+            {"Parameter": "Impute", "Value": Impute}]
+
+# 기존 train_parameter.csv 파일 읽어오기
+train_file_path = "./result/train_parameter.csv"
+df_train = pd.read_csv(train_file_path)
+# 새로운 데이터를 DataFrame으로 변환 후, 기존 DataFrame과 합치기
+df_new = pd.DataFrame(new_data)
+df_combined = pd.concat([df_train, df_new], ignore_index=True)
+# 합쳐진 데이터를 test_parameter.csv로 저장하기
+test_file_path = "./result/test_parameter.csv"
+df_combined.to_csv(test_file_path, index=False, encoding='utf-8-sig')
 
 dir = f"./result/{args.test_dir}"
 if os.path.isdir(dir) == False:
@@ -27,22 +45,80 @@ if os.path.isdir(dir) == False:
 dir = f"./result"
 
 use_all_list =["All","Sector","SectorAll"] # 모델 평가 방식
-
-for K in range(1,6): # 한번만 실행
+all_results={}
+for K in range(1,args.testNum+1): # 한번만 실행
+    print(f"\nTest for Train_Model_{K}")
     list_num_stocks = [] # 각 실험에서 선택된 주식 개수를 저장할 리스트
     for m in range(2,3): # 20번 실행
         result = {} # 백테스팅 결과를 저장할 딕셔너리
+        result_ks = {}
         num_stocks = [] # 각 phase에서 선택된 주식 개수를 저장하는 리스트
         for phase in tqdm(phase_list): # 각 phase 별 진행상태를 시각적으로 출력
             model = joblib.load(f"{dir}/{args.train_dir}_{K}/train_result_model_{K}_{phase}/model.joblib")  # 저장된 모델 불러옴
-            cagr, sharpe, mdd, num_stock_tmp = model.backtest(verbose=True,agg="inter",use_all="SectorAll",inter_n=0.2,isTest=True, testNum=m, dir=args.test_dir) # 백테스팅 실행
+            cagr, sharpe, mdd, num_stock_tmp,cagr_ks,sharpe_ks,mdd_ks = model.backtest(verbose=True,agg=agg,use_all="SectorAll",inter_n=inter_n,isTest=True, testNum=K, dir=args.test_dir) # 백테스팅 실행
             # 상위 20% 주식만을 선택
             num_stocks.append(num_stock_tmp) # 선택된 주식 개수를 저장
             result[phase] = {"CAGR":cagr,"Sharpe Ratio":sharpe,"MDD":mdd} # 백테스팅 결과 저장
-        pd.DataFrame(result).to_csv(f"{dir}/test_result_dir/test_result_file_{K}.csv") # result 딕셔너리를 csv 파일로 저장
+            result_ks[phase] = {"CAGR":cagr_ks,"Sharpe Ratio":sharpe_ks,"MDD":mdd_ks}
 
+        result_df = pd.DataFrame(result)
+        result_df_ks = pd.DataFrame(result_ks)
+        all_results[f"Test {K}"] = result_df
         list_num_stocks.append(num_stocks) # 각 실험에서 선택된 주식 개수 저장
-    DM.create_date_list()
-    num_stocks_x = [DM.pno2date(i) for i in range(19,35,4)] # 백테스팅 수행 시점의 날짜 리스트
-    print("\n각 Phase 별 평균 선택 주식 개수:")
-    print(np.mean(list_num_stocks,axis=0))
+
+final_df = pd.concat(all_results, axis=1)
+avg_df = final_df.groupby(level=1, axis=1).mean()
+avg_df.columns = pd.MultiIndex.from_product([["Average"], avg_df.columns])
+avg_df.to_csv(f"{dir}/test_result_dir/test_result_average.csv", encoding='utf-8-sig')
+final_df_combined = pd.concat([final_df, avg_df], axis=1)
+final_df_combined.to_csv(f"{dir}/test_result_dir/test_result_file.csv", encoding='utf-8-sig')
+
+import matplotlib.pyplot as plt
+
+# 평가지표 리스트
+metrics = ["CAGR", "Sharpe Ratio", "MDD"]
+
+# x축 값: avg_df의 MultiIndex 하위 컬럼(Phase)
+phases = avg_df["Average"].columns
+
+# 각 평가지표마다 하나의 그래프로 나타내도록 subplot 생성 (가로로 배열)
+fig, axs = plt.subplots(nrows=1, ncols=len(metrics), figsize=(6 * len(metrics), 6))
+
+for i, metric in enumerate(metrics):
+    ax = axs[i] if len(metrics) > 1 else axs
+
+    # 그래프 출력: Average는 빨간 실선, KOSPI200은 노란 점선으로 표시
+    ax.plot(phases, avg_df["Average"].loc[metric], 'r-', marker='o', label='Average')
+    ax.plot(phases, result_df_ks.loc[metric], 'y--', marker='o', label='KOSPI200')
+    ax.set_title(metric)
+    ax.set_xlabel("Phase")
+    ax.set_ylabel(metric)
+    ax.grid(True)
+    ax.legend(loc='upper left')
+
+    # 소수점 4자리로 포맷팅한 값을 생성
+    avg_values = [f"{val:.4f}" for val in avg_df["Average"].loc[metric]]
+    ks_values = [f"{val:.4f}" for val in result_df_ks.loc[metric]]
+    cell_text = [avg_values, ks_values]
+
+    # bbox 인자를 사용하여 표와 그래프 사이의 간격을 넓게 조정 (bbox=[x, y, width, height])
+    table = ax.table(cellText=cell_text,
+                     rowLabels=["Average", "KOSPI200"],
+                     colLabels=phases,
+                     cellLoc='center',
+                     bbox=[0, -0.35, 1, 0.25])
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+
+    # y축 하한값 조정하여 그래프와 표가 겹치지 않도록 함
+    lower_bound = min(min(avg_df["Average"].loc[metric]), min(result_df_ks.loc[metric]))
+    ax.set_ylim(bottom=lower_bound - 0.3 * abs(lower_bound))
+
+# 전체 서브플롯 간의 좌우 간격 및 하단 여백 조정
+plt.subplots_adjust(bottom=0.4, wspace=0.3)
+plt.tight_layout(rect=[0, 0.05, 1, 1])
+plt.savefig(f"{dir}/test_result_dir/test_result_graph.png")
+
+
+
+

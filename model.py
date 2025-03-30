@@ -55,33 +55,11 @@ class MultiLayerPerceptron(nn.Module):
                 loss.backward()
                 optimizer.step()
 
-class BaggingModel:
-    def __init__(self, n_modules, input_size, hidden_size):
-        self.n_modules = n_modules
-        self.models = []
-
-        for i in range(n_modules):
-            self.models.append(MultiLayerPerceptron(input_size, hidden_size, 'cpu'))
-
-    def fit(self, X:torch.Tensor, y, epochs = 200, lr = 0.015):
-        num_samples = int(X.shape[0] * 0.8)
-        for i in range(self.n_modules):
-            index = torch.randperm(X.shape[0])[:num_samples]
-            sample_X = X[index]
-            sample_y = y[index]
-            self.models[i].fit(sample_X,sample_y,lr,epochs)
-
-    def predict(self, X):
-        outputs = [model(X).unsqueeze(0) for model in self.models]
-        result = torch.cat(outputs, dim=0).mean(dim=0)
-        return result.cpu().detach().numpy().squeeze()
-
 class AggregationModel:
     def __init__(self, n_input, n_rules, hidden_layer, device, aggregate = ""):
         self.mlp = MultiLayerPerceptron(n_input, hidden_layer, device)
         self.rf = RandomForestRegressor()
         self.device = device
-
 
     def fit(self, X, y, epochs_mlp, epochs_anfis, lr_mlp, lr_anfis):
         data = DataLoader(TensorDataset(X, y), batch_size = 64, shuffle = True)
@@ -134,11 +112,11 @@ class MyModel(nn.Module):
         self.clustering = clustering  # 섹터 군집화 활성화 여부
 
         self.epochs_MLP = 200  # MLP 학습 epoch
-        self.lr_MLP = 0.001  # MLP 학습 rate
+        self.lr_MLP = 0.001  # 0.001
         self.hidden = 128  # MLP 은닉층 크기
 
         self.epochs_anfis = 200
-        self.lr_anfis = 0.01
+        self.lr_anfis = 0.01 #0.01
         self.n_rules = 10
 
         self.device = device
@@ -150,7 +128,31 @@ class MyModel(nn.Module):
         self.valid_models = {}
         self.sector_models = {}
 
-    def trainSectorModelsWithValid(self): # 훈련 데이터뿐만 아니라 검증 데이터도 포함하여 학습
+    def recordParameter(self):
+        file_path = "./result/train_parameter.csv"
+        new_data = [
+            {"Parameter": "feature_n", "Value": self.feature_n},
+            {"Parameter": "valid_stock_k", "Value": self.valid_stock_k},
+            {"Parameter": "valid_sector_k", "Value": self.valid_sector_k},
+            {"Parameter": "each_sector_stock_k", "Value": self.each_sector_stock_k},
+            {"Parameter": "final_stock_k", "Value": self.final_stock_k},
+            {"Parameter": "ensemble", "Value": self.ensemble},
+            {"Parameter": "clustering", "Value": self.clustering},
+            {"Parameter": "epochs_MLP", "Value": self.epochs_MLP},
+            {"Parameter": "lr_MLP", "Value": self.lr_MLP},
+            {"Parameter": "hidden", "Value": self.hidden},
+            {"Parameter": "epochs_anfis", "Value": self.epochs_anfis},
+            {"Parameter": "lr_anfis", "Value": self.lr_anfis},
+            {"Parameter": "n_rules", "Value": self.n_rules}
+        ]
+        try:
+            df = pd.read_csv(file_path)
+        except FileNotFoundError:
+            df = pd.DataFrame(columns=["Parameter", "Value"])
+        df = pd.concat([df, pd.DataFrame(new_data)], ignore_index=True)
+        df.to_csv(file_path, index=False)
+
+    def trainSectorModelsWithValid(self):
         for sector in self.topK_sectors:
             train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
             train_data = np.concatenate((train_data, valid_data), axis=0)
@@ -209,10 +211,10 @@ class MyModel(nn.Module):
 
         ## 백테스팅 진행
         pf_mem = []  # 각 날짜별 포트폴리오 수익률 기록
-        self.moneyHistory = [1]  # 투자 금액의 변화를 기록
+        pf_mem_ks = []
         num_of_stock = []  # 매일 선택된 주식 개수 저장
 
-        if verbose: print(f"\n------[{self.phase}]------")
+        if verbose: print(f"\n------[{self.phase}]------",flush=True)
 
         for pno in range(test_start, test_end):  # test_start ~ end 기간동안 매일 반복 실행
             # 각 날짜마다 주식을 선택하고 수익률을 계산
@@ -222,7 +224,6 @@ class MyModel(nn.Module):
 
             stocks = pd.Series()  # 모든 섹터에서 선택된 주식을 저장
             real_last_topK_stock = []  # 최종적으로 선택된 상위 주식 저장
-            clustered_stocks = {}
 
             if use_all == "Sector" or use_all == "SectorAll":  # SectorAll or Sector일 경우
                 for sector in self.topK_sectors:  # 선택된 섹터별로 종목을 추천
@@ -268,11 +269,11 @@ class MyModel(nn.Module):
             if use_all == "SectorAll" and agg == 'avg':  # SectorAll 모드에서
                 real_last_topK_stock = stocks.sort_values(ascending=False).index.to_list()[:self.final_stock_k]
                 # 개별 섹터와 전체 섹터 모델의 예측값 평균을 사용하여 종목을 결정
-            clustered_stocks_list.append([f"Test Phase of {idx}"] + real_last_topK_stock)
+            clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)
             idx += 1
             self.final_stock_k = len(real_last_topK_stock)  # 최종적으로 선택된 주식 개수를 저장
 
-            if verbose: print(real_last_topK_stock)  # 선택된 최종 종목을 출력
+            if verbose: print(real_last_topK_stock,flush=True)  # 선택된 최종 종목을 출력
             if isTest:
                 pd.DataFrame(clustered_stocks_list).to_csv(f"./result/{dir}/test_selected_stocks_{self.phase}_{testNum}.csv", index=False)
             if not isTest:
@@ -284,22 +285,28 @@ class MyModel(nn.Module):
             fs = pd.read_csv(f"./data_kr/date_regression/{strdate}.csv")  # 현재 날짜의 주가 데이터
             if next_strdate != '2025_Q1':
                 next_fs = pd.read_csv(f"./data_kr/date_regression/{next_strdate}.csv")  # 다음 날짜의 주가 데이터
-
-            daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate, fs, next_fs)
+            ks50_stock = ["KS200"]
+            daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate)
+            daily_change_KOSPI = self.Utils.get_portfolio_memory(ks50_stock,strdate,next_strdate)
             # 매일의 포트폴리오 수익률 계산
             # 선택된 주식 리스트, 현재 및 다음 날짜의 주가 데이터 이용
-
             pf_mem.extend(daily_change)  # 매일 수익률을 리스트에 추가: 각 날짜별 수익률 저장
+            pf_mem_ks.extend(daily_change_KOSPI)
+
 
         return_ratio = np.prod(np.array(pf_mem) + 1) - 1
         mdd = self.Utils.get_MDD(np.array(pf_mem) + 1)
         sharpe = self.Utils.get_sharpe_ratio(pf_mem)
 
-        if verbose:
-            print(f"MDD: {mdd}, Sharpe: {sharpe}, CAGR: {return_ratio}")
-            print("----------------------")
+        return_ratio_ks = np.prod(np.array(pf_mem_ks) + 1) - 1
+        mdd_ks = self.Utils.get_MDD(np.array(pf_mem_ks) + 1)
+        sharpe_ks = self.Utils.get_sharpe_ratio(pf_mem_ks)
 
-        return return_ratio, sharpe, mdd, num_of_stock
+        if verbose:
+            print(f"\nMDD: {mdd}, Sharpe: {sharpe}, CAGR: {return_ratio}",flush=True)
+            print("----------------------",flush=True)
+
+        return return_ratio, sharpe, mdd,num_of_stock, return_ratio_ks, sharpe_ks, mdd_ks
 
     def save(obj):
         return (obj.__class__, obj.__dict__)

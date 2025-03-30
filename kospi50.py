@@ -8,7 +8,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 api_key = ''
 dart = OpenDartReader(api_key)
 
-kospi_50_file = './data_kr/kospi_50.txt'
+kospi_50_file = './data_kr/kospi.txt'
 kospi_50 = {}
 
 with open(kospi_50_file, 'r') as f:

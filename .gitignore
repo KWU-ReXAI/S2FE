@@ -1,1 +1,4 @@
-data_kr/
+./data_kr/clustered_data/
+./data_kr/clusters_output/
+./data_kr/financial_with_Label/
+./result/

@@ -1,6 +1,7 @@
 [실행 순서]
 
 사용해야 할 데이터 폴더명을 data_kr로 바꿔주세요!
+
 1. python datapreprocessing_total.py --isall True
 
 2. python datapreprocessing_total.py --isall cluster

@@ -253,6 +253,11 @@ if args.isall == "False":
                 df_kfeature_tmp = concat_k_features(ticker_str)
                 df_macro_tmp = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
                 df_macro_tmp.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+
+                df_tmp = add_prefix_to_columns(df_tmp, "F_",exclude_cols=["year", "quarter", "code", "name", "sector"])
+                df_kfeature_tmp = add_prefix_to_columns(df_kfeature_tmp, "K_", exclude_cols=["연도", "분기"])
+                df_macro_tmp = add_prefix_to_columns(df_macro_tmp, "M_", exclude_cols=["연도", "분기"])
+
                 df_concat = pd.concat([df_tmp, df_macro_tmp, df_kfeature_tmp], axis=1)
                 df_sector_stocks = pd.concat([df_sector_stocks, df_concat])
 
@@ -277,13 +282,11 @@ if args.isall == "False":
             final_cols = base_cols + feature_cols
 
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
-            ###
+
             for col in df_data.columns[5:]:
                 df_data[col] = df_data[col].astype(str).str.replace(',', '')
                 df_data[col] = df_data[col].replace('-', np.nan).astype(float)
-            ###
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
-            #df_data = pd.concat([df_data.iloc[:,:5],pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))])
 
             df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
             df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
@@ -291,7 +294,6 @@ if args.isall == "False":
             df_data.fillna(0.0, inplace=True)
             df_data.replace([-np.inf, np.inf], 0.0, inplace=True)
 
-            # df_data = df_data[~df_data['year'].str.contains('2015')&~df_data['quarter'].str.contains('Q4')]
 
             df_data = df_data[
                 ~(df_data['year'].astype(str).str.contains('2015') & df_data['quarter'].astype(str).str.contains('Q4'))
@@ -465,9 +467,13 @@ elif args.isall == "cluster":
                 ticker_str = str(ticker).zfill(6)
                 df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv")
                 df_tmp = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                df_kfeature_tmp = concat_k_features(f"{ticker_str}")
+                df_kfeature_tmp = concat_k_features(ticker_str)
                 df_macro_tmp = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
                 df_macro_tmp.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+
+                df_tmp = add_prefix_to_columns(df_tmp, "F_", exclude_cols=["year", "quarter", "code", "name", "sector"])
+                df_kfeature_tmp = add_prefix_to_columns(df_kfeature_tmp, "K_", exclude_cols=["연도", "분기"])
+                df_macro_tmp = add_prefix_to_columns(df_macro_tmp, "M_", exclude_cols=["연도", "분기"])
 
                 df_concat = pd.concat([df_tmp, df_macro_tmp, df_kfeature_tmp], axis=1)
                 df_sector_stocks = pd.concat([df_sector_stocks, df_concat])
@@ -683,6 +689,11 @@ elif args.isall == "True":
                 df_kfeature_tmp = concat_k_features(ticker_str)
                 df_macro_tmp = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
                 df_macro_tmp.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+
+                df_tmp = add_prefix_to_columns(df_tmp, "F_", exclude_cols=["year", "quarter", "code", "name", "sector"])
+                df_kfeature_tmp = add_prefix_to_columns(df_kfeature_tmp, "K_", exclude_cols=["연도", "분기"])
+                df_macro_tmp = add_prefix_to_columns(df_macro_tmp, "M_", exclude_cols=["연도", "분기"])
+
                 df_concat = pd.concat([df_tmp, df_macro_tmp, df_kfeature_tmp], axis=1)
                 df_sector_stocks = pd.concat([df_sector_stocks, df_concat])
 

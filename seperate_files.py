@@ -3,7 +3,7 @@ import os
 import glob
 
 # 1) 위에서 정의한 컬럼 목록과 처리 함수
-COLUMNS_TO_DROP = [
+'''COLUMNS_TO_DROP = [
     "당기손익-공정가치측정금융자산",
     "기타포괄손익-공정가치측정금융자산",
     "보험계약자산",
@@ -20,8 +20,9 @@ COLUMNS_TO_DROP = [
     "순수수료손익",
     "차입부채",
     "상각후원가측정금융자산"
-]
+]'''
 
+COLUMNS_TO_DROP = []
 
 def process_columns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.drop(columns=COLUMNS_TO_DROP, errors='ignore')
@@ -179,8 +180,6 @@ def print_csv_shapes(folder_path):
                 print(f"{file_name} 파일을 읽는 중 에러 발생: {e}")
 
 
-import pandas as pd
-
 
 def compare_code_and_columns(file1, file2):
     """
@@ -246,10 +245,36 @@ def remove_specific_codes(file_path):
 
     print(f"Filtered data saved to {file_path}")
 
+def seperate_comma():
+    input_path = './data_kr/symbol.csv'
+
+    # 출력 파일 경로
+    output_path = './data_kr/financial_statements/kospi_200.txt'
+
+    # CSV 파일 읽기
+    symbol_df = pd.read_csv(input_path)
+
+    # code 컬럼을 문자열로 변환 후 zfill(6) 처리
+    symbol_df['code'] = symbol_df['code'].astype(str).str.zfill(6)
+
+    # ,로 구분된 텍스트 파일로 저장
+    symbol_df.to_csv(output_path, index=False, sep=',')
+
+    print(f"파일이 저장되었습니다: {output_path}")
+
+
 # 사용 예시
 # compare_code_and_columns("path/to/first_file.csv", "path/to/second_file.csv")
 
 # 198: symbol
 #12 18 13 5 29 5 7 1 13 22 33 14 4 2 1
 if __name__ == "__main__":
+    seperate_comma()
+
+    merge_date_regression()
+
+    save_by_sector()
+
+    filter_all_files_by_sector()
+
     save_sector_codes()

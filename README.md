@@ -1,13 +1,23 @@
-python datapreprocessing2.py --isall True
+[실행 순서]
 
-python datapreprocessing2.py --isall cluster
+사용해야 할 데이터 폴더명을 data_kr로 바꿔주세요!
+1. python datapreprocessing_total.py --isall True
 
-python clustering.py
+2. python datapreprocessing_total.py --isall cluster
 
-clustering.py 결과 복사해서 datapreprocessing2.py의 --isall False 밑 cluster_list에 추가
+3. python clustering.py
 
-python datapreprocessing2.py --isall False
+4. python datapreprocessing_total.py --isall False
 
-python train.py --testNum 5
+5. python train.py --testNum 5
 
-python test.py --testNum 5
+6. python test.py --testNum 5
+
+
+[집중적으로 분석해야 하는 파일]
+
+- datapreprocessing_total.py
+- model.py
+- datamanager.py
+- train.py
+- test.py

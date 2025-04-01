@@ -12,9 +12,10 @@ gdp_df = pd.read_csv("./data_kr/macro_economic/GDP.csv")
 interest_df = pd.read_csv("./data_kr/macro_economic/interest_rate.csv")
 export_df = pd.read_csv("./data_kr/macro_economic/total_export_amount.csv")
 unemployment_df = pd.read_csv("./data_kr/macro_economic/unemployment_rate.csv")
+oil_df = pd.read_csv("./data_kr/macro_economic/oil_price.csv")
 
 # 날짜를 datetime으로 변환
-for df in [cpi_df, exchange_df, gdp_df, interest_df, export_df, unemployment_df]:
+for df in [cpi_df, exchange_df, gdp_df, interest_df, export_df, unemployment_df, oil_df]:
     df["observation_date"] = pd.to_datetime(df["observation_date"])
 
 # 연도/분기 컬럼 생성 함수
@@ -30,6 +31,7 @@ unemployment_df = add_year_quarter(unemployment_df)
 gdp_df = add_year_quarter(gdp_df)
 interest_df = add_year_quarter(interest_df)
 export_df = add_year_quarter(export_df)
+oil_df = add_year_quarter(oil_df)
 
 # 월별 데이터는 분기별 평균
 def quarterly_avg(df, value_col):
@@ -38,6 +40,7 @@ def quarterly_avg(df, value_col):
 cpi_q = quarterly_avg(cpi_df, "KORCPALTT01CTGYM").rename(columns={"KORCPALTT01CTGYM": "소비자물가지수"})
 exchange_q = quarterly_avg(exchange_df, "EXKOUS").rename(columns={"EXKOUS": "환율"})
 unemployment_q = quarterly_avg(unemployment_df, "LRUNTTTTKRM156S").rename(columns={"LRUNTTTTKRM156S": "실업률"})
+oil_q = quarterly_avg(oil_df,"MCOILBRENTEU").rename(columns={"MCOILBRENTEU":"국제유가"})
 
 # 분기별 데이터는 그대로
 gdp_q = gdp_df[["연도", "분기", "NGDPRSAXDCKRQ"]].rename(columns={"NGDPRSAXDCKRQ": "GDP"})
@@ -59,6 +62,7 @@ merged = merged.merge(gdp_q, on=["연도", "분기"], how="left")
 merged = merged.merge(interest_q, on=["연도", "분기"], how="left")
 merged = merged.merge(export_q, on=["연도", "분기"], how="left")
 merged = merged.merge(unemployment_q, on=["연도", "분기"], how="left")
+merged = merged.merge(oil_q, on=["연도","분기"],how="left")
 
 # 저장
 merged.to_csv(output_path, index=False, encoding='utf-8-sig')

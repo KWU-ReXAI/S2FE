@@ -22,7 +22,7 @@ DM = DataManager(6) # 특징 개수 4개로 설정하여 데이터 매니저 초
 DM.create_date_list()
 device = torch.device('cpu')
 
-inter_n = 3
+inter_n = 0.1
 agg = "inter"
 Impute = "SoftImpute"
 phase_list = DM.phase_list.keys()
@@ -116,7 +116,7 @@ for i, metric in enumerate(metrics):
 
 # 전체 서브플롯 간의 좌우 간격 및 하단 여백 조정
 plt.subplots_adjust(bottom=0.4, wspace=0.3)
-plt.tight_layout(rect=[0, 0.05, 1, 1])
+plt.tight_layout(rect=[0, 0.1, 1, 1])
 plt.savefig(f"{dir}/test_result_dir/test_result_graph.png")
 
 

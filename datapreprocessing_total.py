@@ -14,7 +14,7 @@ from fancyimpute import SoftImpute
 from sklearn.impute import KNNImputer, SimpleImputer
 from sklearn.ensemble import RandomForestRegressor
 import argparse
-parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
+parser = argparse.ArgumentParser()
 
 parser.add_argument('--isall',type=str,nargs='?',default="False")
 args = parser.parse_args()
@@ -288,7 +288,7 @@ if args.isall == "False":
                 df_data[col] = df_data[col].replace('-', np.nan).astype(float)
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
 
-            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
+            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None)).shift(-1)
             df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
             df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
@@ -506,7 +506,7 @@ elif args.isall == "cluster":
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
             # df_data = pd.concat([df_data.iloc[:,:5],pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))])
 
-            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
+            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None)).shift(-1)
             df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
             df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
@@ -725,7 +725,7 @@ elif args.isall == "True":
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
             # df_data = pd.concat([df_data.iloc[:,:5],pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))])
 
-            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
+            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None)).shift(-1)
             df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
             df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)

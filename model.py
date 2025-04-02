@@ -99,7 +99,7 @@ class AggregationModel:
 
 class MyModel(nn.Module):
     def __init__(self, feature_n, valid_stock_k, valid_sector_k, each_sector_stock_k, final_stock_k, phase, device,
-                 ensemble="S3CE", clustering=False):
+                 ensemble="S3CE", clustering=False, cluster_n=4):
         # 클래스 초기화
         super(MyModel, self).__init__()
         self.feature_n = feature_n  # 사용할 재무 feature 개수
@@ -121,7 +121,7 @@ class MyModel(nn.Module):
 
         self.device = device
 
-        self.DM = DataManager(feature_n)  # 데이터 관리 클래스
+        self.DM = DataManager(features_n=feature_n, cluster_n=cluster_n)  # 데이터 관리 클래스
         self.DM.create_date_list()
         self.Utils = Utils()  # 수익률 계산 등 유틸리티 함수 제공
 
@@ -186,7 +186,7 @@ class MyModel(nn.Module):
     def save_models(self,dir):
         joblib.dump(self,f"{dir}/model.joblib")
 
-    def backtest(self, verbose=True, use_all='SectorAll', agg='avg', inter_n=3, isTest=True, testNum=0, dir=""):  # 백테스팅 수행
+    def backtest(self, verbose=True, use_all='SectorAll', agg='avg', inter_n=0.1, isTest=True, testNum=0, dir=""):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
         # 과거 데이터를 사용하여 모델의 예측이 실제 시장에서 얼마나 잘 맞았는지를 검증하는 과정
         test_start = self.DM.phase_list[self.phase][2]

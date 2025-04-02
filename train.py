@@ -9,6 +9,7 @@ from tqdm import tqdm
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+cluster_n = 6
 
 warnings.filterwarnings(action='ignore')
 
@@ -27,8 +28,10 @@ parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE") # 사용할 
 parser.add_argument('--clustering',action="store_true",default=True) # 클러스터링 여부
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 
+cluster_n = 6
+
 args = parser.parse_args()
-DM = DataManager(args.features_n)
+DM = DataManager(features_n= args.features_n, cluster_n=cluster_n)
 result = {}
 result_ks = {}
 
@@ -50,7 +53,7 @@ for trainNum in range(0, args.testNum):
         if os.path.isdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}") == False:
             os.mkdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}")
         mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
-                          args.final_stock_k, phase, device, args.ensemble, args.clustering)
+                          args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n)
 
         mymodel.trainALLSectorModel()
 

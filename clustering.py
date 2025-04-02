@@ -3,11 +3,12 @@ import pandas as pd
 from datamanager import DataManager
 import os
 
-DM = DataManager(6)
+cluster_n = 4
+
+DM = DataManager(features_n= 6, cluster_n= cluster_n)
 sector_list = DM.sector_list
 DM.create_date_list()
 features = {}
-cluster_n = 6
 
 # 저장할 폴더 생성
 output_folder = "./data_kr/clusters_output"

@@ -18,7 +18,11 @@ parser.add_argument('--train_dir',type=str,nargs='?',default="train_result_dir")
 parser.add_argument('--test_dir',type=str,nargs='?',default="test_result_dir") # 결과 디렉토리 명
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 args = parser.parse_args()
-DM = DataManager(6) # 특징 개수 4개로 설정하여 데이터 매니저 초기화
+
+
+cluster_n = 6
+
+DM = DataManager(features_n=6,cluster_n=cluster_n) # 특징 개수 4개로 설정하여 데이터 매니저 초기화
 DM.create_date_list()
 device = torch.device('cpu')
 

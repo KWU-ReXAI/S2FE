@@ -6,11 +6,11 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 class DataManager:
-    def __init__(self, features_n):
+    def __init__(self, features_n, cluster_n):
         self.features_n = features_n
         self.ticker_list = sorted(pd.read_csv("./data_kr/symbol.csv")["code"].tolist())
         self.sector_list = sorted(pd.read_csv("./data_kr/symbol.csv")["sector"].unique().tolist())
-        self.cluster_list = ["cluster_" + str(i) for i in range(6)]  # 클러스터 번호 부여
+        self.cluster_list = ["cluster_" + str(i) for i in range(cluster_n)]  # 클러스터 번호 부여
 
         self.phase_list = {"p1": [1, 15, 19, 23], "p2": [5, 19, 23, 27], "p3": [9, 23, 27, 31], "p4": [13, 27, 31, 35]}
 

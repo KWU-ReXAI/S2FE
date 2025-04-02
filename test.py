@@ -115,7 +115,7 @@ for i, metric in enumerate(metrics):
     ax.set_ylim(bottom=lower_bound - 0.3 * abs(lower_bound))
 
 # 전체 서브플롯 간의 좌우 간격 및 하단 여백 조정
-plt.subplots_adjust(bottom=0.4, wspace=0.3)
+plt.subplots_adjust(bottom=0.5, wspace=0.3)
 plt.tight_layout(rect=[0, 0.1, 1, 1])
 plt.savefig(f"{dir}/test_result_dir/test_result_graph.png")
 

@@ -295,9 +295,7 @@ if args.isall == "False":
             df_data.replace([-np.inf, np.inf], 0.0, inplace=True)
 
 
-            df_data = df_data[
-                ~(df_data['year'].astype(str).str.contains('2015') & df_data['quarter'].astype(str).str.contains('Q4'))
-            ]
+            #df_data = df_data[~(df_data['year'].astype(str).str.contains('2015') & df_data['quarter'].astype(str).str.contains('Q4'))]
 
             # 시장초과수익률 계산
             df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv", index_col=[0])
@@ -514,9 +512,7 @@ elif args.isall == "cluster":
 
             # df_data = df_data[~df_data['year'].str.contains('2015')&~df_data['quarter'].str.contains('Q4')]
 
-            df_data = df_data[
-                ~(df_data['year'].astype(str).str.contains('2015') & df_data['quarter'].astype(str).str.contains('Q4'))
-            ]
+            #df_data = df_data[~(df_data['year'].astype(str).str.contains('2015') & df_data['quarter'].astype(str).str.contains('Q4'))]
 
             # 시장초과수익률 계산
             df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv", index_col=[0])

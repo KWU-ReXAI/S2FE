@@ -22,3 +22,12 @@
 - datamanager.py
 - train.py
 - test.py
+
+[실험 결과 보내는 곳]
+
+한 압축폴더에 ./data_kr/clustered_data/ & ./data_kr/clusters_output/ & ./result/test_result_dir/ & ./result/test_parameter.csv 폴더에 추가
+
+jhzzang0703@naver.com
+
+
+

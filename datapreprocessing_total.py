@@ -233,7 +233,7 @@ if args.isall == "False":
     # 문자열을 안전하게 리스트로 변환
     cluster_list = ast.literal_eval(cluster_result_str)
 
-    for cluster_index in cluster_list:
+    for cluster_index in range(len(cluster_list)):
         sector_list = cluster_list[cluster_index]
         clustered_ticker_list = []
 

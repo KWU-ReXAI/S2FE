@@ -288,7 +288,7 @@ if args.isall == "False":
                 df_data[col] = df_data[col].replace('-', np.nan).astype(float)
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
 
-            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None)).shift(-1)
+            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
             df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
             df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
@@ -365,6 +365,9 @@ if args.isall == "False":
 
             df_data["Label"] = label
             df_data["Code"] = ticker_str
+
+            df_data = df_data[
+                ~(df_data['year'].astype(str).str.contains('2015') & df_data['quarter'].astype(str).str.contains('Q4'))]
 
             if df_processing_data.empty:
                 df_processing_data = df_data
@@ -504,7 +507,7 @@ elif args.isall == "cluster":
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
             # df_data = pd.concat([df_data.iloc[:,:5],pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))])
 
-            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None)).shift(-1)
+            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
             df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
             df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
@@ -512,7 +515,6 @@ elif args.isall == "cluster":
 
             # df_data = df_data[~df_data['year'].str.contains('2015')&~df_data['quarter'].str.contains('Q4')]
 
-            #df_data = df_data[~(df_data['year'].astype(str).str.contains('2015') & df_data['quarter'].astype(str).str.contains('Q4'))]
 
             # 시장초과수익률 계산
             df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv", index_col=[0])
@@ -582,6 +584,9 @@ elif args.isall == "cluster":
 
             df_data["Label"] = label
             df_data["Code"] = ticker_str
+            df_data = df_data[
+                ~(df_data['year'].astype(str).str.contains('2015') & df_data['quarter'].astype(str).str.contains('Q4'))]
+
 
             if df_processing_data.empty:
                 df_processing_data = df_data
@@ -721,7 +726,7 @@ elif args.isall == "True":
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
             # df_data = pd.concat([df_data.iloc[:,:5],pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))])
 
-            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None)).shift(-1)
+            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
             df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
             df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
@@ -799,6 +804,8 @@ elif args.isall == "True":
 
             df_data["Label"] = label
             df_data["Code"] = ticker_str
+            df_data = df_data[
+                ~(df_data['year'].astype(str).str.contains('2015') & df_data['quarter'].astype(str).str.contains('Q4'))]
 
             if df_processing_data.empty:
                 df_processing_data = df_data

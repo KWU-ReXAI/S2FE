@@ -233,7 +233,7 @@ if args.isall == "False":
     # 문자열을 안전하게 리스트로 변환
     cluster_list = ast.literal_eval(cluster_result_str)
 
-    for cluster_index in range(6):
+    for cluster_index in cluster_list:
         sector_list = cluster_list[cluster_index]
         clustered_ticker_list = []
 
@@ -449,7 +449,7 @@ elif args.isall == "cluster":
         ['유통'], ['음식료·담배'], ['제약'] ,['운송·창고'], ['기타금융'] ,['화학'] ,['운송장비·부품'] ,['비금속'] ,['전기·전자'] ,['금속'] ,['건설']
          ,['섬유·의류'] ,['전기·가스'] ,['종이·목재'] ,['일반서비스'] ,['통신'] ,['기계·장비'] ,['IT 서비스'] ,['오락·문화'] ,['기타제조']]
 
-    cluster_list = [['건설'], ['경기소비재'],['산업재'],['생활소비재'],['에너지_화학'],['정보기술'],['중공업'],['철강_소재'],['커뮤니케이션서비스'],['헬스케어']]
+    #cluster_list = [['건설'], ['경기소비재'],['산업재'],['생활소비재'],['에너지_화학'],['정보기술'],['중공업'],['철강_소재'],['커뮤니케이션서비스'],['헬스케어']]
     for cluster_index in range(20):
         sector_list = cluster_list[cluster_index]
         clustered_ticker_list = []
@@ -667,8 +667,7 @@ elif args.isall == "True":
     cluster_list = [['유통', '음식료·담배', '제약', '운송·창고', '기타금융', '화학', '운송장비·부품', '비금속' ,'전기·전자', '금속', '건설'
          ,'섬유·의류' ,'전기·가스', '종이·목재', '일반서비스', '통신', '기계·장비', 'IT 서비스', '오락·문화', '기타제조']]
 
-    cluster_list = [['건설', '경기소비재', '산업재', '생활소비재', '에너지_화학', '정보기술', '중공업', '철강_소재',
-                    '커뮤니케이션서비스', '헬스케어']]
+    #cluster_list = [['건설', '경기소비재', '산업재', '생활소비재', '에너지_화학', '정보기술', '중공업', '철강_소재','커뮤니케이션서비스', '헬스케어']]
     for cluster_index in range(1):
         sector_list = cluster_list[cluster_index]
         clustered_ticker_list = []

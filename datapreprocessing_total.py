@@ -288,7 +288,7 @@ if args.isall == "False":
                 df_data[col] = df_data[col].replace('-', np.nan).astype(float)
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
 
-            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
+            df_pct_change = (df_data.iloc[:, 5:].pct_change(fill_method=None))
             df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
             df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
@@ -507,7 +507,7 @@ elif args.isall == "cluster":
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
             # df_data = pd.concat([df_data.iloc[:,:5],pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))])
 
-            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
+            df_pct_change = (df_data.iloc[:, 5:].pct_change(fill_method=None))
             df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
             df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)
@@ -726,7 +726,7 @@ elif args.isall == "True":
             df_data.iloc[:, 5:] = pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))
             # df_data = pd.concat([df_data.iloc[:,:5],pd.DataFrame(impute.fit_transform(df_data.iloc[:, 5:]))])
 
-            df_pct_change = (-df_data.iloc[:, 5:].pct_change(fill_method=None))
+            df_pct_change = (df_data.iloc[:, 5:].pct_change(fill_method=None))
             df_pct_change.columns = [col + " 변화율" for col in df_pct_change.columns]
             df_data = pd.concat([df_data.iloc[:, :5], df_pct_change], axis=1)
             df_data.fillna(0.0, inplace=True)

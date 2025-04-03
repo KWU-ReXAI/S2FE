@@ -214,6 +214,9 @@ class MyModel(nn.Module):
         pf_mem_ks = []
         num_of_stock = []  # 매일 선택된 주식 개수 저장
 
+        pf_mem_first = []
+        pf_mem_first_ks = []
+
         if verbose: print(f"\n------[{self.phase}]------",flush=True)
 
         for pno in range(test_start, test_end):  # test_start ~ end 기간동안 매일 반복 실행
@@ -290,9 +293,8 @@ class MyModel(nn.Module):
             daily_change_KOSPI = self.Utils.get_portfolio_memory(ks50_stock,strdate,next_strdate)
             # 매일의 포트폴리오 수익률 계산
             # 선택된 주식 리스트, 현재 및 다음 날짜의 주가 데이터 이용
-            pf_mem.extend(daily_change)  # 매일 수익률을 리스트에 추가: 각 날짜별 수익률 저장
+            pf_mem.extend(daily_change)
             pf_mem_ks.extend(daily_change_KOSPI)
-
 
         return_ratio = np.prod(np.array(pf_mem) + 1) - 1
         mdd = self.Utils.get_MDD(np.array(pf_mem) + 1)

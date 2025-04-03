@@ -30,12 +30,12 @@ class Utils:
             return np.mean(memory) * np.sqrt(len(memory)) / (np.std(memory) + 1e-6)
 
     def get_CAGR(self,money_history): # 연평균 성장률 계산
-        n = len(money_history)/4
+        n = 1
         cagr = np.power((money_history[-1]/money_history[0]),1/n)-1
         
         return cagr
 
-    def get_date_range(self,year, quarter, ticker):
+    def get_start_date_range(self,year, quarter, ticker):
         # 쿼터 시작일 설정
         if quarter == "Q1":
             start_date_str = f"{year}-01-01"
@@ -71,6 +71,44 @@ class Utils:
             if current_date > df['날짜'].max():
                 print(f"{ticker}의 데이터에서 {quarter_start} 이후의 거래일을 찾을 수 없습니다.")
                 return 0
+
+    def get_end_date_range(self,year, quarter, ticker):
+        # 쿼터 시작일 설정
+        if quarter == "Q1":
+            start_date_str = f"{year}-01-01"
+        elif quarter == "Q2":
+            start_date_str = f"{year}-04-01"
+        elif quarter == "Q3":
+            start_date_str = f"{year}-07-01"
+        elif quarter == "Q4":
+            start_date_str = f"{year}-10-01"
+        else:
+            raise ValueError("쿼터는 'Q1', 'Q2', 'Q3', 'Q4' 중 하나여야 합니다.")
+
+        quarter_start = datetime.strptime(start_date_str, "%Y-%m-%d")
+
+        # CSV 파일 읽기
+        file_path = f"./data_kr/price/{ticker}.csv"
+        df = pd.read_csv(file_path)
+
+        # Date 컬럼을 datetime 형식으로 변환 후 정렬
+        df['날짜'] = pd.to_datetime(df['날짜'])
+        df.sort_values(by='날짜', inplace=True)
+
+        # 기준일 이후에 데이터가 존재할 때까지 날짜를 증가시킴
+        current_date = quarter_start
+        current_date -= timedelta(days=1)
+        while True:
+            # 날짜만 비교하기 위해 .dt.date 사용
+            matching_rows = df[df['날짜'].dt.date == current_date.date()]
+            if not matching_rows.empty:
+                # 해당 날짜의 첫 거래일의 시가 반환
+                return current_date.strftime("%Y-%m-%d")
+            current_date -= timedelta(days=1)
+            # 데이터 범위를 넘어가는 경우 예외 발생
+            if current_date > df['날짜'].max():
+                print(f"{ticker}의 데이터에서 {quarter_start} 이후의 거래일을 찾을 수 없습니다.")
+                return 0
     
     def get_portfolio_memory(self,stocks,strdate,next_strdate): # 포트폴리오 수익률 계산
 
@@ -85,8 +123,8 @@ class Utils:
                 ticker_str = str(ticker).zfill(6)
             else:
                 ticker_str = ticker  # 또는 필요한 경우 다른 형식으로 변환
-            start_date = self.get_date_range(year_now, quarter_now, ticker_str)
-            end_date = self.get_date_range(year_next, quarter_next, ticker_str)
+            start_date = self.get_start_date_range(year_now, quarter_now, ticker_str)
+            end_date = self.get_end_date_range(year_next, quarter_next, ticker_str)
             price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv",index_col=[0])['종가'].loc[
                     start_date:end_date]
 

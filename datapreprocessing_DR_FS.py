@@ -409,46 +409,45 @@ if args.isall == "False":
 
         X_imputed_df = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2], index=df_processing_data.index)
 
-        if args.DR == "False":
-            X_imputed_df = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
-                                        index=df_processing_data.index)
-            X_pca_df = X_imputed_df
-        elif args.DR == "PCA":
-            X_imputed_df = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
-                                        index=df_processing_data.index)
-            X_pca_df = apply_pca(X_imputed_df, n_components=30)
-        elif args.DR == "VIF":
+        if args.DR == "VIF":
             selected_features = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
             X_pca_df = df_processing_data[selected_features]
         elif args.DR == "PC":
-            df_processing_data_cleaned = remove_highly_correlated_features(df_processing_data,correlation_threshold=0.9)
+            df_processing_data_cleaned = remove_highly_correlated_features(df_processing_data,
+                                                                           correlation_threshold=0.9)
             X_pca_df = df_processing_data_cleaned
+        else:
+            print("Wrong method")
+            exit()
 
         if args.FS == "RF":
             print("Using Random Forest for feature selection")
-            selected_features = random_forest_feature_selection(X_imputed_df, df_processing_data["Label"], n_features_t)
+            selected_features = random_forest_feature_selection(X_imputed_df.drop(columns=["Relative Return"]),
+                                                                df_processing_data["Label"], n_features_t)
             selected_features_series = pd.Series(selected_features)
             selected_features_series.to_csv(
-            f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_T_feature_imp.csv",
+                f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_T_feature_imp.csv",
             encoding='utf-8-sig')
         elif args.FS == "FS":
             print("Using Forward Selection for feature selection")
-            selected_features = forward_selection(X_imputed_df, df_processing_data["Label"], n_features_t)
+            selected_features = forward_selection(X_imputed_df.drop(columns=["Relative Return"]),
+                                                  df_processing_data["Label"], n_features_t)
             selected_features_series = pd.Series(selected_features)
             selected_features_series.to_csv(
-            f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_T_feature_imp.csv",
+                f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_T_feature_imp.csv",
             encoding='utf-8-sig')
         elif args.FS == "BE":
             print("Using Backward Elimination for feature selection")
-            selected_features = backward_elimination(X_imputed_df, df_processing_data["Label"], n_features_t,
-                                                     significance_level=0.07)
+            selected_features = backward_elimination(X_imputed_df.drop(columns=["Relative Return"]),
+                                                     df_processing_data["Label"], n_features_t, significance_level=0.07)
             selected_features_series = pd.Series(selected_features)
             selected_features_series.to_csv(
-            f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_T_feature_imp.csv",
+                f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_T_feature_imp.csv",
             encoding='utf-8-sig')
 
         df_processed_data = pd.concat(
             [df_processing_data.iloc[:, 1:5],
+             df_processing_data.iloc[:, -3:-2],
              df_processing_data[selected_features],
              df_processing_data.iloc[:, -2:]
              ],
@@ -660,36 +659,33 @@ elif args.isall == "cluster":
 
         X_imputed_df = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2], index=df_processing_data.index)
 
-        if args.DR == "False":
-            X_imputed_df = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],index=df_processing_data.index)
-            X_pca_df = X_imputed_df
-        elif args.DR == "PCA":
-            X_imputed_df = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],index=df_processing_data.index)
-            X_pca_df = apply_pca(X_imputed_df, n_components=30)
-        elif args.DR == "VIF":
+        if args.DR == "VIF":
             selected_features = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
             X_pca_df = df_processing_data[selected_features]
         elif args.DR == "PC":
             df_processing_data_cleaned = remove_highly_correlated_features(df_processing_data,correlation_threshold=0.9)
             X_pca_df = df_processing_data_cleaned
+        else:
+            print("Wrong method")
+            exit()
 
         if args.FS == "RF":
             print("Using Random Forest for feature selection")
-            selected_features = random_forest_feature_selection(X_imputed_df, df_processing_data["Label"],n_features_t)
+            selected_features = random_forest_feature_selection(X_imputed_df.drop(columns=["Relative Return"]), df_processing_data["Label"],n_features_t)
             selected_features_series = pd.Series(selected_features)
             selected_features_series.to_csv(
             f"./data_kr/financial_with_Label/{sector_list[0]}/{sector_list[0]}_T_feature_imp.csv",
             encoding='utf-8-sig')
         elif args.FS == "FS":
             print("Using Forward Selection for feature selection")
-            selected_features = forward_selection(X_imputed_df, df_processing_data["Label"], n_features_t)
+            selected_features = forward_selection(X_imputed_df.drop(columns=["Relative Return"]), df_processing_data["Label"], n_features_t)
             selected_features_series = pd.Series(selected_features)
             selected_features_series.to_csv(
             f"./data_kr/financial_with_Label/{sector_list[0]}/{sector_list[0]}_T_feature_imp.csv",
             encoding='utf-8-sig')
         elif args.FS == "BE":
             print("Using Backward Elimination for feature selection")
-            selected_features = backward_elimination(X_imputed_df, df_processing_data["Label"], n_features_t,significance_level=0.07)
+            selected_features = backward_elimination(X_imputed_df.drop(columns=["Relative Return"]), df_processing_data["Label"], n_features_t,significance_level=0.07)
             selected_features_series = pd.Series(selected_features)
             selected_features_series.to_csv(
             f"./data_kr/financial_with_Label/{sector_list[0]}/{sector_list[0]}_T_feature_imp.csv",
@@ -697,6 +693,7 @@ elif args.isall == "cluster":
 
         df_processed_data = pd.concat(
             [df_processing_data.iloc[:, 1:5],
+             df_processing_data.iloc[:, -3:-2],
              df_processing_data[selected_features],
              df_processing_data.iloc[:, -2:]
              ],
@@ -908,38 +905,48 @@ elif args.isall == "True":
 
         X_imputed_df = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2], index=df_processing_data.index)
 
-        if args.DR == "False":
-            X_pca_df = X_imputed_df
-        elif args.DR == "PCA":
-            X_pca_df = apply_pca(X_imputed_df, n_components=30)
-        elif args.DR == "VIF":
+        if args.DR == "VIF":
             selected_features = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
             X_pca_df = df_processing_data[selected_features]
         elif args.DR == "PC":
-            df_processing_data_cleaned = remove_highly_correlated_features(df_processing_data,correlation_threshold=0.9)
+            df_processing_data_cleaned = remove_highly_correlated_features(df_processing_data,
+                                                                           correlation_threshold=0.9)
             X_pca_df = df_processing_data_cleaned
+        else:
+            print("Wrong method")
+            exit()
 
         if args.FS == "RF":
             print("Using Random Forest for feature selection")
-            selected_features = random_forest_feature_selection(X_imputed_df, df_processing_data["Label"], n_features_t)
+            selected_features = random_forest_feature_selection(X_imputed_df.drop(columns=["Relative Return"]),
+                                                                df_processing_data["Label"], n_features_t)
             selected_features_series = pd.Series(selected_features)
-            selected_features_series.to_csv(f"./data_kr/clustered_data/ALL/ALL_T_feature_imp.csv", encoding='utf-8-sig',index=False)
+            selected_features_series.to_csv(
+                f"./data_kr/clustered_data/ALL/ALL_T_feature_imp.csv",
+            encoding='utf-8-sig')
         elif args.FS == "FS":
             print("Using Forward Selection for feature selection")
-            selected_features = forward_selection(X_imputed_df, df_processing_data["Label"], n_features_t)
+            selected_features = forward_selection(X_imputed_df.drop(columns=["Relative Return"]),
+                                                  df_processing_data["Label"], n_features_t)
             selected_features_series = pd.Series(selected_features)
-            selected_features_series.to_csv(f"./data_kr/clustered_data/ALL/ALL_T_feature_imp.csv", encoding='utf-8-sig',index=False)
+            selected_features_series.to_csv(
+                f"./data_kr/clustered_data/ALL/ALL_T_feature_imp.csv",
+            encoding='utf-8-sig')
         elif args.FS == "BE":
             print("Using Backward Elimination for feature selection")
-            selected_features = backward_elimination(X_imputed_df, df_processing_data["Label"], n_features_t,significance_level=0.07)
+            selected_features = backward_elimination(X_imputed_df.drop(columns=["Relative Return"]),
+                                                     df_processing_data["Label"], n_features_t, significance_level=0.07)
             selected_features_series = pd.Series(selected_features)
-            selected_features_series.to_csv(f"./data_kr/clustered_data/ALL/ALL_T_feature_imp.csv", encoding='utf-8-sig',index=False)
-
-        df_processed_data = pd.concat([
-            df_processing_data.iloc[:, 1:5],  # name, year, quarter, sector
-            df_processing_data[selected_features],  # 선택된 특징들
-            df_processing_data.iloc[:, -2:]  # Label
-        ], axis=1)
+            selected_features_series.to_csv(
+                f"./data_kr/clustered_data/ALL/ALL_T_feature_imp.csv",
+            encoding='utf-8-sig')
+        df_processed_data = pd.concat(
+            [df_processing_data.iloc[:, 1:5],
+             df_processing_data.iloc[:, -3:-2],
+             df_processing_data[selected_features],
+             df_processing_data.iloc[:, -2:]
+             ],
+            axis=1)
 
         # 열 이름에서 접두사 제거
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|K_)', '', regex=True)

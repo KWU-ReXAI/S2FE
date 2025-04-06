@@ -35,7 +35,7 @@ impute = SoftImpute(verbose=False)
 #impute = SimpleImputer(strategy='median')
 #impute = KNNImputer(n_neighbors=5)
 
-n_features_t = 9
+n_features_t = 6
 
 def add_prefix_to_columns(df, prefix, exclude_cols=None):
     if exclude_cols is None:
@@ -407,20 +407,51 @@ if args.isall == "False":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        rgr = RandomForestRegressor()
-        rgr.fit(df_processing_data.iloc[:, 5:-3], df_processing_data.iloc[:, -2:-1])
-        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[5:-3]).sort_values(
-            ascending=False)
-        feature_importance[:n_features_t].to_csv(
+        X_imputed_df = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2], index=df_processing_data.index)
+
+        if args.DR == "False":
+            X_imputed_df = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
+                                        index=df_processing_data.index)
+            X_pca_df = X_imputed_df
+        elif args.DR == "PCA":
+            X_imputed_df = pd.DataFrame(X_imputed, columns=df_processing_data.columns[5:-2],
+                                        index=df_processing_data.index)
+            X_pca_df = apply_pca(X_imputed_df, n_components=30)
+        elif args.DR == "VIF":
+            selected_features = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
+            X_pca_df = df_processing_data[selected_features]
+        elif args.DR == "PC":
+            df_processing_data_cleaned = remove_highly_correlated_features(df_processing_data,correlation_threshold=0.9)
+            X_pca_df = df_processing_data_cleaned
+
+        if args.FS == "RF":
+            print("Using Random Forest for feature selection")
+            selected_features = random_forest_feature_selection(X_imputed_df, df_processing_data["Label"], n_features_t)
+            selected_features_series = pd.Series(selected_features)
+            selected_features_series.to_csv(
+            f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_T_feature_imp.csv",
+            encoding='utf-8-sig')
+        elif args.FS == "FS":
+            print("Using Forward Selection for feature selection")
+            selected_features = forward_selection(X_imputed_df, df_processing_data["Label"], n_features_t)
+            selected_features_series = pd.Series(selected_features)
+            selected_features_series.to_csv(
+            f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_T_feature_imp.csv",
+            encoding='utf-8-sig')
+        elif args.FS == "BE":
+            print("Using Backward Elimination for feature selection")
+            selected_features = backward_elimination(X_imputed_df, df_processing_data["Label"], n_features_t,
+                                                     significance_level=0.07)
+            selected_features_series = pd.Series(selected_features)
+            selected_features_series.to_csv(
             f"./data_kr/clustered_data/cluster_{cluster_index}/cluster_{cluster_index}_T_feature_imp.csv",
             encoding='utf-8-sig')
 
-        select_col = feature_importance.index[:n_features_t]
-        df_col[sector] = select_col
-
         df_processed_data = pd.concat(
-            [df_processing_data.iloc[:, 1:5], df_processing_data.iloc[:, -3:-2], df_processing_data[select_col],
-             df_processing_data.iloc[:, -2:]],
+            [df_processing_data.iloc[:, 1:5],
+             df_processing_data[selected_features],
+             df_processing_data.iloc[:, -2:]
+             ],
             axis=1)
 
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|K_)', '', regex=True)
@@ -453,11 +484,12 @@ if args.isall == "False":
 
     exit()
 elif args.isall == "cluster":
+    '''
     cluster_list = [
         ['유통'], ['음식료·담배'], ['제약'] ,['운송·창고'], ['기타금융'] ,['화학'] ,['운송장비·부품'] ,['비금속'] ,['전기·전자'] ,['금속'] ,['건설']
          ,['섬유·의류'] ,['전기·가스'] ,['종이·목재'] ,['일반서비스'] ,['통신'] ,['기계·장비'] ,['IT 서비스'] ,['오락·문화'] ,['기타제조']]
-
-    #cluster_list = [['건설'], ['경기소비재'],['산업재'],['생활소비재'],['에너지_화학'],['정보기술'],['중공업'],['철강_소재'],['커뮤니케이션서비스'],['헬스케어']]
+    '''
+    cluster_list = [['건설'], ['경기소비재'],['산업재'],['생활소비재'],['에너지_화학'],['정보기술'],['중공업'],['철강_소재'],['커뮤니케이션서비스'],['헬스케어']]
     for cluster_index in range(len(cluster_list)):
         sector_list = cluster_list[cluster_index]
         clustered_ticker_list = []
@@ -652,7 +684,9 @@ elif args.isall == "cluster":
             print("Using Forward Selection for feature selection")
             selected_features = forward_selection(X_imputed_df, df_processing_data["Label"], n_features_t)
             selected_features_series = pd.Series(selected_features)
-            selected_features_series.to_csv(f"./data_kr/clustered_data/ALL/ALL_T_feature_imp.csv", encoding='utf-8-sig',index=False)
+            selected_features_series.to_csv(
+            f"./data_kr/financial_with_Label/{sector_list[0]}/{sector_list[0]}_T_feature_imp.csv",
+            encoding='utf-8-sig')
         elif args.FS == "BE":
             print("Using Backward Elimination for feature selection")
             selected_features = backward_elimination(X_imputed_df, df_processing_data["Label"], n_features_t,significance_level=0.07)
@@ -663,7 +697,6 @@ elif args.isall == "cluster":
 
         df_processed_data = pd.concat(
             [df_processing_data.iloc[:, 1:5],
-             df_processing_data.iloc[:, -3:-2],
              df_processing_data[selected_features],
              df_processing_data.iloc[:, -2:]
              ],
@@ -699,10 +732,11 @@ elif args.isall == "cluster":
 
     exit()
 elif args.isall == "True":
+    '''
     cluster_list = [['유통', '음식료·담배', '제약', '운송·창고', '기타금융', '화학', '운송장비·부품', '비금속' ,'전기·전자', '금속', '건설'
          ,'섬유·의류' ,'전기·가스', '종이·목재', '일반서비스', '통신', '기계·장비', 'IT 서비스', '오락·문화', '기타제조']]
-
-    #cluster_list = [['건설', '경기소비재', '산업재', '생활소비재', '에너지_화학', '정보기술', '중공업', '철강_소재','커뮤니케이션서비스', '헬스케어']]
+    '''
+    cluster_list = [['건설', '경기소비재', '산업재', '생활소비재', '에너지_화학', '정보기술', '중공업', '철강_소재','커뮤니케이션서비스', '헬스케어']]
     for cluster_index in range(len(cluster_list)):
         sector_list = cluster_list[cluster_index]
         clustered_ticker_list = []
@@ -903,7 +937,6 @@ elif args.isall == "True":
 
         df_processed_data = pd.concat([
             df_processing_data.iloc[:, 1:5],  # name, year, quarter, sector
-            df_processing_data.iloc[:, -3:-2],  # Relative Return
             df_processing_data[selected_features],  # 선택된 특징들
             df_processing_data.iloc[:, -2:]  # Label
         ], axis=1)

@@ -26,15 +26,16 @@ def extract_video_text(url):
 
 def summary_text(text):
 	summarizer = pipeline("summarization", model="t5-base")
-	summary = summarizer(text, max_length=150, min_length=40, do_sample=False)
+	input_text = 'summarize: ' + text
+	summary = summarizer(input_text, max_length=150, min_length=40, do_sample=False)
     
-	return summary
-    
+	return summary[0]['summary_text']
 
 # 유튜브 영상에서 자막 추출
 url = "https://www.youtube.com/watch?v=PuxGPqk9IQA"
 text = extract_video_text(url)
 summary = summary_text(text)
+print(summary)
 
 # 랭체인으로 LLM에 질문하고 대답 가져오기기
 # 1. OpenAI LLM 설정 (OPENAI_API_KEY가 환경 변수로 설정되어 있어야 함)

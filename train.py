@@ -9,7 +9,7 @@ from tqdm import tqdm
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-cluster_n = 6
+cluster_n = 5
 
 warnings.filterwarnings(action='ignore')
 
@@ -27,8 +27,6 @@ parser.add_argument('--use_all',type=str,nargs="?",default="SectorAll") # 모델
 parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE") # 사용할 앙상블 방법
 parser.add_argument('--clustering',action="store_true",default=True) # 클러스터링 여부
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
-
-cluster_n = 6
 
 args = parser.parse_args()
 DM = DataManager(features_n= args.features_n, cluster_n=cluster_n)

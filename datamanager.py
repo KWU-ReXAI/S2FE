@@ -12,7 +12,7 @@ class DataManager:
         self.sector_list = sorted(pd.read_csv("./data_kr/symbol.csv")["sector"].unique().tolist())
         self.cluster_list = ["cluster_" + str(i) for i in range(cluster_n)]  # 클러스터 번호 부여
 
-        self.phase_list = {"p1": [1, 15, 19, 23], "p2": [5, 19, 23, 27], "p3": [9, 23, 27, 31], "p4": [13, 27, 31, 35]}
+        self.phase_list = {"p1": [1, 16, 20, 24], "p2": [5, 20, 24, 28], "p3": [9, 24, 28, 32], "p4": [13, 28, 32, 36]}
 
     def create_date_list(self):
         # 예시: merged 폴더의 파일 이름이 "2015_Q1.csv", "2015_Q2.csv" 등이라면
@@ -73,6 +73,9 @@ class DataManager:
         test_start = self.phase_list[phase][2]
         test_end = self.phase_list[phase][3]
 
+        """print(f"train: {self.pno2date(train_start)} ~ {self.pno2date(valid_start - 1)} / valid: {self.pno2date(valid_start)} ~ {self.pno2date(test_start-1)}"
+              f" / test: {self.pno2date(test_start)} ~ {self.pno2date(test_end-1)}")"""
+
         if isall:
             train_data = pd.DataFrame()
             valid_data = pd.DataFrame()
@@ -80,21 +83,21 @@ class DataManager:
 
             for pno in range(train_start, valid_start):
                 strdate = self.pno2date(pno)  # 예: "2015_Q1"
-                fp = f"./data_kr/financial_with_Label/{sector}/{strdate}.csv"
+                fp = f"./preprocessed_data/sectors/{sector}/{strdate}.csv"
                 fs_data = pd.read_csv(fp)
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 train_data = pd.concat([train_data, fs_data], axis=0)
 
             for pno in range(valid_start, test_start):
                 strdate = self.pno2date(pno)
-                fp = f"./data_kr/financial_with_Label/{sector}/{strdate}.csv"
+                fp = f"./preprocessed_data/sectors/{sector}/{strdate}.csv"
                 fs_data = pd.read_csv(fp)
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 valid_data = pd.concat([valid_data, fs_data], axis=0)
 
             for pno in range(test_start, test_end):
                 strdate = self.pno2date(pno)
-                fp = f"./data_kr/financial_with_Label/{sector}/{strdate}.csv"
+                fp = f"./preprocessed_data/sectors/{sector}/{strdate}.csv"
                 fs_data = pd.read_csv(fp)
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 test_data = pd.concat([test_data, fs_data], axis=0)
@@ -136,19 +139,19 @@ class DataManager:
 
             for pno in range(train_start, valid_start):
                 strdate = self.pno2date(pno)
-                fs_data = pd.read_csv(f"./data_kr/clustered_data/{sector}/{strdate}.csv",index_col=[0])
+                fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 train_list.append(fs_data)
 
             for pno in range(valid_start, test_start):
                 strdate = self.pno2date(pno)
-                fs_data = pd.read_csv(f"./data_kr/clustered_data/{sector}/{strdate}.csv", index_col=[0])
+                fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv", index_col=[0])
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 valid_list.append(fs_data)
 
             for pno in range(test_start, test_end):
                 strdate = self.pno2date(pno)
-                fs_data = pd.read_csv(f"./data_kr/clustered_data/{sector}/{strdate}.csv", index_col=[0])
+                fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv", index_col=[0])
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 test_list.append(fs_data)
 
@@ -161,19 +164,19 @@ class DataManager:
 
         for pno in range(train_start, valid_start):
             strdate = self.pno2date(pno)  # 예: "2015_Q1"
-            fs_data = pd.read_csv(f"./data_kr/clustered_data/{sector}/{strdate}.csv",index_col=[0])
+            fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
             fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
             train_data.append(fs_data)
 
         for pno in range(valid_start, test_start):
             strdate = self.pno2date(pno)
-            fs_data = pd.read_csv(f"./data_kr/clustered_data/{sector}/{strdate}.csv",index_col=[0])
+            fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
             fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
             valid_data.append(fs_data)
 
         for pno in range(test_start, test_end):
             strdate = self.pno2date(pno)
-            fs_data = pd.read_csv(f"./data_kr/clustered_data/{sector}/{strdate}.csv",index_col=[0])
+            fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
             fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
             test_data.append(fs_data)
 

@@ -20,7 +20,8 @@ class Utils:
         # memory: 포트폴리오의 가치(주가 혹은 누적 수익률 리스트)
         if len(memory) <= 1: return 0
         else:
-            return max((peak_pv - pv) / peak_pv for peak_pv, pv in zip(itertools.accumulate(memory, max), memory))
+            mdd = max((peak_pv - pv) / peak_pv for peak_pv, pv in zip(itertools.accumulate(memory, max), memory))
+            return mdd
 
     def get_sharpe_ratio(self,memory): # 샤프 비율 계산
         # money_history ex: [1.0, 1.2, 1.5, 1.3, 1.6]

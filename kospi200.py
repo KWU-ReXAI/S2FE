@@ -14,9 +14,9 @@ kospi_200 = {}
 
 #jump_cnt = 0  # 데이터 뛰어넘을 때 사용하는 변수
 
-with open(kospi_200_file, 'r') as f:
+with open(kospi_200_file, 'r',encoding='utf-8 sig') as f:
     for line in f:
-        code, name, sector = line.strip().split(',')
+        code, name = line.strip().split(',')
         kospi_200[code] = name
 
 quarters = {
@@ -30,6 +30,7 @@ years = list(range(2015, 2025))
 save_valid_stock = []
 
 for corp_code, corp_name in kospi_200.items():
+    if corp_code == 'code': continue
     corp_code = corp_code.zfill(6)
     #jump_cnt += 1
 

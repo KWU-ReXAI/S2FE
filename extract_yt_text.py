@@ -1,10 +1,15 @@
+from dotenv import load_dotenv
+import os
+
 from youtube_transcript_api import YouTubeTranscriptApi
 from urllib.parse import urlparse, parse_qs
-from transformers import pipeline
 
-from langchain_community.llms import OpenAI
-from langchain_core.prompts import PromptTemplate
-from langchain.chains.llm import LLMChain
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import LLMChain, SequentialChain
+from langchain.prompts import PromptTemplate
+from langchain.schema import BaseOutputParser
+
+load_dotenv()  # .env 파일에서 환경변수 불러오기
 
 def extract_video_id(url):
     if "youtu.be" in url:
@@ -24,42 +29,60 @@ def extract_video_text(url):
 	
 	return full_text
 
-def summary_text(text):
-	summarizer = pipeline("summarization", model="t5-base")
-	input_text = 'summarize: ' + text
-	summary = summarizer(input_text, max_length=150, min_length=100, do_sample=False)
-    
-	return summary[0]['summary_text']
-
 # 유튜브 영상에서 자막 추출
-url = "https://www.youtube.com/watch?v=PuxGPqk9IQA"
+url = "https://www.youtube.com/watch?v=XLAUgCEIaS0"
 text = extract_video_text(url)
-summary = summary_text(text)
-print(text)
-print(summary)
+print("YOUTUBE title:\n", text)
 
-# # 랭체인으로 LLM에 질문하고 대답 가져오기기
-# # 1. OpenAI LLM 설정 (OPENAI_API_KEY가 환경 변수로 설정되어 있어야 함)
-# # 창의성은 70%, 대답 수 max는 10 tokens
-# llm = OpenAI(
-# 				temperature=0.7,
-# 				max_tokens=30,
-# 				openai_api_key="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"
-#             )
+# 랭체인으로 LLM에 질문하고 대답 가져오기기
+# 1. OpenAI LLM 설정 (OPENAI_API_KEY가 환경 변수로 설정되어 있어야 함)
+# 창의성은 70%, 대답 수 max는 10 tokens
+llm = ChatOpenAI(temperature=0, model="gpt-4o", openai_api_key=os.getenv("OPENAI_API_KEY"))
 
-# # 2. 프롬프트 템플릿 정의
-# prompt = PromptTemplate(
-#     input_variables=["question"],
-#     template="너는 친절한 경제 전문가야. 다음 질문에 대해 설명해줘:\n\n질문: {question}\n\n답변:"
-# )
+# 2. 프롬프트 템플릿 정의
+# 요약 단계 프롬프트
+summary_prompt = PromptTemplate(
+    input_variables=["article"],
+    template="""
+다음 경제 뉴스 기사를 간결하고 명확하게 요약해 주세요:
 
-# # 3. LLMChain 생성
-# chain = LLMChain(llm=llm, prompt=prompt)
+"{article}"
 
-# corp_list = ["삼성", "LG"]
-# for corp in corp_list:
-# 	# 4. 질문 입력 후 실행
-# 	question = f"\"{summary}\"를 바탕으로 {corp}의 주가가 상승할지 하락할지만 예측해줘줘"
-# 	response = chain.run(question)
+요약:
+"""
+)
 
-# 	print(response)
+# 상승 여부 예측 프롬프트
+prediction_prompt = PromptTemplate(
+    input_variables=["summary", "stock"],
+    template="""
+아래는 경제 뉴스의 요약입니다.
+
+"{summary}"
+
+이 뉴스의 내용이 주식 종목 "{stock}"에 긍정적인 영향을 미칠 가능성이 있을까요? 그렇다면 '오를 가능성 있음', 아니라면 '오를 가능성 낮음'이라고만 답해 주세요.
+"""
+)
+
+# 3. LLMChain 생성
+# 각 체인 정의
+summary_chain = LLMChain(llm=llm, prompt=summary_prompt, output_key="summary")
+prediction_chain = LLMChain(llm=llm, prompt=prediction_prompt, output_key="prediction")
+
+# 전체 파이프라인 연결
+full_chain = SequentialChain(
+    chains=[summary_chain, prediction_chain],
+    input_variables=["article", "stock"],
+    output_variables=["summary", "prediction"],
+    verbose=True
+)
+
+stock_name = "엔비디아"
+
+result = full_chain({
+    "article": text,
+    "stock": stock_name
+})
+
+print("요약:", result['summary'])
+print("예측:", result['prediction'])

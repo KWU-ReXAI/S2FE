@@ -2,7 +2,8 @@ from dotenv import load_dotenv
 import os
 
 from googleapiclient.discovery import build
-from youtube_transcript_api import YouTubeTranscriptApi
+import yt_dlp
+import whisper
 import re
 
 import google.generativeai as genai
@@ -14,11 +15,14 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
+
 # -----------------------------
 # 유튜브 영상 검색
 # date 이전의 query 검색 결과들만 보여줌 
+# date는 '2025-04-11' 형식으로 입력
 # -----------------------------
 def search_videos(query, date):
+	date += 'T00:00:00Z' # ISO 8601 형식으로 변경
 	youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
 
 	# Step 1: 검색
@@ -73,15 +77,41 @@ def search_videos(query, date):
 	return video_id
 
 # -----------------------------
-# 유튜브 id에서 자막 추출
+# 유튜브 id에서 음성파일 추출
+# INPUT: youtube id, 오디오 다운로드 경로
 # -----------------------------
-def extract_video_text(video_id):
-	transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['ko', 'en'])
-
-	# 모든 문장을 띄어쓰기로 이어붙이기
-	full_text = " ".join([entry['text'] for entry in transcript])
+def extract_video_audio(video_id, audio_dir):
+	os.makedirs('./audio', exist_ok=True)
 	
-	return full_text
+	url = "https://www.youtube.com/watch?v=" + video_id
+
+	ydl_opts = {
+		'format': 'bestaudio/best',
+		'outtmpl': f'{audio_dir}.%(ext)s',
+		'postprocessors': [{
+			'key': 'FFmpegExtractAudio',
+			'preferredcodec': 'mp3',
+		}]
+	}
+
+	with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+		ydl.download([url])
+
+# -----------------------------
+# 음성파일을 텍스트로 변환
+# INPUT: youtube id, 오디오 다운로드 경로
+# -----------------------------
+def audio2text(audio_dir):
+	# 모델 로드 (base, small, medium, large 중 선택 가능)
+	model = whisper.load_model("small")
+
+	# 음성 파일 STT 수행
+	result = model.transcribe(f'{audio_dir}.mp3')  # wav, mp4 등도 OK
+
+	# 텍스트 출력
+	print(result["text"])
+
+	return result["text"]
 
 # -----------------------------
 # 자막 전처리 함수
@@ -127,17 +157,21 @@ def predict_market_from_summary(summary: str, stock: str) -> str:
 
 
 # ------------------------
+# 앞의 모든 함수를 이용한 최종 함수
+#
 # 주식과 날짜 입력하면 주가전망 예측
 # date는 '2025-04-11' 형식으로 입력
 # ------------------------
 def predict_market(stock: str, date: str) -> str:
 	SEARCH_QUERY = f'{stock} 주가전망'
-	BEFORE_DATE = date + 'T00:00:00Z'
+	BEFORE_DATE = date
 
 	video_id = search_videos(SEARCH_QUERY, BEFORE_DATE)
 
-	# 유튜브 영상에서 자막 추출
-	text = extract_video_text(video_id)
+	# 유튜브 영상 음성 추출
+	audio_dir = f'audio/{stock}_{BEFORE_DATE}'
+	extract_video_audio(video_id, audio_dir)
+	text = audio2text(audio_dir)
 
 	# 자막 전처리
 	cleaned = clean_srt(text)

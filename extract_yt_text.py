@@ -1,16 +1,12 @@
 from dotenv import load_dotenv
 import os
-import datetime
 
 from googleapiclient.discovery import build
-from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
-from urllib.parse import urlparse, parse_qs
+from youtube_transcript_api import YouTubeTranscriptApi
 import re
 
 import google.generativeai as genai
 from langchain.chat_models import ChatOpenAI
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
 from langchain.schema import HumanMessage
 
 load_dotenv()  # .env 파일에서 환경변수 불러오기
@@ -18,13 +14,13 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
-
 # -----------------------------
 # 유튜브 영상 검색
 # date 이전의 query 검색 결과들만 보여줌 
 # -----------------------------
-youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
 def search_videos(query, date):
+	youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+
 	# Step 1: 검색
 	search_res = youtube.search().list(
 		q=query,
@@ -98,55 +94,68 @@ def clean_srt(srt_text: str) -> str:
 # ------------------------
 # Gemini 요약
 # ------------------------
-genai.configure(api_key=GEMINI_API_KEY)
-gemini_model = genai.GenerativeModel("gemini-2.0-flash")
-
 def summarize_with_gemini(text: str) -> str:
-    prompt = f"""
+	genai.configure(api_key=GEMINI_API_KEY)
+	gemini_model = genai.GenerativeModel("gemini-2.0-flash")
+
+	prompt = f"""
 다음은 경제 관련 유튜브 영상 자막입니다.
 말투는 제거하고, 핵심 내용 위주로 간결하게 뉴스 스타일로 요약해주세요:
 
 {text}
 """
-    response = gemini_model.generate_content(prompt)
-    return response.text.strip()
+	response = gemini_model.generate_content(prompt)
+	return response.text.strip()
 
 
 
 # ------------------------
 # GPT-4 등락 예측
 # ------------------------
-GPT_llm = ChatOpenAI(temperature=0, model="gpt-4o", openai_api_key=OPENAI_API_KEY)
-
 def predict_market_from_summary(summary: str, stock: str) -> str:
-    prompt = f"""
+	GPT_llm = ChatOpenAI(temperature=0, model="gpt-4o", openai_api_key=OPENAI_API_KEY)
+
+	prompt = f"""
 아래는 경제 뉴스의 요약입니다.
 
 "{summary}"
 
 이 뉴스의 내용이 주식 종목 "{stock}"에 긍정적인 영향을 미칠 가능성이 있을까요? 그렇다면 '오를 가능성 있음', 아니라면 '오를 가능성 낮음'이라고만 답해 주세요.
 """
-    response = GPT_llm([HumanMessage(content=prompt)])
-    return response.content.strip()
+	response = GPT_llm([HumanMessage(content=prompt)])
+	return response.content.strip()
 
-# 유튜브에서 주가전망 영상 찾기기
-SEARCH_QUERY = '삼성전자 주가전망'
-BEFORE_DATE = '2024-12-31T00:00:00Z'
-video_id = search_videos(SEARCH_QUERY, BEFORE_DATE)
 
-# 유튜브 영상에서 자막 추출
-text = extract_video_text(video_id)
+# ------------------------
+# 주식과 날짜 입력하면 주가전망 예측
+# date는 '2025-04-11' 형식으로 입력
+# ------------------------
+def predict_market(stock: str, date: str) -> str:
+	SEARCH_QUERY = f'{stock} 주가전망'
+	BEFORE_DATE = date + 'T00:00:00Z'
 
-# 자막 전처리
-cleaned = clean_srt(text)
-print("전처리:\n", cleaned)
+	video_id = search_videos(SEARCH_QUERY, BEFORE_DATE)
 
-# 전처리 자막 요약
-summary = summarize_with_gemini(cleaned)
+	# 유튜브 영상에서 자막 추출
+	text = extract_video_text(video_id)
 
-# 주식 등락 예측
-stock = "삼성전자"
-prediction = predict_market_from_summary(summary, stock)
+	# 자막 전처리
+	cleaned = clean_srt(text)
+	print("전처리:\n", cleaned)
 
-print("\n📄 GEMINI 요약 결과:\n", summary)
-print("\n📈 GPT-4 예측 결과:\n", prediction)
+	# 전처리 자막 요약
+	summary = summarize_with_gemini(cleaned)
+
+	# 주식 등락 예측
+	stock = "삼성전자"
+	prediction = predict_market_from_summary(summary, stock)
+
+	print("\n📄 GEMINI 요약 결과:\n", summary)
+	print("\n📈 GPT-4 예측 결과:\n", prediction)
+
+	if prediction == '오를 가능성 있음':
+		return 'up'
+	elif prediction == '오를 가능성 낮음':
+		return 'down'
+	else:
+		return 'middle'

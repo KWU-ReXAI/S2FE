@@ -153,6 +153,15 @@ class MyModel(nn.Module):
         df.to_csv(file_path, index=False)
 
     def trainSectorModelsWithValid(self):
+        print(f"trainSectorModelsWithValid ({self.phase}): ")
+        train_start = self.DM.phase_list[self.phase][0]
+        valid_start = self.DM.phase_list[self.phase][1]
+        test_start = self.DM.phase_list[self.phase][2]
+        test_end = self.DM.phase_list[self.phase][3]
+
+        print(
+            f"train: {self.DM.pno2date(train_start)} ~ {self.DM.pno2date(valid_start - 1)} / valid: {self.DM.pno2date(valid_start)} ~ {self.DM.pno2date(test_start - 1)}"
+            f" / test: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end - 1)}")
         for sector in self.topK_sectors:
             train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
             train_data = np.concatenate((train_data, valid_data), axis=0)
@@ -165,8 +174,17 @@ class MyModel(nn.Module):
 
             self.sector_models[sector] = the_model
 
-    def trainALLSectorModel(self): # 전체 섹터를 하나의 모델로 학습
+    def trainALLSectorModelWithValid(self): # 전체 섹터를 하나의 모델로 학습
         # 전체 섹터 학습 모델
+        print(f"trainALLSectorModelsWithValid ({self.phase}): ")
+        train_start = self.DM.phase_list[self.phase][0]
+        valid_start = self.DM.phase_list[self.phase][1]
+        test_start = self.DM.phase_list[self.phase][2]
+        test_end = self.DM.phase_list[self.phase][3]
+
+        print(
+            f"train: {self.DM.pno2date(train_start)} ~ {self.DM.pno2date(valid_start - 1)} / valid: {self.DM.pno2date(valid_start)} ~ {self.DM.pno2date(test_start - 1)}"
+            f" / test: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end - 1)}")
         train_data = np.ndarray([0])
         train_tmp, valid_tmp, _ = self.DM.data_phase("ALL",self.phase)
         train_tmp = np.concatenate((train_tmp, valid_tmp))
@@ -206,7 +224,7 @@ class MyModel(nn.Module):
             _, _, data_tmp = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
             test_data[sector] = data_tmp
 
-            symbol_index = pd.read_csv(f"./data_kr/clustered_data/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
+            symbol_index = pd.read_csv(f"./preprocessed_data/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
             symbols[sector] = symbol_index["Code"]
 
         ## 백테스팅 진행
@@ -219,7 +237,9 @@ class MyModel(nn.Module):
 
         if verbose: print(f"\n------[{self.phase}]------",flush=True)
 
+        print(f"Test Period: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end-1)}")
         for pno in range(test_start, test_end):  # test_start ~ end 기간동안 매일 반복 실행
+            print(f"Test in {self.DM.pno2date(pno)}:")
             # 각 날짜마다 주식을 선택하고 수익률을 계산
             i = pno - test_start
             strdate = self.DM.pno2date(pno)  # 현재 날짜와
@@ -284,10 +304,6 @@ class MyModel(nn.Module):
                     f"{dir}/train_selected_stocks_{self.phase}.csv", index=False)
             num_of_stock.append(len(real_last_topK_stock))
 
-            # 실제 데이터 로딩 및 포트폴리오 성과 평가
-            fs = pd.read_csv(f"./data_kr/date_regression/{strdate}.csv")  # 현재 날짜의 주가 데이터
-            if next_strdate != '2025_Q1':
-                next_fs = pd.read_csv(f"./data_kr/date_regression/{next_strdate}.csv")  # 다음 날짜의 주가 데이터
             ks50_stock = ["KS200"]
             daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate)
             daily_change_KOSPI = self.Utils.get_portfolio_memory(ks50_stock,strdate,next_strdate)
@@ -304,8 +320,11 @@ class MyModel(nn.Module):
         mdd_ks = self.Utils.get_MDD(np.array(pf_mem_ks) + 1)
         sharpe_ks = self.Utils.get_sharpe_ratio(pf_mem_ks)
 
+
+
         if verbose:
-            print(f"\nMDD: {mdd}, Sharpe: {sharpe}, CAGR: {return_ratio}",flush=True)
+            print(f"\nMDD: {mdd}\tSharpe: {sharpe}\tCAGR: {return_ratio}",flush=True)
+            print(f"KOSPI MDD: {mdd_ks}\tKOSPI Sharpe: {sharpe_ks}\tKOSPI CAGR: {return_ratio_ks}",flush=True)
             print("----------------------",flush=True)
 
         return return_ratio, sharpe, mdd,num_of_stock, return_ratio_ks, sharpe_ks, mdd_ks

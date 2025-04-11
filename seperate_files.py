@@ -231,9 +231,7 @@ def compare_code_and_columns(file1, file2):
 
 def remove_specific_codes(file_path):
     # 제거할 code 값들
-    codes_to_remove = {68870, 86790, 71050, 6800, 4990, 30, 88350, 810, 24110, 138930,
-                       5940, 32830, 5830, 29780, 105560, 2270, 16360, 37620, 3450, 55550}
-
+    codes_to_remove = ['4990', '5830', '5940', '6800', '16360', '24110', '29780', '32830', '37620', '55550', '68870', '71050', '86790', '88350', '105560', '138930']
     # CSV 파일 읽기
     df = pd.read_csv(file_path)
 
@@ -249,7 +247,7 @@ def seperate_comma():
     input_path = './data_kr/symbol.csv'
 
     # 출력 파일 경로
-    output_path = './data_kr/financial_statements/kospi_200.txt'
+    output_path = './data_kr/kospi_200.txt'
 
     # CSV 파일 읽기
     symbol_df = pd.read_csv(input_path)
@@ -262,19 +260,181 @@ def seperate_comma():
 
     print(f"파일이 저장되었습니다: {output_path}")
 
+def saveUpjongtoSymbol():
+    df_data = pd.read_csv('./data_kr/20201002_업종.csv', encoding='cp949')
+    df_symbol = pd.read_csv('./data_kr/symbol.csv', encoding='utf-8-sig')
 
-# 사용 예시
-# compare_code_and_columns("path/to/first_file.csv", "path/to/second_file.csv")
+    # 종목코드 문자열 변환
+    df_data['종목코드'] = df_data['종목코드'].astype(str).str.zfill(6)
+    df_symbol['code'] = df_symbol['code'].astype(str).str.zfill(6)
+
+    # 종목코드 기준으로 병합하여 sector 추가
+    df_updated = pd.merge(df_symbol, df_data[['종목코드', '업종명']],
+                          how='left', left_on='code', right_on='종목코드')
+
+    # 기존 sector 컬럼 삭제하고, 새로 가져온 '업종명'을 sector로 사용
+    df_updated.drop(columns=['sector', '종목코드'], inplace=True)
+    df_updated.rename(columns={'업종명': 'sector'}, inplace=True)
+
+    # 결과 저장
+    df_updated.to_csv('./data_kr/symbol_upjong.csv', index=False)
+
+def saveSectortoSymbol():
+    # symbol.csv 불러오기
+    symbol_path = './data_kr/symbol.csv'
+    sector_folder = './data_kr/섹터정보'
+    output_path = './data_kr/symbol_sector.csv'
+    df_symbol = pd.read_csv(symbol_path, encoding='utf-8-sig')
+    df_symbol['code'] = df_symbol['code'].astype(str).str.zfill(6)
+    df_symbol['sector'] = None  # sector 열 초기화
+
+    # 섹터 폴더 내 모든 csv 파일 순회
+    for filename in os.listdir(sector_folder):
+        if filename.endswith('.csv'):
+            sector_name = os.path.splitext(filename)[0]  # 파일명 (확장자 제거) = 섹터명
+            sector_file_path = os.path.join(sector_folder, filename)
+
+            # 섹터 파일 읽기
+            df_sector = pd.read_csv(sector_file_path, encoding='utf-8-sig')
+            if '종목코드' not in df_sector.columns:
+                continue  # 종목코드 컬럼이 없으면 스킵
+
+            df_sector['종목코드'] = df_sector['종목코드'].astype(str).str.zfill(6)
+
+            # 종목코드 매칭되는 symbol에 섹터명 넣기
+            df_symbol.loc[df_symbol['code'].isin(df_sector['종목코드']), 'sector'] = sector_name
+
+    # 결과 저장
+    df_symbol.to_csv(output_path, index=False, encoding='utf-8-sig')
+
+
+def removeInvalidSymbolsAndFiles(folder_path, symbol_path, expected_rows=37, encoding='utf-8-sig'):
+    # symbol.csv 불러오기
+    df_symbol = pd.read_csv(symbol_path, encoding=encoding)
+    df_symbol['code'] = df_symbol['code'].astype(str).str.zfill(6)
+
+    invalid_codes = []
+
+    for filename in os.listdir(folder_path):
+        if filename.endswith('.csv'):
+            filepath = os.path.join(folder_path, filename)
+            try:
+                df = pd.read_csv(filepath, encoding=encoding)
+                if df.shape[0] != expected_rows:
+                    code = os.path.splitext(filename)[0].zfill(6)
+                    invalid_codes.append(code)
+                    os.remove(filepath)  # 파일 삭제
+                    print(f"[삭제됨] {filename} (행 개수: {df.shape[0]})")
+            except Exception as e:
+                print(f"[오류] {filename} 파일을 읽는 중 오류 발생: {e}")
+                code = os.path.splitext(filename)[0].zfill(6)
+                invalid_codes.append(code)
+                try:
+                    os.remove(filepath)
+                    print(f"[삭제됨] 오류난 파일 {filename}")
+                except:
+                    print(f"[경고] {filename} 삭제 실패")
+
+    # symbol.csv에서 코드 삭제
+    before_count = df_symbol.shape[0]
+    df_symbol = df_symbol[~df_symbol['code'].isin(invalid_codes)]
+    after_count = df_symbol.shape[0]
+
+    # 저장
+    df_symbol.to_csv(symbol_path, index=False, encoding=encoding)
+
+    print(f"\n총 {before_count - after_count}개의 종목 코드가 symbol.csv에서 삭제되었습니다.")
+    if invalid_codes:
+        print("삭제된 종목코드 목록:", invalid_codes)
+    else:
+        print("모든 CSV 파일이 유효한 37개의 행을 가지고 있습니다.")
+
+
+def compareFolderAndSymbol(folder_path, symbol_path, encoding='utf-8-sig'):
+    # 폴더 내 csv 파일 이름들 → 종목코드 리스트
+    folder_codes = [
+        os.path.splitext(f)[0].zfill(6)
+        for f in os.listdir(folder_path)
+        if f.endswith('.csv')
+    ]
+
+    # symbol.csv의 종목코드 리스트
+    df_symbol = pd.read_csv(symbol_path, encoding=encoding)
+    symbol_codes = df_symbol['code'].astype(str).str.zfill(6).tolist()
+
+    # 비교
+    only_in_folder = sorted(set(folder_codes) - set(symbol_codes))
+    only_in_symbol = sorted(set(symbol_codes) - set(folder_codes))
+    in_both = sorted(set(folder_codes) & set(symbol_codes))
+
+    print(f"✅ 폴더에만 있는 코드 ({len(only_in_folder)}개): {only_in_folder}")
+    print(f"✅ symbol.csv에만 있는 코드 ({len(only_in_symbol)}개): {only_in_symbol}")
+    print(f"✅ 둘 다에 있는 코드 ({len(in_both)}개): {in_both[:10]}{' ...' if len(in_both) > 10 else ''}")  # 일부만 출력
+
+    return {
+        "only_in_folder": only_in_folder,
+        "only_in_symbol": only_in_symbol,
+        "in_both": in_both
+    }
+
+def cleanSymbolWithFolder(folder_path, symbol_path, encoding='utf-8-sig'):
+    # 폴더 내 파일 이름들에서 종목코드 추출
+    folder_codes = [
+        os.path.splitext(f)[0].zfill(6)
+        for f in os.listdir(folder_path)
+        if f.endswith('.csv')
+    ]
+
+    # symbol.csv 로드
+    df_symbol = pd.read_csv(symbol_path, encoding=encoding)
+    df_symbol['code'] = df_symbol['code'].astype(str).str.zfill(6)
+
+    # 비교: symbol.csv에는 있지만 폴더에 없는 코드
+    symbol_codes = df_symbol['code'].tolist()
+    only_in_symbol = sorted(set(symbol_codes) - set(folder_codes))
+
+    # 해당 코드 제거
+    before_count = len(df_symbol)
+    df_symbol = df_symbol[~df_symbol['code'].isin(only_in_symbol)]
+    after_count = len(df_symbol)
+
+    # 저장
+    df_symbol.to_csv(symbol_path, index=False, encoding=encoding)
+
+    print(f"총 {before_count - after_count}개의 종목이 symbol.csv에서 삭제되었습니다.")
+    if only_in_symbol:
+        print("삭제된 종목코드:", only_in_symbol)
+    else:
+        print("symbol.csv와 폴더 내 파일명이 완전히 일치합니다.")
+
 
 # 198: symbol
 #12 18 13 5 29 5 7 1 13 22 33 14 4 2 1
 if __name__ == "__main__":
+    """
+    compareFolderAndSymbol(
+        folder_path='./backup/data_kr_sector/k_features/최대주주변동',
+        symbol_path='./data_kr/symbol.csv'
+    )
+
+    cleanSymbolWithFolder(
+        folder_path='./data_kr/merged',
+        symbol_path='./data_kr/symbol.csv'
+    )
+    merge_date_regression()
+    save_by_sector()
+    filter_all_files_by_sector()
+    save_sector_codes()
+
+    removeInvalidSymbolsAndFiles(
+        folder_path='./data_kr/merged',
+        symbol_path='./data_kr/symbol.csv',
+        expected_rows=37
+    )"""
     seperate_comma()
 
     merge_date_regression()
-
     save_by_sector()
-
     filter_all_files_by_sector()
-
     save_sector_codes()
+

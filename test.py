@@ -20,7 +20,7 @@ parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 
 args = parser.parse_args()
 
 
-cluster_n = 6
+cluster_n = 5
 
 DM = DataManager(features_n=6,cluster_n=cluster_n) # 특징 개수 4개로 설정하여 데이터 매니저 초기화
 DM.create_date_list()

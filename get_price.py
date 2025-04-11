@@ -1,4 +1,4 @@
-from pykrx import stock
+"""from pykrx import stock
 from pykrx import bond
 import pykrx
 import FinanceDataReader as fdr
@@ -8,7 +8,7 @@ import os
 # symbol.csv 파일에서 종목 코드를 문자열로 읽고, 6자리로 맞춥니다.
 symbol_df = pd.read_csv('./data_kr/symbol.csv', encoding='utf-8-sig', dtype={'code': str})
 ticker_list = symbol_df['code'].astype(str).str.zfill(6)
-ticker_list = {"KS200"}
+
 os.makedirs('./data_kr/price', exist_ok=True)
 
 start_date = '2015-01-01'
@@ -21,7 +21,22 @@ for ticker in ticker_list:
         df_price.to_csv(f'./data_kr/price/{ticker}.csv', index=True, encoding='utf-8-sig')
         print(f"{ticker}의 가격 데이터를 저장했습니다.")
     except Exception as e:
-        print(f"{ticker}의 가격 데이터를 가져오는 중 오류 발생: {e}")
+        print(f"{ticker}의 가격 데이터를 가져오는 중 오류 발생: {e}")"""
+from pykrx import stock
+import pandas as pd
+
+# 날짜 범위 설정
+start_date = '2015-01-01'
+end_date = '2025-01-31'
+
+# KOSPI200 지수(코드: 1028)의 일별 가격 데이터 가져오기
+df_ks200 = stock.get_index_ohlcv_by_date(fromdate=start_date,
+                                         todate=end_date,
+                                         ticker="1028")  # KOSPI200
+
+# 결과 저장
+df_ks200.to_csv('./data_kr/price/KS200.csv', encoding='utf-8-sig')
+print("KS200 지수 데이터를 저장했습니다.")
 
 '''
 

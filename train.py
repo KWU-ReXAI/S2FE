@@ -9,7 +9,7 @@ from tqdm import tqdm
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-cluster_n = 6
+cluster_n = 5
 
 warnings.filterwarnings(action='ignore')
 
@@ -28,12 +28,15 @@ parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE") # 사용할 
 parser.add_argument('--clustering',action="store_true",default=True) # 클러스터링 여부
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 
-cluster_n = 6
-
 args = parser.parse_args()
 DM = DataManager(features_n= args.features_n, cluster_n=cluster_n)
+DM.create_date_list()
 result = {}
 result_ks = {}
+
+dir = f"./result"
+if os.path.isdir(dir) == False:
+    os.mkdir(dir)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 file_path = "./result/train_parameter.csv"
@@ -50,12 +53,13 @@ for trainNum in range(0, args.testNum):
     if os.path.isdir(dir) == False:
         os.mkdir(dir)
     for phase in tqdm(DM.phase_list):  # 각 phase 별로 모델 학습 및 평가
+        print(f"\nTrain Phase of Model {trainNum+1}: {phase}")
         if os.path.isdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}") == False:
             os.mkdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}")
         mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
                           args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n)
 
-        mymodel.trainALLSectorModel()
+        mymodel.trainALLSectorModelWithValid()
 
         mymodel.topK_sectors = DM.cluster_list
 

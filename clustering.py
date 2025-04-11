@@ -3,7 +3,7 @@ import pandas as pd
 from datamanager import DataManager
 import os
 
-cluster_n = 4
+cluster_n = 5
 
 DM = DataManager(features_n= 6, cluster_n= cluster_n)
 sector_list = DM.sector_list
@@ -11,13 +11,13 @@ DM.create_date_list()
 features = {}
 
 # 저장할 폴더 생성
-output_folder = "./data_kr/clusters_output"
+output_folder = "./preprocessed_data/cluster_result"
 os.makedirs(output_folder, exist_ok=True)
 
 cluster_result = None  # 첫 번째 phase의 결과를 저장할 변수
 
 for phase in DM.phase_list:
-    dup_features = np.zeros((20, 20))
+    dup_features = np.zeros((10, 10))
     for sector in sector_list:
         df_data, _, _ = DM.data_phase(sector, phase, True, isall=True)
         sector_features = df_data.columns[:-1]

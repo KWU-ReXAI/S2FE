@@ -1,14 +1,12 @@
 [실행 순서]
 
-사용해야 할 데이터 폴더명을 data_kr로 바꿔주세요!
+1. python datapreprocessing.py --isall True
 
-1. python datapreprocessing_total.py --isall True
-
-2. python datapreprocessing_total.py --isall cluster
+2. python datapreprocessing.py --isall cluster
 
 3. python clustering.py
 
-4. python datapreprocessing_total.py --isall False
+4. python datapreprocessing.py --isall False
 
 5. python train.py --testNum 5
 
@@ -17,7 +15,7 @@
 
 [집중적으로 분석해야 하는 파일]
 
-- datapreprocessing_total.py
+- datapreprocessing.py
 - model.py
 - datamanager.py
 - train.py
@@ -25,7 +23,7 @@
 
 [실험 결과 보내는 곳]
 
-한 압축폴더에 ./data_kr/clustered_data/ & ./data_kr/clusters_output/ & ./result/test_result_dir/ & ./result/test_parameter.csv 폴더에 추가
+한 압축폴더에 ./preprocessed_data/ 폴더 전체 & ./result/test_result_dir/ 폴더 전체
 
 jhzzang0703@naver.com
 

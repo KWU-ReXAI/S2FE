@@ -91,7 +91,7 @@ def merge_year_quarter_from_csv(csv_path, drop_cols=None, total_option=False):
 
 def concat_k_features(code):
     df_small = merge_year_quarter_from_csv(f"./data_kr/public_info/소액주주/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시','주주 수','주주 비율','보유 주식 비율'],False)
-    df_total = merge_year_quarter_from_csv(f"./data_kr/public_info/주식총수/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시'],False)
+    df_total = merge_year_quarter_from_csv(f"./data_kr/public_info/주식총수/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시','기타','상환주식의 상환'],False)
     df_prime = merge_year_quarter_from_csv(f"./data_kr/public_info/주요주주_소유보고/{code}.csv",['접수번호','법인구분','회사코드','접수일자','회사명','대표보고자','발행 회사 관계 임원(등기여부)','발행 회사 관계 임원 직위','발행 회사 관계 주요 주주','결제일시','특정 증권 등 소유 비율','특정 증권 등 소유 증감 비율'],False)
     df_jeungja = merge_year_quarter_from_csv(f"./data_kr/public_info/증자/{code}.csv",['접수번호','법인구분','고유번호','회사코드','회사명','증자일자','증자방식','증자주식종류','구분','결제일시'],False)
     df_employee = merge_year_quarter_from_csv(f"./data_kr/public_info/직원현황/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명', '직원 수','총 급여액','비고', '결제일시'],False)
@@ -697,6 +697,9 @@ elif args.isall == "True":
 
         nan_ratio = df_sector_stocks.isna().mean()
         over_50_columns = nan_ratio[nan_ratio >= 0.5].index.to_list()
+
+        over_50_columns_exact = nan_ratio[nan_ratio >= 0.5].round(5).sort_values(ascending=False)
+
 
         for ticker in tqdm(clustered_ticker_list):
             if ticker == "code":

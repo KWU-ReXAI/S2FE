@@ -1,4 +1,6 @@
+preprocessed_data/
 result/
 .idea/
 .env
 .vscode/
+__pycache__

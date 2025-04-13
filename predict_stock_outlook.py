@@ -10,6 +10,8 @@ import google.generativeai as genai
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage
 
+import pandas as pd
+
 load_dotenv()  # .env 파일에서 환경변수 불러오기
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -193,3 +195,5 @@ def predict_market(stock: str, date: str) -> str:
 		return 'down'
 	else:
 		return 'middle'
+
+

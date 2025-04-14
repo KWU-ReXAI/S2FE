@@ -16,7 +16,7 @@ kospi_200 = {}
 
 with open(kospi_200_file, 'r',encoding='utf-8 sig') as f:
     for line in f:
-        code, name = line.strip().split(',')
+        code, name, sector = line.strip().split(',')
         kospi_200[code] = name
 
 quarters = {
@@ -51,7 +51,7 @@ for corp_code, corp_name in kospi_200.items():
                         data['Year'] = year
                         data['Quarter'] = quarter
                         annual_data.append(
-                            data[['Year', 'Quarter', 'sj_div', 'account_nm', 'thstrm_dt', 'thstrm_amount']]
+                            data[['Year', 'Quarter', 'sj_div', 'account_nm', 'thstrm_dt', 'thstrm_amount','rcept_dt']]
                         )
 
             except Exception as e:

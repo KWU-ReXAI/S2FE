@@ -8,10 +8,16 @@ from sklearn.metrics import mean_squared_error
 def random_forest_feature_selection(X, y, n_features_t):
     rgr = RandomForestRegressor()
     rgr.fit(X, y)
-    feature_importance = pd.Series(rgr.feature_importances_, index=X.columns).sort_values(ascending=False)
-    selected_features = feature_importance.index[:n_features_t]
-    return selected_features
+    selected_columns = X.columns
+    feature_importance = pd.Series(rgr.feature_importances_, index=selected_columns).sort_values(ascending=False)
+    selected_features = feature_importance.head(n_features_t)
 
+    result = pd.DataFrame({
+        'Feature': selected_features.index,
+        'Importance': selected_features.values
+    })
+
+    return result
 
 def forward_selection(X, y, n_features_t):
     selected_features = []
@@ -35,26 +41,43 @@ def forward_selection(X, y, n_features_t):
         selected_features.append(best_feature)
         remaining_features.remove(best_feature)
 
-        print(f"선택된 특성: {best_feature}, MSE: {best_mse:.4f}")
+        model.fit(X[selected_features], y)
+        feature_importances = model.feature_importances_
 
-    return selected_features
+
+        importance_dict = {selected_features[i]: feature_importances[i] for i in range(len(selected_features))}
+        selected_features_df = pd.DataFrame(list(importance_dict.items()), columns=['Feature', 'Importance'])
+
+    selected_features_df = selected_features_df.sort_values(by='Importance', ascending=False)
+
+    return selected_features_df
 
 
-def backward_elimination(X, y, n_features, significance_level):
-    X_with_const = sm.add_constant(X)
-    model = sm.OLS(y, X_with_const).fit()
+def backward_elimination(x, y, n_features):
+    model = RandomForestRegressor()
+    model.fit(x, y)
+    feature_importances = pd.Series(model.feature_importances_, index=x.columns).sort_values(ascending=False)
+    x_with_features = x.copy()
 
-    while max(model.pvalues[1:]) > significance_level:
-        remove = model.pvalues.idxmax()
-        X_with_const = X_with_const.drop(columns=[remove])
-        model = sm.OLS(y, X_with_const).fit()
+    while len(x_with_features.columns) > n_features:
+        remove = feature_importances.idxmin()
+        x_with_features = x_with_features.drop(columns=[remove])
 
-        if len(X_with_const.columns) - 1 <= n_features:
-            break
+        model.fit(x_with_features, y)
+        feature_importances = pd.Series(model.feature_importances_, index=x_with_features.columns).sort_values(
+            ascending=False)
 
-    selected_features = X_with_const.columns[1:]
+    final_feature_importances = pd.Series(model.feature_importances_, index=x_with_features.columns).sort_values(
+        ascending=False)
+    top_features = final_feature_importances.head(n_features)
 
-    if len(selected_features) > n_features:
-        selected_features = selected_features[:n_features]
+    top_features_df = pd.DataFrame({
+        'Feature': top_features.index,
+        'Importance': top_features.values
+    }).reset_index(drop=True)
 
-    return selected_features
+    print("상위 특성 및 중요도:")
+    print(top_features_df)
+
+    return top_features_df
+

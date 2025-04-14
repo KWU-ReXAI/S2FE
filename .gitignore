@@ -4,3 +4,4 @@ result/
 .env
 .vscode/
 __pycache__
+audio/

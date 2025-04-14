@@ -20,6 +20,9 @@ from functools import reduce
 from membership import make_anfis
 from experimental import train_anfis
 from datamanager import DataManager
+
+from predict_stock_outlook import predict_market
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -417,20 +420,33 @@ class MyModel(nn.Module):
             if use_all == "SectorAll" and agg == 'avg':  # SectorAll 모드에서
                 real_last_topK_stock = stocks.sort_values(ascending=False).index.to_list()[:self.final_stock_k]
                 # 개별 섹터와 전체 섹터 모델의 예측값 평균을 사용하여 종목을 결정
-            clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)
-            idx += 1
-            self.final_stock_k = len(real_last_topK_stock)  # 최종적으로 선택된 주식 개수를 저장
+                
+            print("딥러닝 종목: ", real_last_topK_stock)
+            
+            all_symbols = pd.read_csv("./data_kr/symbols.csv")
+            final_stocks = []
+            for stock_symbol in real_last_topK_stock:
+                stock_name = all_symbols[all_symbols["corp_code"] == stock_symbol]["corp_name"].iloc[0]
+                prediction = predict_market(stock_name, DataManager.quarter2date(strdate)[0])
+                
+                if prediction == "up":
+                    final_stocks.append(stock_symbol)
+            print("llm필터링 종목:", final_stocks)
 
-            if verbose: print(real_last_topK_stock,flush=True)  # 선택된 최종 종목을 출력
+            clustered_stocks_list.append([f"{idx}"] + final_stocks)
+            idx += 1
+            self.final_stock_k = len(final_stocks)  # 최종적으로 선택된 주식 개수를 저장
+
+            if verbose: print(final_stocks,flush=True)  # 선택된 최종 종목을 출력
             if isTest:
                 pd.DataFrame(clustered_stocks_list).to_csv(f"./result/{dir}/test_selected_stocks_{self.phase}_{testNum}.csv", index=False)
             if not isTest:
                 pd.DataFrame(clustered_stocks_list).to_csv(
                     f"{dir}/train_selected_stocks_{self.phase}.csv", index=False)
-            num_of_stock.append(len(real_last_topK_stock))
+            num_of_stock.append(len(final_stocks))
 
             ks50_stock = ["KS200"]
-            daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate)
+            daily_change = self.Utils.get_portfolio_memory(final_stocks, strdate, next_strdate)
             daily_change_KOSPI = self.Utils.get_portfolio_memory(ks50_stock,strdate,next_strdate)
             # 매일의 포트폴리오 수익률 계산
             # 선택된 주식 리스트, 현재 및 다음 날짜의 주가 데이터 이용

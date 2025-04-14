@@ -41,7 +41,7 @@ def search_videos(query, date):
 	video_ids = [item['id']['videoId'] for item in search_res['items']]
 	if not video_ids:
 		print("조건에 맞는 영상 없음")
-		exit()
+		return None
 
 	# Step 3: 상세 정보 조회 (조회수 등)
 	video_details = youtube.videos().list(
@@ -66,7 +66,7 @@ def search_videos(query, date):
 
 	if not filtered:
 		print("필터 조건에 맞는 영상 없음")
-		exit()
+		return None
 
 	# Step 5: 조회수 기준 최상위 영상 선택
 	top_video = max(filtered, key=lambda x: x['views'])
@@ -96,8 +96,14 @@ def extract_video_audio(video_id, audio_dir):
 		}]
 	}
 
-	with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-		ydl.download([url])
+	try:
+		with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+			ydl.download([url])
+		print("음성파일 다운로드 성공")
+		return True
+	except:
+		print("음성파일 다운로드 실패")
+		return False
 
 # -----------------------------
 # 음성파일을 텍스트로 변환
@@ -131,8 +137,8 @@ def summarize_with_gemini(text: str) -> str:
 	gemini_model = genai.GenerativeModel("gemini-2.0-flash")
 
 	prompt = f"""
-다음은 경제 관련 유튜브 영상 자막입니다.
-말투는 제거하고, 핵심 내용 위주로 간결하게 뉴스 스타일로 요약해주세요:
+다음은 경제 관련 영상 자막입니다.
+핵심 내용 위주로 간결하게 뉴스 스타일로 요약해주세요:
 
 {text}
 """
@@ -167,12 +173,15 @@ def predict_market_from_summary(summary: str, stock: str) -> str:
 def predict_market(stock: str, date: str) -> str:
 	SEARCH_QUERY = f'{stock} 주가전망'
 	BEFORE_DATE = date
-
+	print("SEARCH_QUERY:", SEARCH_QUERY)
 	video_id = search_videos(SEARCH_QUERY, BEFORE_DATE)
+	if video_id == None:
+		return "middle"
 
 	# 유튜브 영상 음성 추출
 	audio_dir = f'audio/{stock}_{BEFORE_DATE}'
-	extract_video_audio(video_id, audio_dir)
+	if not extract_video_audio(video_id, audio_dir):
+		return "middle"
 	text = audio2text(audio_dir)
 
 	# 자막 전처리
@@ -183,11 +192,10 @@ def predict_market(stock: str, date: str) -> str:
 	summary = summarize_with_gemini(cleaned)
 
 	# 주식 등락 예측
-	stock = "삼성전자"
 	prediction = predict_market_from_summary(summary, stock)
 
 	print("\n📄 GEMINI 요약 결과:\n", summary)
-	print("\n📈 GPT-4 예측 결과:\n", prediction)
+	print("\n📈 GPT-4 예측 결과:\n\n", prediction)
 
 	if prediction == '오를 가능성 있음':
 		return 'up'

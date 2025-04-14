@@ -10,7 +10,7 @@ import joblib
 import argparse
 import shap
 import matplotlib.pyplot as plt
-from numpy import vstack
+import numpy as np
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
 parser.add_argument('--train_dir',type=str,nargs='?',default="train_result_dir") # 불러올 모델 폴더
 parser.add_argument('--xai_dir',type=str,nargs='?',default="xai_v2_result_dir") # 결과 디렉토리 명
 parser.add_argument('--trainNum',type=int,nargs='?',default=5) # 훈련 횟수
-parser.add_argument('--cluster_n',type=int,nargs='?',default=6)
+parser.add_argument('--cluster_n',type=int,nargs='?',default=5)
 
 args = parser.parse_args()
 trainNum = args.trainNum
@@ -87,14 +87,27 @@ for num in tqdm(range(1, trainNum+1), desc="Test Progress"):
             for idx in range(len(phase_shap)):
                 sectors_shap[sector_idx][idx] += phase_shap[idx]
 
+# 이상치 대체(IQR)
+for i in range(len(sectors_shap)):
+    for j in range(len(sectors_shap[i])):
+        Q1 = np.percentile(sectors_shap[i][j], 25, axis=0)
+        Q3 = np.percentile(sectors_shap[i][j], 75, axis=0)
+        IQR = Q3 - Q1
+        lower = Q1 - 1.5 * IQR
+        upper = Q3 + 1.5 * IQR
+        sectors_shap[i][j] = np.clip(sectors_shap[i][j], lower, upper)
+
 # 그래프 포맷 조정 필요
 for idx, sector in enumerate(["ALL"] + DM.cluster_list):
-    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+    fig, axs = plt.subplots(2, 2, figsize=(30, 16), constrained_layout=True)
     for x, y in [(0, 0), (0, 1), (1, 0), (1, 1)]:
         phase = x * 2 + y
         plt.sca(axs[x, y])  # axs[x, y]를 현재 active axis로 설정
-        shap.plots.violin(shap_values=sectors_shap[idx][phase], features=data_list[idx][phase], feature_names=feature_names[idx],show=False)
-        axs[x,y].set_title(f"{sector} Analysis - Phase {phase+1}")
-    fig.tight_layout()
-    plt.savefig(f"{dir}/{sector}_Phase.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
+        shap.plots.violin(shap_values=sectors_shap[idx][phase], features=data_list[idx][phase], feature_names=feature_names[idx], show=False, color_bar=False)
+        axs[x,y].set_title(f"Phase {phase+1}")
+        axs[x, y].tick_params(axis='x', labelsize=8)  # 기존 코드
+        axs[x, y].tick_params(axis='y', labelsize=8)  # 기존 코드
+        axs[x, y].set_xlabel("SHAP value (impact on model output)", fontsize=8)
+    fig.suptitle(f"{sector} Analysis", fontsize=20)
+    plt.savefig(f"{dir}/{sector}.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
     plt.clf()

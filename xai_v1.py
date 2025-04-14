@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
 parser.add_argument('--train_dir',type=str,nargs='?',default="train_result_dir") # 불러올 모델 폴더
 parser.add_argument('--xai_dir',type=str,nargs='?',default="xai_result_dir") # 결과 디렉토리 명
 parser.add_argument('--trainNum',type=int,nargs='?',default=5) # 훈련 횟수
-parser.add_argument('--cluster_n',type=int,nargs='?',default=6)
+parser.add_argument('--cluster_n',type=int,nargs='?',default=5)
 
 args = parser.parse_args()
 trainNum = args.trainNum
@@ -87,11 +87,19 @@ for num in tqdm(range(1, trainNum+1), desc="Test Progress"):
             for idx in range(len(phase_shap)):
                 sectors_shap[sector_idx][idx] += phase_shap[idx]
 
+# 데이터 정규화
+eps = 1e-8  # 0 나눔 방지
+for idx in range(len(data_list)):
+     data_list[idx] = [
+         (arr - np.mean(arr, axis=0)) / (np.std(arr, axis=0) + eps)
+         for arr in data_list[idx]
+     ]
+
 # vstack for graph
 features = [np.vstack(tuple(x)) for x in data_list]
 shap_values = [np.vstack(tuple(x)) for x in sectors_shap]
 
-# 이상치 제거(IQR)
+# 이상치 대체(IQR)
 shap_values = [np.clip(
                 x,
                 np.percentile(x, 25, axis=0) - 1.5 * (np.percentile(x, 75, axis=0) - np.percentile(x, 25, axis=0)),
@@ -101,5 +109,5 @@ shap_values = [np.clip(
 for idx, sector in enumerate(["ALL"] + DM.cluster_list):
     shap.plots.violin(shap_values=shap_values[idx], features=features[idx], feature_names=feature_names[idx],show=False)
     plt.title(f"{sector} Analysis")
-    plt.savefig(f"{dir}/{sector}_Phase.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
+    plt.savefig(f"{dir}/{sector}.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
     plt.clf()

@@ -9,7 +9,9 @@ import pandas as pd
 import joblib
 import argparse
 import shap
+from shap.plots.colors import red_blue
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import numpy as np
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
@@ -105,8 +107,19 @@ for idx, sector in enumerate(["ALL"] + DM.cluster_list):
         plt.sca(axs[x, y])  # axs[x, y]를 현재 active axis로 설정
         shap.plots.violin(shap_values=sectors_shap[idx][phase], features=data_list[idx][phase], feature_names=feature_names[idx], show=False, color_bar=False)
         axs[x,y].set_title(f"Phase {phase+1}")
-        axs[x, y].tick_params(axis='x', labelsize=8)  # 기존 코드
-        axs[x, y].tick_params(axis='y', labelsize=8)  # 기존 코드
+
+        # 폰트 크기 조절때문에 직접 그린 color bar
+        m = cm.ScalarMappable(cmap=red_blue)
+        m.set_array([0, 1])
+        cb = plt.colorbar(m, ax=plt.gca(), ticks=[0, 1], aspect=80)
+        cb.set_ticklabels(["Low", "High"])
+        cb.set_label("Feature Value", size=8, labelpad=0)
+        cb.ax.tick_params(labelsize=8, length=0)
+        cb.set_alpha(1)
+        cb.outline.set_visible(False)
+
+        axs[x, y].tick_params(axis='x', labelsize=8)
+        axs[x, y].tick_params(axis='y', labelsize=8)
         axs[x, y].set_xlabel("SHAP value (impact on model output)", fontsize=8)
     fig.suptitle(f"{sector} Analysis", fontsize=20)
     plt.savefig(f"{dir}/{sector}.png", dpi=300, bbox_inches="tight", pad_inches=0.1)

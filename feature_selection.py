@@ -1,17 +1,6 @@
 from sklearn.ensemble import RandomForestRegressor
-from statsmodels.stats.outliers_influence import variance_inflation_factor
-import numpy as np
-import statsmodels.api as sm
 import pandas as pd
 from sklearn.metrics import mean_squared_error
-
-def random_forest_feature_selection(X, y, n_features_t):
-    rgr = RandomForestRegressor()
-    rgr.fit(X, y)
-    feature_importance = pd.Series(rgr.feature_importances_, index=X.columns).sort_values(ascending=False)
-    selected_features = feature_importance.index[:n_features_t]
-    return selected_features
-
 
 def forward_selection(X, y, n_features_t):
     selected_features = []
@@ -35,26 +24,12 @@ def forward_selection(X, y, n_features_t):
         selected_features.append(best_feature)
         remaining_features.remove(best_feature)
 
-        print(f"선택된 특성: {best_feature}, MSE: {best_mse:.4f}")
+        model.fit(X[selected_features], y)
+        feature_importances = model.feature_importances_
 
-    return selected_features
+        importance_dict = {selected_features[i]: feature_importances[i] for i in range(len(selected_features))}
+        selected_features_df = pd.DataFrame(list(importance_dict.items()), columns=['Feature', 'Importance'])
 
+    selected_features_df = selected_features_df.sort_values(by='Importance', ascending=False)
 
-def backward_elimination(X, y, n_features, significance_level):
-    X_with_const = sm.add_constant(X)
-    model = sm.OLS(y, X_with_const).fit()
-
-    while max(model.pvalues[1:]) > significance_level:
-        remove = model.pvalues.idxmax()
-        X_with_const = X_with_const.drop(columns=[remove])
-        model = sm.OLS(y, X_with_const).fit()
-
-        if len(X_with_const.columns) - 1 <= n_features:
-            break
-
-    selected_features = X_with_const.columns[1:]
-
-    if len(selected_features) > n_features:
-        selected_features = selected_features[:n_features]
-
-    return selected_features
+    return selected_features_df

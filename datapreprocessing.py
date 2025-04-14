@@ -14,6 +14,9 @@ from fancyimpute import SoftImpute
 from sklearn.impute import KNNImputer, SimpleImputer
 from sklearn.ensemble import RandomForestRegressor
 import argparse
+from feature_selection import *
+from dimensionality_reduction import *
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--isall',type=str,nargs='?',default="False")
@@ -401,20 +404,21 @@ if args.isall == "False":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        rgr = RandomForestRegressor()
-        rgr.fit(df_processing_data.iloc[:, 5:-3], df_processing_data.iloc[:, -2:-1])
-        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[5:-3]).sort_values(
-            ascending=False)
-        feature_importance[:n_features_t].to_csv(
-            f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
-            encoding='utf-8-sig')
+        remove_features, corr_matrix= remove_highly_correlated_features(df_processing_data.iloc[:, 5:-2], 0.99)
+        df_processing_data.drop(columns=remove_features, inplace=True)
+        corr_matrix.to_csv(f"{save_folder}/cluster_{cluster_index}/corr_matrix.csv", index=False, encoding='utf-8-sig')
 
-        select_col = feature_importance.index[:n_features_t]
-        df_col[sector] = select_col
+        df_processing_data.to_csv(f"{save_folder}/cluster_{cluster_index}/after_DR.csv", index=False, encoding='utf-8-sig')
+
+        selected_features = forward_selection(df_processing_data.iloc[:, 5:-3],df_processing_data["Label"], n_features_t)
+        selected_features.to_csv(f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",encoding='utf-8-sig')
 
         df_processed_data = pd.concat(
-            [df_processing_data.iloc[:, 1:5], df_processing_data.iloc[:, -3:-2], df_processing_data[select_col],
-             df_processing_data.iloc[:, -2:]],
+            [df_processing_data.iloc[:, 1:5],
+             df_processing_data.iloc[:, -3:-2],
+             df_processing_data[selected_features["Feature"].tolist()],
+             df_processing_data.iloc[:, -2:]
+             ],
             axis=1)
 
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|P_)', '', regex=True)
@@ -620,20 +624,21 @@ elif args.isall == "cluster":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        rgr = RandomForestRegressor()
-        rgr.fit(df_processing_data.iloc[:, 5:-3], df_processing_data.iloc[:, -2:-1])
-        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[5:-3]).sort_values(
-            ascending=False)
-        feature_importance[:n_features_t].to_csv(
-            f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
-            encoding='utf-8-sig')
+        remove_features, corr_matrix = remove_highly_correlated_features(df_processing_data.iloc[:, 5:-2], 0.99)
+        df_processing_data.drop(columns=remove_features, inplace=True)
+        corr_matrix.to_csv(f"{save_folder}/{sector_list[0]}/corr_matrix.csv", index=False, encoding='utf-8-sig')
 
-        select_col = feature_importance.index[:n_features_t]
-        df_col[sector] = select_col
+        df_processing_data.to_csv(f"{save_folder}/{sector_list[0]}/after_DR.csv", index=False, encoding='utf-8-sig')
+
+        selected_features = forward_selection(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"], n_features_t)
+        selected_features.to_csv(f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",encoding='utf-8-sig')
 
         df_processed_data = pd.concat(
-            [df_processing_data.iloc[:, 1:5], df_processing_data.iloc[:, -3:-2], df_processing_data[select_col],
-             df_processing_data.iloc[:, -2:]],
+            [df_processing_data.iloc[:, 1:5],
+             df_processing_data.iloc[:, -3:-2],
+             df_processing_data[selected_features["Feature"].tolist()],
+             df_processing_data.iloc[:, -2:]
+             ],
             axis=1)
 
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|P_)', '', regex=True)
@@ -697,9 +702,6 @@ elif args.isall == "True":
 
         nan_ratio = df_sector_stocks.isna().mean()
         over_50_columns = nan_ratio[nan_ratio >= 0.5].index.to_list()
-
-        over_50_columns_exact = nan_ratio[nan_ratio >= 0.5].round(5).sort_values(ascending=False)
-
 
         for ticker in tqdm(clustered_ticker_list):
             if ticker == "code":
@@ -818,6 +820,9 @@ elif args.isall == "True":
         df_processing_data.to_csv(f"{save_folder}/ALL/cluster_check.csv",
                                   encoding='utf-8-sig')
 
+        # df_processing_data.iloc[:, 4:-2] = df_processing_data.iloc[:, 4:-2].replace([-np.inf, np.inf], 0.0)
+        # df_processing_data.iloc[:, -2:-1] = df_processing_data.iloc[:, -2:-1].replace([-np.inf, np.inf], 0.0)
+
         # Feature Matrix (X) Imputation
 
         base_cols = ['code', 'name', 'year', 'quarter', 'sector']  # 예시로 기본 정보 열을 지정합니다.
@@ -836,19 +841,21 @@ elif args.isall == "True":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        rgr = RandomForestRegressor()
-        rgr.fit(df_processing_data.iloc[:,5:-3], df_processing_data.iloc[:, -2:-1])
-        feature_importance = pd.Series(rgr.feature_importances_, index=df_processing_data.columns[5:-3]).sort_values(ascending=False)
-        feature_importance[:n_features_t].to_csv(
-            f"{save_folder}/ALL/ALL_feature_imp.csv",
-            encoding='utf-8-sig')
+        remove_features, corr_matrix= remove_highly_correlated_features(df_processing_data.iloc[:, 5:-2], 0.99)
+        df_processing_data.drop(columns=remove_features, inplace=True)
+        corr_matrix.to_csv(f"{save_folder}/ALL/corr_matrix.csv",index=False, encoding='utf-8-sig')
 
-        select_col = feature_importance.index[:n_features_t]
-        df_col[sector] = select_col
+        df_processing_data.to_csv(f"{save_folder}/ALL/after_DR.csv",index=False, encoding='utf-8-sig')
+
+        selected_features = forward_selection(df_processing_data.iloc[:, 5:-3],df_processing_data["Label"], n_features_t)
+        selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
 
         df_processed_data = pd.concat(
-            [df_processing_data.iloc[:, 1:5], df_processing_data.iloc[:, -3:-2], df_processing_data[select_col],
-             df_processing_data.iloc[:, -2:]],
+            [df_processing_data.iloc[:, 1:5],
+             df_processing_data.iloc[:, -3:-2],
+             df_processing_data[selected_features["Feature"].tolist()],
+             df_processing_data.iloc[:, -2:]
+             ],
             axis=1)
 
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|P_)', '', regex=True)
@@ -882,6 +889,3 @@ elif args.isall == "True":
 else:
     print("Wrong COMMAND")
     exit()
-
-
-

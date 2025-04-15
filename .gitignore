@@ -1,6 +1,7 @@
 result/
+preprocessed_data/
 .idea/
-.env
+.env/
 .vscode/
 __pycache__/
 audio/

@@ -411,6 +411,11 @@ def cleanSymbolWithFolder(folder_path, symbol_path, encoding='utf-8-sig'):
 
 
 if __name__ == "__main__":
+    seperate_comma()
+    merge_date_regression()
+    save_by_sector()
+    filter_all_files_by_sector()
+    save_sector_codes()
     compareFolderAndSymbol("./data_kr/price","./data_kr/symbol.csv")
 """
 # 198: symbol

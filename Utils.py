@@ -127,20 +127,133 @@ class Utils:
                 print(f"{ticker}: {year}_{quarter} 이전 거래일 없음.")
                 return 0
 
+    def get_KOSPI_start_date(self,year, quarter, ticker):
+        """
+        date_regression 폴더의 공시일(disclosure_date)을 기준으로
+        가장 가까운 거래일의 시가(Open)를 반환합니다.
+
+        :param year: int, 연도
+        :param quarter: str, "Q1" ~ "Q4"
+        :param ticker: str, 종목 코드 (6자리 문자열)
+        :return: 해당 종목의 시가 (float)
+        """
+        # 1. disclosure_date 가져오기
+        try:
+            reg_path = f"./data_kr/merged/KS200.csv"
+            reg_df = pd.read_csv(reg_path)
+
+            # 자료형 정리
+            reg_df['quarter'] = reg_df['quarter'].astype(str).str.strip()
+            reg_df['year'] = reg_df['year'].astype(int)
+
+            # 조건 필터링
+            reg_row = reg_df[(reg_df['year'] == int(year)) & (reg_df['quarter'] == str(quarter))]
+            if reg_row.empty:
+                print(f"{ticker}: {year}_{quarter} 공시일 정보를 찾을 수 없습니다.")
+                return 0
+            current_date = pd.to_datetime(reg_row.iloc[0]['disclosure_date'])
+        except Exception as e:
+            print(f"{ticker}: 공시일 파일 로드 실패 - {e}")
+            return 0
+
+        # 2. 가격 데이터 로딩
+        try:
+            file_path = f"./data_kr/price/KS200.csv"
+            df = pd.read_csv(file_path)
+            df['날짜'] = pd.to_datetime(df['날짜'])
+            df.sort_values(by='날짜', inplace=True)
+        except Exception as e:
+            print(f"{ticker}: 가격 데이터 로드 실패 - {e}")
+            return 0
+
+        # 3. disclosure_date 이후 가장 가까운 거래일의 시가 반환
+        while True:
+            match = df[df['날짜'].dt.date == current_date.date()]
+            if not match.empty:
+                return current_date.strftime("%Y-%m-%d")
+            current_date += timedelta(days=1)
+            if current_date > df['날짜'].max():
+                print(f"{ticker}: {year}_{quarter} 이후 거래일 없음.")
+                return 0
+
+    def get_KOSPI_end_date(self,year, quarter, ticker):
+        """
+        date_regression 폴더에서 가져온 disclosure_date 기준 이전 마지막 거래일의 종가(Close)를 반환합니다.
+
+        :param year: int, 연도
+        :param quarter: str, "Q1" ~ "Q4"
+        :param ticker: str, 종목 코드 (6자리 문자열)
+        :return: 해당 종목의 종가 (float)
+        """
+        # 1. disclosure_date 가져오기
+        try:
+            reg_path = f"./data_kr/merged/KS200.csv"
+            reg_df = pd.read_csv(reg_path)
+            reg_df['quarter'] = reg_df['quarter'].astype(str).str.strip()
+            reg_df['year'] = reg_df['year'].astype(int)
+
+            # 조건 필터링
+            reg_row = reg_df[(reg_df['year'] == int(year)) & (reg_df['quarter'] == str(quarter))]
+
+            if reg_row.empty:
+                print(f"{ticker}: {year}_{quarter} 공시일 정보를 찾을 수 없습니다.")
+                return 0
+            current_date = pd.to_datetime(reg_row.iloc[0]['disclosure_date']) - timedelta(days=1)
+        except Exception as e:
+            print(f"{ticker}: 공시일 파일 로드 실패 - {e}")
+            return 0
+
+        # 2. 가격 데이터 로딩
+        try:
+            file_path = f"./data_kr/price/KS200.csv"
+            df = pd.read_csv(file_path)
+            df['날짜'] = pd.to_datetime(df['날짜'])
+            df.sort_values(by='날짜', inplace=True)
+        except Exception as e:
+            print(f"{ticker}: 가격 데이터 로드 실패 - {e}")
+            return 0
+
+        # 3. disclosure_date 이전 가장 가까운 거래일의 종가 반환
+        while True:
+            match = df[df['날짜'].dt.date == current_date.date()]
+            if not match.empty:
+                return current_date.strftime("%Y-%m-%d")
+            current_date -= timedelta(days=1)
+            if current_date < df['날짜'].min():
+                print(f"{ticker}: {year}_{quarter} 이전 거래일 없음.")
+                return 0
     
     def get_portfolio_memory(self,stocks,strdate,next_strdate,isKS200=False): # 포트폴리오 수익률 계산
 
-        if len(stocks) == 0: return []
+        if len(stocks) == 0:
+            if isKS200:
+                df_total_price = pd.DataFrame()
+
+                year_now, quarter_now = strdate.split('_')
+                year_next, quarter_next = next_strdate.split('_')
+                ticker_str = "KS200"
+
+                start_date = self.get_KOSPI_start_date(year_now, quarter_now, ticker_str)
+                end_date = self.get_KOSPI_end_date(year_next, quarter_next, ticker_str)
+
+                price = pd.read_csv(f"./data_kr/price/KS200.csv", index_col=[0])['종가'].loc[start_date:end_date]
+                df_total_price = pd.concat([df_total_price, price], axis=1, join='outer')
+                df_total_price.sort_index(inplace=True)
+
+                df_total_price = df_total_price.fillna(method='ffill').fillna(method='bfill').sum(axis=1)
+                df_pf = df_total_price / df_total_price.iloc[0]
+                daily_change = df_pf.pct_change().dropna()
+                # 일일 변동률(%)을 계산하여 반환
+                return daily_change.values.tolist()
+            else:
+                return []
         
         df_total_price = pd.DataFrame()
 
         year_now, quarter_now = strdate.split('_')
         year_next, quarter_next = next_strdate.split('_')
         for ticker in stocks: # stocks 리스트에 있는 종목들의 주가 데이터를 가져옴
-            if ticker != "KS200":
-                ticker_str = str(ticker).zfill(6)
-            else:
-                ticker_str = ticker  # 또는 필요한 경우 다른 형식으로 변환
+            ticker_str = str(ticker).zfill(6)
 
             if isKS200:
                 start_date = self.get_start_date(year_now, quarter_now, ticker_str,True)

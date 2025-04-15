@@ -304,6 +304,8 @@ class MyModel(nn.Module):
                     f"{dir}/train_selected_stocks_{self.phase}.csv", index=False)
             num_of_stock.append(len(real_last_topK_stock))
             ks50_stock = []
+
+
             daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate,False)
             daily_change_KOSPI = self.Utils.get_portfolio_memory(real_last_topK_stock,strdate,next_strdate,True)
             # 매일의 포트폴리오 수익률 계산

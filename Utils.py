@@ -4,6 +4,8 @@ import pandas as pd
 from datetime import datetime,timedelta
 import itertools
 import os
+
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 ########################################################################################################################
@@ -222,7 +224,31 @@ class Utils:
             if current_date < df['날짜'].min():
                 print(f"{ticker}: {year}_{quarter} 이전 거래일 없음.")
                 return 0
-    
+
+
+    def getDateList(self, code_list, year, quarter, isStart=False):
+        disclosure_lists = []
+
+        for ticker in code_list:
+            try:
+                ticker_str = str(ticker).zfill(6)
+                reg_path = f"./data_kr/merged/{ticker_str}.csv"
+                reg_df = pd.read_csv(reg_path)
+                reg_df['quarter'] = reg_df['quarter'].astype(str).str.strip()
+                reg_df['year'] = reg_df['year'].astype(int)
+
+                # 조건 필터링
+                reg_row = reg_df[(reg_df['year'] == int(year)) & (reg_df['quarter'] == str(quarter))]
+
+                if reg_row.empty:
+                    print(f"{ticker}: {year}_{quarter} 공시일 정보를 찾을 수 없습니다.")
+                    continue
+                disclosure_lists.append(pd.to_datetime(reg_row.iloc[0]['disclosure_date']).strftime("%Y-%m-%d"))
+            except Exception as e:
+                print(f"{ticker}: 공시일 파일 로드 실패 - {e}")
+                continue
+        return min(disclosure_lists) if isStart else max(disclosure_lists)
+
     def get_portfolio_memory(self,stocks,strdate,next_strdate,isKS200=False): # 포트폴리오 수익률 계산
 
         if len(stocks) == 0:
@@ -252,13 +278,13 @@ class Utils:
 
         year_now, quarter_now = strdate.split('_')
         year_next, quarter_next = next_strdate.split('_')
+
+        start_date = self.getDateList(stocks, year_now, quarter_now, isStart=True)
+        end_date = self.getDateList(stocks, year_next, quarter_next, isStart=False)
         for ticker in stocks: # stocks 리스트에 있는 종목들의 주가 데이터를 가져옴
             ticker_str = str(ticker).zfill(6)
 
-            if isKS200:
-                start_date = self.get_start_date(year_now, quarter_now, ticker_str,True)
-                end_date = self.get_end_date(year_next, quarter_next, ticker_str,True)
-            else:
+            if isKS200 != True:
                 start_date = self.get_start_date(year_now, quarter_now, ticker_str,False)
                 end_date = self.get_end_date(year_next, quarter_next, ticker_str,False)
 

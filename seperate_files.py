@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import glob
+from pandas.tseries.offsets import DateOffset
 
 # 1) 위에서 정의한 컬럼 목록과 처리 함수
 '''COLUMNS_TO_DROP = [
@@ -408,10 +409,13 @@ def cleanSymbolWithFolder(folder_path, symbol_path, encoding='utf-8-sig'):
         print("symbol.csv와 폴더 내 파일명이 완전히 일치합니다.")
 
 
+
+if __name__ == "__main__":
+    compareFolderAndSymbol("./data_kr/price","./data_kr/symbol.csv")
+"""
 # 198: symbol
 #12 18 13 5 29 5 7 1 13 22 33 14 4 2 1
 if __name__ == "__main__":
-    """
     compareFolderAndSymbol(
         folder_path='./backup/data_kr_sector/k_features/최대주주변동',
         symbol_path='./data_kr/symbol.csv'
@@ -421,20 +425,15 @@ if __name__ == "__main__":
         folder_path='./data_kr/merged',
         symbol_path='./data_kr/symbol.csv'
     )
-    merge_date_regression()
-    save_by_sector()
-    filter_all_files_by_sector()
-    save_sector_codes()
-
     removeInvalidSymbolsAndFiles(
         folder_path='./data_kr/merged',
         symbol_path='./data_kr/symbol.csv',
         expected_rows=37
-    )"""
+    )
     seperate_comma()
 
     merge_date_regression()
     save_by_sector()
     filter_all_files_by_sector()
-    save_sector_codes()
+    save_sector_codes()"""
 

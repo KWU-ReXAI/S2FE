@@ -122,104 +122,98 @@ def quarter2date(year, quarter):
 
     return quarter_start
 
-def get_start_price(year, quarter, ticker):
+
+def get_start_price(year, quarter, ticker, isKS200 = False):
     """
-    지정한 연도와 쿼터의 시작일 이후 가장 가까운 거래일의 시가(Open)를 반환합니다.
-    해당 날짜에 가격 데이터가 없으면, 데이터가 있을 때까지 날짜를 1일씩 증가시킵니다.
+    date_regression 폴더의 공시일(disclosure_date)을 기준으로
+    가장 가까운 거래일의 시가(Open)를 반환합니다.
 
-    예시:
-      year=2015, quarter="Q1"이면 기준일은 "2015-01-01"이며,
-      그 이후의 첫 거래일의 Open 가격을 반환합니다.
-
-    :param year: int, 연도 (예: 2015)
-    :param quarter: str, 쿼터 ("Q1", "Q2", "Q3", "Q4")
-    :param ticker: str, 티커명 (예: "AAPL")
-    :return: 거래일의 시가 (float)
+    :param year: int, 연도
+    :param quarter: str, "Q1" ~ "Q4"
+    :param ticker: str, 종목 코드 (6자리 문자열)
+    :return: 해당 종목의 시가 (float)
     """
-    # 쿼터 시작일 설정
-    if quarter == "Q1":
-        start_date_str = f"{year}-01-01"
-    elif quarter == "Q2":
-        start_date_str = f"{year}-04-01"
-    elif quarter == "Q3":
-        start_date_str = f"{year}-07-01"
-    elif quarter == "Q4":
-        start_date_str = f"{year}-10-01"
-    else:
-        raise ValueError("쿼터는 'Q1', 'Q2', 'Q3', 'Q4' 중 하나여야 합니다.")
+    # 1. disclosure_date 가져오기
+    try:
+        reg_path = f"./data_kr/date_regression/{year}_{quarter}.csv"
+        reg_df = pd.read_csv(reg_path)
+        reg_row = reg_df[reg_df['code'].astype(str).str.zfill(6) == ticker]
+        if reg_row.empty:
+            print(f"{ticker}: {year}_{quarter} 공시일 정보를 찾을 수 없습니다.")
+            return 0
+        current_date = pd.to_datetime(reg_row.iloc[0]['disclosure_date'])
+    except Exception as e:
+        print(f"{ticker}: 공시일 파일 로드 실패 - {e}")
+        return 0
 
-    quarter_start = datetime.strptime(start_date_str, "%Y-%m-%d")
+    # 2. 가격 데이터 로딩
+    try:
+        if isKS200: file_path = f"./data_kr/price/KS200.csv"
+        else: file_path = f"./data_kr/price/{ticker}.csv"
+        df = pd.read_csv(file_path)
+        df['날짜'] = pd.to_datetime(df['날짜'])
+        df.sort_values(by='날짜', inplace=True)
+    except Exception as e:
+        print(f"{ticker}: 가격 데이터 로드 실패 - {e}")
+        return 0
 
-    # CSV 파일 읽기
-    file_path = f"./data_kr/price/{ticker}.csv"
-    df = pd.read_csv(file_path)
-
-    # Date 컬럼을 datetime 형식으로 변환 후 정렬
-    df['날짜'] = pd.to_datetime(df['날짜'])
-    df.sort_values(by='날짜', inplace=True)
-
-    # 기준일 이후에 데이터가 존재할 때까지 날짜를 증가시킴
-    current_date = quarter_start
+    # 3. disclosure_date 이후 가장 가까운 거래일의 시가 반환
     while True:
-        # 날짜만 비교하기 위해 .dt.date 사용
-        matching_rows = df[df['날짜'].dt.date == current_date.date()]
-        if not matching_rows.empty:
-            # 해당 날짜의 첫 거래일의 시가 반환
-            return matching_rows.iloc[0]['시가']
+        match = df[df['날짜'].dt.date == current_date.date()]
+        if not match.empty:
+            return match.iloc[0]['시가']
         current_date += timedelta(days=1)
-        # 데이터 범위를 넘어가는 경우 예외 발생
         if current_date > df['날짜'].max():
-            print(f"{ticker}의 데이터에서 {quarter_start} 이후의 거래일을 찾을 수 없습니다.")
+            print(f"{ticker}: {year}_{quarter} 이후 거래일 없음.")
             return 0
 
 
-def get_end_price(year, quarter, ticker):
+
+def get_end_price(year, quarter, ticker, isKS200 = False):
     """
-    지정한 연도와 쿼터의 시작일 이전 가장 가까운 거래일의 종가(Close)를 반환합니다.
-    해당 날짜에 가격 데이터가 없으면, 데이터가 있을 때까지 날짜를 1일씩 감소시킵니다.
+    date_regression 폴더에서 가져온 disclosure_date 기준 이전 마지막 거래일의 종가(Close)를 반환합니다.
 
-    예시:
-      year=2015, quarter="Q1"이면 기준일은 "2015-01-01"이며,
-      그 이전의 마지막 거래일의 Close 가격을 반환합니다.
-
-    :param year: int, 연도 (예: 2015)
-    :param quarter: str, 쿼터 ("Q1", "Q2", "Q3", "Q4")
-    :param ticker: str, 티커명 (예: "AAPL")
-    :return: 거래일의 종가 (float)
+    :param year: int, 연도
+    :param quarter: str, "Q1" ~ "Q4"
+    :param ticker: str, 종목 코드 (6자리 문자열)
+    :return: 해당 종목의 종가 (float)
     """
-    # 쿼터 시작일 설정
-    if quarter == "Q1":
-        start_date_str = f"{year}-01-01"
-    elif quarter == "Q2":
-        start_date_str = f"{year}-04-01"
-    elif quarter == "Q3":
-        start_date_str = f"{year}-07-01"
-    elif quarter == "Q4":
-        start_date_str = f"{year}-10-01"
-    else:
-        raise ValueError("쿼터는 'Q1', 'Q2', 'Q3', 'Q4' 중 하나여야 합니다.")
+    # 1. disclosure_date 가져오기
+    try:
+        reg_path = f"./data_kr/date_regression/{year}_{quarter}.csv"
+        reg_df = pd.read_csv(reg_path)
+        reg_row = reg_df[reg_df['code'].astype(str).str.zfill(6) == ticker]
+        if reg_row.empty:
+            print(f"{ticker}: {year}_{quarter} 공시일 정보를 찾을 수 없습니다.")
+            return 0
+        current_date = pd.to_datetime(reg_row.iloc[0]['disclosure_date']) - timedelta(days=1)
+    except Exception as e:
+        print(f"{ticker}: 공시일 파일 로드 실패 - {e}")
+        return 0
 
-    quarter_start = datetime.strptime(start_date_str, "%Y-%m-%d")
+    # 2. 가격 데이터 로딩
+    try:
+        if isKS200:
+            file_path = f"./data_kr/price/KS200.csv"
+        else:
+            file_path = f"./data_kr/price/{ticker}.csv"
+        df = pd.read_csv(file_path)
+        df['날짜'] = pd.to_datetime(df['날짜'])
+        df.sort_values(by='날짜', inplace=True)
+    except Exception as e:
+        print(f"{ticker}: 가격 데이터 로드 실패 - {e}")
+        return 0
 
-    # CSV 파일 읽기
-    file_path = f"./data_kr/price/{ticker}.csv"
-    df = pd.read_csv(file_path)
-
-    # Date 컬럼을 datetime 형식으로 변환 후 정렬
-    df['날짜'] = pd.to_datetime(df['날짜'])
-
-    # 쿼터 시작일 이전의 거래일을 찾기 위해, 기준일의 전날부터 시작
-    current_date = quarter_start - timedelta(days=1)
+    # 3. disclosure_date 이전 가장 가까운 거래일의 종가 반환
     while True:
-        matching_rows = df[df['날짜'].dt.date == current_date.date()]
-        if not matching_rows.empty:
-            # 해당 날짜의 마지막 거래일의 종가 반환
-            return matching_rows.iloc[-1]['종가']
+        match = df[df['날짜'].dt.date == current_date.date()]
+        if not match.empty:
+            return match.iloc[-1]['종가']
         current_date -= timedelta(days=1)
-        # 데이터 범위를 넘어가는 경우 예외 발생
         if current_date < df['날짜'].min():
-            print(f"{ticker}의 데이터에서 {quarter_start} 이전의 거래일을 찾을 수 없습니다.")
+            print(f"{ticker}: {year}_{quarter} 이전 거래일 없음.")
             return 0
+
 
 save_folder = "./preprocessed_data"
 if os.path.isdir(f"{save_folder}/") == False:
@@ -276,7 +270,8 @@ if args.isall == "False":
             df_kfeature = concat_k_features(ticker_str)
             df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
             df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
-            df_data = add_prefix_to_columns(df_data, "F_", exclude_cols=["year", "quarter","code","name","sector"])
+            df_data = add_prefix_to_columns(df_data, "F_", exclude_cols=["year", "quarter","code","name","sector","disclosure_date"])
+            df_data = df_data.drop(columns=['disclosure_date'])
             df_kfeature = add_prefix_to_columns(df_kfeature, "P_", exclude_cols=["연도", "분기"])
             df_macro = add_prefix_to_columns(df_macro, "M_", exclude_cols=["연도", "분기"])
             df_data = pd.concat([df_data, df_macro,df_kfeature], axis=1)
@@ -302,17 +297,15 @@ if args.isall == "False":
             #df_data = df_data[~(df_data['year'].astype(str).str.contains('2015') & df_data['quarter'].astype(str).str.contains('Q4'))]
 
             # 시장초과수익률 계산
-            df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv", index_col=[0])
-            stock_date = datetime.strptime(df_price.index[0], "%Y-%m-%d")
             past_return = []
             df_data = df_data.iloc[::-1].reset_index(drop=True)
             for i in range(0, len(df_data) - 1):
 
-                start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str)
-                end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
+                start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str,False)
+                end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str,False)
 
-                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str,True)
+                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str,True)
 
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
@@ -331,11 +324,11 @@ if args.isall == "False":
 
             label = []
 
-            start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str)
-            end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str)
+            start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str,False)
+            end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str,False)
 
-            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], "KS200")
-            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], "KS200")
+            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str, True)
+            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str, True)
             if start_price == 0 or ks200_start_price == 0:
                 relative_return = 0.0
             else:
@@ -357,8 +350,8 @@ if args.isall == "False":
                 start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
                 end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True)
+                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str, True)
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
                 else:
@@ -492,7 +485,9 @@ elif args.isall == "cluster":
             df_kfeature = concat_k_features(ticker_str)
             df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
             df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
-            df_data = add_prefix_to_columns(df_data, "F_", exclude_cols=["year", "quarter", "code", "name", "sector"])
+            df_data = add_prefix_to_columns(df_data, "F_", exclude_cols=["year", "quarter", "code", "name", "sector",
+                                                                         "disclosure_date"])
+            df_data = df_data.drop(columns=['disclosure_date'])
             df_kfeature = add_prefix_to_columns(df_kfeature, "P_", exclude_cols=["연도", "분기"])
             df_macro = add_prefix_to_columns(df_macro, "M_", exclude_cols=["연도", "분기"])
             df_data = pd.concat([df_data, df_macro, df_kfeature], axis=1)
@@ -529,8 +524,8 @@ elif args.isall == "cluster":
                 start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str)
                 end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str, True)
+                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True)
 
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
@@ -552,8 +547,8 @@ elif args.isall == "cluster":
             start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str)
             end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str)
 
-            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], "KS200")
-            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], "KS200")
+            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str, True)
+            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str,True)
             if start_price == 0 or ks200_start_price == 0:
                 relative_return = 0.0
             else:
@@ -575,8 +570,8 @@ elif args.isall == "cluster":
                 start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
                 end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True)
+                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str, True)
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
                 else:
@@ -711,7 +706,9 @@ elif args.isall == "True":
             df_kfeature = concat_k_features(ticker_str)
             df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
             df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
-            df_data = add_prefix_to_columns(df_data, "F_", exclude_cols=["year", "quarter", "code", "name", "sector"])
+            df_data = add_prefix_to_columns(df_data, "F_", exclude_cols=["year", "quarter", "code", "name", "sector",
+                                                                         "disclosure_date"])
+            df_data = df_data.drop(columns=['disclosure_date'])
             df_kfeature = add_prefix_to_columns(df_kfeature, "P_", exclude_cols=["연도", "분기"])
             df_macro = add_prefix_to_columns(df_macro, "M_", exclude_cols=["연도", "분기"])
             df_data = pd.concat([df_data, df_macro, df_kfeature], axis=1)
@@ -749,8 +746,8 @@ elif args.isall == "True":
                 start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str)
                 end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str, True)
+                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True)
 
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
@@ -772,8 +769,8 @@ elif args.isall == "True":
             start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str)
             end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str)
 
-            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], "KS200")
-            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], "KS200")
+            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str, True)
+            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str, True)
             if start_price == 0 or ks200_start_price == 0:
                 relative_return = 0.0
             else:
@@ -795,8 +792,8 @@ elif args.isall == "True":
                 start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
                 end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True)
+                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str, True)
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
                 else:

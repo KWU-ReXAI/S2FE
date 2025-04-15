@@ -123,7 +123,7 @@ def quarter2date(year, quarter):
     return quarter_start
 
 
-def get_start_price(year, quarter, ticker):
+def get_start_price(year, quarter, ticker, isKS200 = False):
     """
     date_regression 폴더의 공시일(disclosure_date)을 기준으로
     가장 가까운 거래일의 시가(Open)를 반환합니다.
@@ -148,7 +148,8 @@ def get_start_price(year, quarter, ticker):
 
     # 2. 가격 데이터 로딩
     try:
-        file_path = f"./data_kr/price/{ticker}.csv"
+        if isKS200: file_path = f"./data_kr/price/KS200.csv"
+        else: file_path = f"./data_kr/price/{ticker}.csv"
         df = pd.read_csv(file_path)
         df['날짜'] = pd.to_datetime(df['날짜'])
         df.sort_values(by='날짜', inplace=True)
@@ -168,7 +169,7 @@ def get_start_price(year, quarter, ticker):
 
 
 
-def get_end_price(year, quarter, ticker):
+def get_end_price(year, quarter, ticker, isKS200 = False):
     """
     date_regression 폴더에서 가져온 disclosure_date 기준 이전 마지막 거래일의 종가(Close)를 반환합니다.
 
@@ -192,7 +193,10 @@ def get_end_price(year, quarter, ticker):
 
     # 2. 가격 데이터 로딩
     try:
-        file_path = f"./data_kr/price/{ticker}.csv"
+        if isKS200:
+            file_path = f"./data_kr/price/KS200.csv"
+        else:
+            file_path = f"./data_kr/price/{ticker}.csv"
         df = pd.read_csv(file_path)
         df['날짜'] = pd.to_datetime(df['날짜'])
         df.sort_values(by='날짜', inplace=True)
@@ -297,11 +301,11 @@ if args.isall == "False":
             df_data = df_data.iloc[::-1].reset_index(drop=True)
             for i in range(0, len(df_data) - 1):
 
-                start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str)
-                end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
+                start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str,False)
+                end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str,False)
 
-                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str,True)
+                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str,True)
 
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
@@ -320,11 +324,11 @@ if args.isall == "False":
 
             label = []
 
-            start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str)
-            end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str)
+            start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str,False)
+            end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str,False)
 
-            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], "KS200")
-            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], "KS200")
+            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str, True)
+            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str, True)
             if start_price == 0 or ks200_start_price == 0:
                 relative_return = 0.0
             else:
@@ -346,8 +350,8 @@ if args.isall == "False":
                 start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
                 end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True)
+                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str, True)
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
                 else:
@@ -520,8 +524,8 @@ elif args.isall == "cluster":
                 start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str)
                 end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str, True)
+                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True)
 
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
@@ -543,8 +547,8 @@ elif args.isall == "cluster":
             start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str)
             end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str)
 
-            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], "KS200")
-            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], "KS200")
+            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str, True)
+            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str,True)
             if start_price == 0 or ks200_start_price == 0:
                 relative_return = 0.0
             else:
@@ -566,8 +570,8 @@ elif args.isall == "cluster":
                 start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
                 end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True)
+                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str, True)
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
                 else:
@@ -742,8 +746,8 @@ elif args.isall == "True":
                 start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str)
                 end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str, True)
+                ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True)
 
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
@@ -765,8 +769,8 @@ elif args.isall == "True":
             start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str)
             end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str)
 
-            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], "KS200")
-            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], "KS200")
+            ks200_start_price = get_start_price(df_data.iloc[1, 3], df_data.iloc[1, 4], ticker_str, True)
+            ks200_end_price = get_end_price(df_data.iloc[0, 3], df_data.iloc[0, 4], ticker_str, True)
             if start_price == 0 or ks200_start_price == 0:
                 relative_return = 0.0
             else:
@@ -788,8 +792,8 @@ elif args.isall == "True":
                 start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
                 end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], "KS200")
-                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], "KS200")
+                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True)
+                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str, True)
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
                 else:

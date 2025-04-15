@@ -60,7 +60,7 @@ save_valid_stock = []
 for corp_code, corp_name in kospi_200.items():
     if corp_code == 'code':  # 파일 헤더 등 제외
         continue
-    corp_code = corp_code.zfill(6)
+    #corp_code = corp_code.zfill(6)
 
     annual_data_dict = {}
     valid_years = []

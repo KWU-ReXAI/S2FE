@@ -303,10 +303,9 @@ class MyModel(nn.Module):
                 pd.DataFrame(clustered_stocks_list).to_csv(
                     f"{dir}/train_selected_stocks_{self.phase}.csv", index=False)
             num_of_stock.append(len(real_last_topK_stock))
-
             ks50_stock = ["KS200"]
-            daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate)
-            daily_change_KOSPI = self.Utils.get_portfolio_memory(ks50_stock,strdate,next_strdate)
+            daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate,False)
+            daily_change_KOSPI = self.Utils.get_portfolio_memory(real_last_topK_stock,strdate,next_strdate,True)
             # 매일의 포트폴리오 수익률 계산
             # 선택된 주식 리스트, 현재 및 다음 날짜의 주가 데이터 이용
             pf_mem.extend(daily_change)

@@ -3,5 +3,5 @@ result/
 .idea/
 .env
 .vscode/
-__pycache__
+__pycache__/
 audio/

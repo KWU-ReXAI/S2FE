@@ -3,88 +3,36 @@ import pandas as pd
 import os
 import time
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+import requests
+import pandas as pd
 
-api_key = ''
-dart = OpenDartReader(api_key)
+# OpenDART API 키와 조회 대상 정보
+api_key = 'a4ccf72e53bf597911d0ff504d58c5f09f2029a3'
+corp_code = "000050"
+year = 2021
+reprt_code = "11011"  # 예: 사업보고서
 
-kospi_50_file = './data_kr/kospi.txt'
-kospi_50 = {}
+# 1) 재무제표 데이터 조회 (기존 finstate 호출 가정)
+fin_params = {'crtfc_key': api_key, 'corp_code': corp_code,
+              'bsns_year': year, 'reprt_code': reprt_code}
+res = requests.get('https://opendart.fss.or.kr/api/fnlttSinglAcnt.json', params=fin_params)
+df_fin = pd.DataFrame(res.json()['list'])  # finstate 결과 (재무제표 데이터)
+# df_fin에는 rcept_no, account_nm, thstrm_amount 등 재무제표 항목들이 포함됨
 
-with open(kospi_50_file, 'r') as f:
-    for line in f:
-        code, name, sector = line.strip().split(',')
-        kospi_50[code] = name
-
-quarters = {
-    'Q1': '11013',  # 1분기
-    'Q2': '11012',  # 반기
-    'Q3': '11014',  # 3분기
-    'Q4': '11011'  # 사업보고서 (4분기)
+# 2) 공시 목록 조회하여 제출일 가져오기
+list_params = {
+    'crtfc_key': api_key,
+    'corp_code': corp_code,
+    'bgn_de': f"{year}0101",       # 해당 연도의 시작일
+    'end_de': f"{year+1}1231",     # 다음년도 말까지 (사업보고서의 경우 다음해 3월말쯤 제출됨)
+    'pblntf_ty': 'A',             # 정기공시
+    'pblntf_detail_ty': 'A001',   # 사업보고서 (필요에 따라 A002, A003)
+    'last_reprt_at': 'N',         # 정정시 최종본만
+    'page_count': 100
 }
-years = range(2015, 2025)
+res_list = requests.get('https://opendart.fss.or.kr/api/list.json', params=list_params)
+df_list = pd.DataFrame(res_list.json()['list'])
 
-# 10년 KOSPI 기업 재무제표 추출
-for corp_code, corp_name in kospi_50.items():
-    folder_path = f'./data_kr/financial_statements/{corp_code}'
-    os.makedirs(folder_path, exist_ok=True)
-
-    for year in years:
-        annual_data = []
-
-        for quarter, code in quarters.items():
-            try:
-                data = dart.finstate(corp_code, year, reprt_code=code)
-
-                if data is not None:
-                    # "재무제표" 데이터만 추출
-                    data = data[data['fs_nm'] == '재무제표']
-
-                    if not data.empty:
-                        data['Year'] = year
-                        data['Quarter'] = quarter
-                        annual_data.append(
-                            data[['Year', 'Quarter', 'sj_div', 'account_nm', 'thstrm_dt', 'thstrm_amount']])
-
-            except Exception as e:
-                print(f"{corp_name} - {year} {quarter} financial data collection error: {e}")
-            time.sleep(0.5)
-
-        if annual_data:
-            annual_df = pd.concat(annual_data, ignore_index=True)
-            file_name = f'{folder_path}/{corp_code}_{year}.csv'
-            # 'sj_div'가 'IS'인 데이터 필터링
-            is_data = annual_df[annual_df['sj_div'] == 'IS'].copy()
-
-            # 'thstrm_amount' 컬럼에서 '-'를 NaN으로 처리
-            is_data['thstrm_amount'] = is_data['thstrm_amount'].replace('-', None)
-
-            # 'thstrm_amount'를 숫자형으로 변환
-            is_data['thstrm_amount'] = is_data['thstrm_amount'].replace(',', '', regex=True).astype(float)
-
-            # 결측치(NaN)를 이전 또는 다음 분기의 값으로 대체
-            is_data['thstrm_amount'] = is_data['thstrm_amount'].ffill().bfill()
-
-            # Q4에 대해 Q1, Q2, Q3 값을 뺀 값으로 대체
-            q4_data = is_data[is_data['Quarter'] == 'Q4'].copy()
-            for index, row in q4_data.iterrows():
-                year = row['Year']
-                account = row['account_nm']
-                # 해당 연도, 계정의 Q1~Q3 값 합산
-                sum_q1_to_q3 = is_data[(is_data['Year'] == year) &
-                                       (is_data['account_nm'] == account) &
-                                       (is_data['Quarter'].isin(['Q1', 'Q2', 'Q3']))
-                                       ]['thstrm_amount'].sum()
-                # Q4에서 Q1~Q3 누적값을 뺀 값을 대체
-                q4_data.at[index, 'thstrm_amount'] = row['thstrm_amount'] - sum_q1_to_q3
-
-            # 원본 데이터의 Q4 값 업데이트
-            annual_df.loc[is_data.index, 'thstrm_amount'] = is_data['thstrm_amount']
-            annual_df.loc[q4_data.index, 'thstrm_amount'] = q4_data['thstrm_amount']
-
-            annual_df['thstrm_amount'] = annual_df['thstrm_amount'].replace(',', '', regex=True).astype(float)
-
-            annual_df.to_csv(file_name, index=False, encoding='utf-8-sig')
-            print(f"{corp_name}'s {year} financial statements saved to {file_name}.")
-        else:
-            print(f"{corp_name} - No financial data for the year {year}.")
+# 3) finstate 결과와 공시일 데이터 병합 (접수번호 rcept_no 기준)
+df_merge = pd.merge(df_fin, df_list[['rcept_no', 'rcept_dt']], on='rcept_no', how='left')
+# 이제 df_merge의 각 재무제표 항목에 'rcept_dt' 컬럼으로 공시일자(제출일)가 추가됨

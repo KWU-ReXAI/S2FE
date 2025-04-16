@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 import os
+from pathlib import Path
+import datetime
 
 from googleapiclient.discovery import build
 import yt_dlp
@@ -17,6 +19,105 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
+# whisper 모델 로드 (base, small, medium, large 중 선택 가능)
+whisper_model = whisper.load_model("small")
+
+# gemini 모델 로드
+genai.configure(api_key=GEMINI_API_KEY)
+gemini_model = genai.GenerativeModel("gemini-2.0-flash")
+
+# GPT 모델 로드
+gpt_model = ChatOpenAI(temperature=0, model="gpt-4o", openai_api_key=OPENAI_API_KEY)
+
+# YOUTUBE 빌드
+youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+
+# -----------------------------
+# 유튜브 채널명으로 채널ID 추출
+# 입력 예: "한국경제TV" 또는 "@wowtv"
+# 출력: 채널 ID
+# -----------------------------
+def get_channel_id(channel_name):
+	res = youtube.search().list(
+		q=channel_name,
+		type="channel",
+		part="snippet",
+		maxResults=1
+	).execute()
+
+	# 결과에서 채널 ID 추출
+	if res.get("items"):
+		channel_id = res["items"][0]["snippet"]["channelId"]
+		print("📺 채널 ID:", channel_id)
+	else:
+		print("채널을 찾을 수 없습니다.")
+
+	return channel_id
+
+# -----------------------------
+# 채널 ID로 업로드 playlist ID 얻기
+# 입력: channel id
+# 출력: playlist id
+# -----------------------------
+def get_uploads_playlist_id(channel_id):
+    res = youtube.channels().list(
+        part="contentDetails",
+        id=channel_id
+    ).execute()
+    return res["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+
+# -----------------------------
+# playlist ID로 video ID 얻기기
+# 입력: playlist id, 기간 시작 & 끝
+# 출력: videos ids
+# -----------------------------
+def get_video_ids_within_date(playlist_id, start_date, end_date):
+	video_ids = []
+	next_page_token = None
+
+	while True:
+		res = youtube.playlistItems().list(
+			part="snippet",
+			playlistId=playlist_id,
+			maxResults=50,
+			pageToken=next_page_token
+		).execute()
+
+		for item in res["items"]:
+			published_at = item["snippet"]["publishedAt"]
+			pub_date = datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%SZ")
+
+			if start_date <= pub_date <= end_date:
+				video_id = item["snippet"]["resourceId"]["videoId"]
+				video_ids.append(video_id)
+
+		next_page_token = res.get("nextPageToken")
+		if not next_page_token:
+			break
+
+	if not video_ids:
+		print("조건에 맞는 영상 없음")
+
+	return video_ids
+
+# -----------------------------
+# 조회수 기준 필터링
+# 입력: videos id, 최소조회수수
+# 출력: videos id
+# -----------------------------
+def filter_by_view_count(video_ids, min_views):
+    filtered_ids = []
+    for i in range(0, len(video_ids), 50):  # 50개씩 요청
+        res = youtube.videos().list(
+            part="statistics",
+            id=",".join(video_ids[i:i+50])
+        ).execute()
+
+        for item in res["items"]:
+            view_count = int(item["statistics"].get("viewCount", 0))
+            if view_count >= min_views:
+                filtered_ids.append(item["id"])
+    return filtered_ids
 
 # -----------------------------
 # 유튜브 영상 검색
@@ -25,7 +126,6 @@ YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 # -----------------------------
 def search_videos(query, date):
 	date += 'T00:00:00Z' # ISO 8601 형식으로 변경
-	youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
 
 	# Step 1: 검색
 	search_res = youtube.search().list(
@@ -41,42 +141,8 @@ def search_videos(query, date):
 	video_ids = [item['id']['videoId'] for item in search_res['items']]
 	if not video_ids:
 		print("조건에 맞는 영상 없음")
-		return None
 
-	# Step 3: 상세 정보 조회 (조회수 등)
-	video_details = youtube.videos().list(
-		part='statistics,snippet',
-		id=','.join(video_ids)
-	).execute()
-
-	# Step 4: 필터링 & 정렬
-	filtered = []
-	for item in video_details['items']:
-		stats = item['statistics']
-		snippet = item['snippet']
-		publish_date = snippet['publishedAt']
-
-		if publish_date < date:
-			filtered.append({
-				'videoId': item['id'],
-				'title': snippet['title'],
-				'views': int(stats.get('viewCount', 0)),
-				'publishedAt': publish_date
-			})
-
-	if not filtered:
-		print("필터 조건에 맞는 영상 없음")
-		return None
-
-	# Step 5: 조회수 기준 최상위 영상 선택
-	top_video = max(filtered, key=lambda x: x['views'])
-	video_id = top_video['videoId']
-	print(f"🎬 가장 인기 있는 영상: {top_video['title']}")
-	print(f"🔗 https://www.youtube.com/watch?v={video_id}")
-	print(f"👀 조회수: {top_video['views']}")
-	print(f"📅 업로드: {top_video['publishedAt']}")
-
-	return video_id
+	return video_ids
 
 # -----------------------------
 # 유튜브 id에서 음성파일 추출
@@ -110,11 +176,8 @@ def extract_video_audio(video_id, audio_dir):
 # INPUT: youtube id, 오디오 다운로드 경로
 # -----------------------------
 def audio2text(audio_dir):
-	# 모델 로드 (base, small, medium, large 중 선택 가능)
-	model = whisper.load_model("small")
-
 	# 음성 파일 STT 수행
-	result = model.transcribe(f'{audio_dir}.mp3')  # wav, mp4 등도 OK
+	result = whisper_model.transcribe(f'{audio_dir}.mp3')  # wav, mp4 등도 OK
 
 	# 텍스트 출력
 	print(result["text"])
@@ -125,17 +188,14 @@ def audio2text(audio_dir):
 # 자막 전처리 함수
 # -----------------------------
 def clean_srt(srt_text: str) -> str:
-    srt_text = re.sub(r"(좀|그냥|뭐랄까|그러니까|아니|약간|뭔가|뭐냐면요)", "", srt_text)
-    return srt_text
+	srt_text = re.sub(r"(좀|그냥|뭐랄까|그러니까|아니|약간|뭔가|뭐냐면요)", "", srt_text)
+	return srt_text
 
 
 # ------------------------
 # Gemini 요약
 # ------------------------
 def summarize_with_gemini(text: str) -> str:
-	genai.configure(api_key=GEMINI_API_KEY)
-	gemini_model = genai.GenerativeModel("gemini-2.0-flash")
-
 	prompt = f"""
 다음은 경제 관련 영상 자막입니다.
 핵심 내용 위주로 간결하게 뉴스 스타일로 요약해주세요:
@@ -151,8 +211,6 @@ def summarize_with_gemini(text: str) -> str:
 # GPT-4 등락 예측
 # ------------------------
 def predict_market_from_summary(summary: str, stock: str) -> str:
-	GPT_llm = ChatOpenAI(temperature=0, model="gpt-4o", openai_api_key=OPENAI_API_KEY)
-
 	prompt = f"""
 아래는 경제 뉴스의 요약입니다.
 
@@ -160,7 +218,7 @@ def predict_market_from_summary(summary: str, stock: str) -> str:
 
 이 뉴스의 내용이 주식 종목 "{stock}"에 긍정적인 영향을 미칠 가능성이 있을까요? 그렇다면 '오를 가능성 있음', 아니라면 '오를 가능성 낮음'이라고만 답해 주세요.
 """
-	response = GPT_llm([HumanMessage(content=prompt)])
+	response = gpt_model([HumanMessage(content=prompt)])
 	return response.content.strip()
 
 
@@ -205,3 +263,31 @@ def predict_market(stock: str, date: str) -> str:
 		return 'middle'
 
 
+if __name__ == "__main__":
+    # 모든 종목의 모든 분기 공시일을 하나의 파일로로
+	root_path = Path('./data_kr/merged')
+	df = pd.DataFrame()
+	for file_path in root_path.rglob("*.csv"):
+		df_ = pd.read_csv(file_path)
+		df_ = df_[["code", "name", "year", "quarter", "disclosure_date"]]
+		df = pd.concat([df, df_])
+
+	df.to_csv("./data_kr/all_symbols_disclosure_date.csv", index=False)
+
+	df_symbol = pd.read_csv("./data_kr/all_symbols_disclosure_date.csv")
+
+	years = [2015] + ([y for y in range(2016, 2025) for _ in range(4)])
+	quarters = ["Q4"] + ([q for _ in range(2016, 2025) for q in ["Q1", "Q2", "Q3", "Q4"]])
+	df_disclosure = pd.DataFrame({
+		"year": years,
+		"quarter": quarters,
+		"min_disclosure_date": [None] * len(years),
+		"max_disclosure_date": [None] * len(years)
+	})
+
+	for i, row in enumerate(df_disclosure.itertuples()):
+		disclosures = df_symbol[(df_symbol["year"] == row.year) & (df_symbol["quarter"] == row.quarter)]["disclosure_date"]
+		df_disclosure.loc[i, "min_disclosure_date"] = disclosures.min()
+		df_disclosure.loc[i, "max_disclosure_date"] = disclosures.max()
+
+	df_disclosure.to_csv("./data_kr/disclosure_date_range.csv", index=False)

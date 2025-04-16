@@ -42,7 +42,7 @@ data_list = [] # shape: (1 + cluster_n, phase)
 for sector in ["ALL"] + DM.cluster_list:
     # feature_names 추출
     column_path = f"./preprocessed_data/{sector}/{sector}_feature_imp.csv"
-    df = pd.read_csv(column_path, index_col=0)
+    df = pd.read_csv(column_path, index_col=0 if sector == "ALL" else 1)
     index = df.index.tolist()
     index.insert(0, "Relative Return")  # RR 제외하고 feature selection 했을 때
     feature_names.append(index)
@@ -75,9 +75,9 @@ for num in tqdm(range(1, trainNum+1), desc="Test Progress"):
             explainer_anfis = shap.GradientExplainer(sector_model.anfis, torch.Tensor(data).to(sector_model.device))
             explainer_rf = shap.TreeExplainer(sector_model.rf, data)
 
-            shap_values_mlp = explainer_mlp.shap_values(torch.Tensor(data).to(sector_model.device))
+            shap_values_mlp = explainer_mlp.shap_values(torch.Tensor(data).to(sector_model.device), check_additivity=False)
             shap_values_anfis = explainer_anfis.shap_values(torch.Tensor(data).to(sector_model.device))
-            shap_values_rf = explainer_rf.shap_values(data)
+            shap_values_rf = explainer_rf.shap_values(data, check_additivity=False)
 
             shap_values = shap_values_mlp[:, :, 0] + shap_values_anfis[:, :, 0] + shap_values_rf
             shap_values /= 3

@@ -16,7 +16,6 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
 parser.add_argument('--train_dir',type=str,nargs='?',default="train_result_dir") # 결과 파일명
 parser.add_argument('--test_dir',type=str,nargs='?',default="test_result_dir") # 결과 디렉토리 명
-parser.add_argument('--llm',type=bool,nargs='?',default=False) # 결과 디렉토리 명
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 args = parser.parse_args()
 
@@ -60,10 +59,7 @@ for K in range(1,args.testNum+1): # 한번만 실행
         num_stocks = [] # 각 phase에서 선택된 주식 개수를 저장하는 리스트
         for phase in tqdm(phase_list): # 각 phase 별 진행상태를 시각적으로 출력
             model = joblib.load(f"{dir}/{args.train_dir}_{K}/train_result_model_{K}_{phase}/model.joblib")  # 저장된 모델 불러옴
-            if args.llm:
-                cagr, sharpe, mdd, num_stock_tmp,cagr_ks,sharpe_ks,mdd_ks = model.backtest_with_llm(verbose=True,agg=agg,use_all="SectorAll",inter_n=inter_n,isTest=True, testNum=K, dir=args.test_dir) # 백테스팅 실행
-            else:
-                cagr, sharpe, mdd, num_stock_tmp,cagr_ks,sharpe_ks,mdd_ks = model.backtest(verbose=True,agg=agg,use_all="SectorAll",inter_n=inter_n,isTest=True, testNum=K, dir=args.test_dir) # 백테스팅 실행
+            cagr, sharpe, mdd, num_stock_tmp,cagr_ks,sharpe_ks,mdd_ks = model.backtest(verbose=True,agg=agg,use_all="SectorAll",inter_n=inter_n,isTest=True, testNum=K, dir=args.test_dir) # 백테스팅 실행
                 
             # 상위 20% 주식만을 선택
             num_stocks.append(num_stock_tmp) # 선택된 주식 개수를 저장

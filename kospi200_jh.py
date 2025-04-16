@@ -94,8 +94,7 @@ for corp_code, corp_name in kospi_200.items():
 
 			##### 분기보고서 최초제출일 구하기 #####
 			# 분기보고서 가져오기
-			corp_code = dart.find_corp_code('005090')
-			df = dart.list(corp=corp_code, start='20160401', end='20170401', kind='A', final=False)
+			df = dart.list(corp=corp_code, start=f'{year}0401', end=f'{year+1}0401', kind='A', final=False)
 			# 정정 보고서 제외 (report_nm 앞에 '[기재정정]'이 있는 행 제거)
 			df = df[~df['report_nm'].str.startswith('[기재정정]')].reset_index(drop=True)
    

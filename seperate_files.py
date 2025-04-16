@@ -408,10 +408,36 @@ def cleanSymbolWithFolder(folder_path, symbol_path, encoding='utf-8-sig'):
     else:
         print("symbol.csv와 폴더 내 파일명이 완전히 일치합니다.")
 
+def add_disclosure_date(file_path, save_path=None):
+    """
+    CSV 파일 경로를 받아 deadline과 quarter 열 기준으로 disclosure_date를 계산하여 저장합니다.
+
+    :param file_path: str, 입력 CSV 파일 경로
+    :param save_path: str, 결과를 저장할 경로 (None이면 기존 경로에 덮어쓰기)
+    """
+    df = pd.read_csv(file_path)
+
+    # datetime 형식으로 변환
+    df['deadline'] = pd.to_datetime(df['deadline'], errors='coerce')
+
+    # disclosure_date 열 추가
+    df['disclosure_date'] = df.apply(
+        lambda row: row['deadline'] + pd.Timedelta(days=90) if row['quarter'] == 'Q4'
+        else row['deadline'] + pd.Timedelta(days=45),
+        axis=1
+    )
+
+    # 저장 경로 설정
+    if save_path is None:
+        save_path = file_path
+
+    df.to_csv(save_path, index=False)
+    print(f"저장 완료: {save_path}")
+
 
 
 if __name__ == "__main__":
-    compareFolderAndSymbol("./data_kr/price","./data_kr/symbol.csv")
+   add_disclosure_date("./data_kr/merged/KS200.csv")
 """
 # 198: symbol
 #12 18 13 5 29 5 7 1 13 22 33 14 4 2 1

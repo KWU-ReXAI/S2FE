@@ -67,6 +67,7 @@ class DataManager:
         except IndexError:
             raise ValueError(f"pno {pno}은 date_list의 범위를 벗어났습니다. date_list 길이: {len(self.date_list)}")
 
+
     def data_phase(self, sector: str, phase: str, pandas_format=False, cluster=False, isall=False):
         train_start = self.phase_list[phase][0]
         valid_start = self.phase_list[phase][1]

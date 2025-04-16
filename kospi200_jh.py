@@ -94,15 +94,15 @@ for corp_code, corp_name in kospi_200.items():
 
 			##### 분기보고서 최초제출일 구하기 #####
 			# 분기보고서 가져오기
-			df = dart.list(corp=corp_code, start=f'{year}0401', end=f'{year+1}0401', kind='A', final=False)
+			df = dart.list(corp=corp_code, start=f'{year}0401', end=f'{year+1}0415', kind='A', final=False)
 			# 정정 보고서 제외 (report_nm 앞에 '[기재정정]'이 있는 행 제거)
 			df = df[~df['report_nm'].str.startswith('[기재정정]')].reset_index(drop=True)
    
 			annual_df["공시일"] = None
-			annual_df.loc[annual_df["Quarter"] == "Q1", "공시일"] = df.loc[3, "rcept_dt"]
-			annual_df.loc[annual_df["Quarter"] == "Q2", "공시일"] = df.loc[2, "rcept_dt"]
-			annual_df.loc[annual_df["Quarter"] == "Q3", "공시일"] = df.loc[1, "rcept_dt"]
-			annual_df.loc[annual_df["Quarter"] == "Q4", "공시일"] = df.loc[0, "rcept_dt"]
+			if (annual_df["Quarter"] == "Q1").any(): annual_df.loc[annual_df["Quarter"] == "Q1", "공시일"] = df.loc[3, "rcept_dt"]
+			if (annual_df["Quarter"] == "Q2").any(): annual_df.loc[annual_df["Quarter"] == "Q2", "공시일"] = df.loc[2, "rcept_dt"]
+			if (annual_df["Quarter"] == "Q3").any(): annual_df.loc[annual_df["Quarter"] == "Q3", "공시일"] = df.loc[1, "rcept_dt"]
+			if (annual_df["Quarter"] == "Q4").any(): annual_df.loc[annual_df["Quarter"] == "Q4", "공시일"] = df.loc[0, "rcept_dt"]
 
 			annual_df = annual_df[['Year','Quarter','공시일','sj_div','account_nm','thstrm_dt','thstrm_amount']]
 			annual_df.to_csv(file_name, index=False, encoding='utf-8-sig')

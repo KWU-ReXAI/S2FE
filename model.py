@@ -20,6 +20,7 @@ from functools import reduce
 from membership import make_anfis
 from experimental import train_anfis
 from datamanager import DataManager
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 

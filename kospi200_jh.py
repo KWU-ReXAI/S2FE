@@ -6,7 +6,7 @@ import numpy as np
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-api_key = 'a4ccf72e53bf597911d0ff504d58c5f09f2029a3'
+api_key = '	1929dcd7962be583a8ed9dd1757c709523b81a8e'
 dart = OpenDartReader(api_key)
 
 kospi_200_file = './data_kr/kospi_200.txt'
@@ -68,7 +68,7 @@ for corp_code, corp_name in kospi_200.items():
 		os.makedirs(folder_path, exist_ok=True)  # 폴더 생성 (필요할 때만)
   
 		# 분기보고서 가져오기
-		df_closure = dart.list(corp=corp_code, start=f'{year}0401', end=f'{year+1}0415', kind='A', final=False)
+		df_closure = dart.list(corp=corp_code, start='20150401', end='20251231', kind='A', final=False)
 		for year, annual_df in annual_data_dict.items():
 			file_name = f'{folder_path}/{corp_code}_{year}.csv'
 
@@ -96,10 +96,10 @@ for corp_code, corp_name in kospi_200.items():
 
 			##### 분기보고서 최초제출일 구하기 #####
 			# 정정 보고서 제외 (각 분기 보고서들 중 제출일자가 가장 빠른 것 고르기)
-			clousure_q1 = df_closure[df_closure['report_nm'].str.contains(f'분기보고서 ({year}.03)', regex=False)].iloc[-1]["rcept_dt"]
-			clousure_q2 = df_closure[df_closure['report_nm'].str.contains(f'반기보고서 ({year}.06)', regex=False)].iloc[-1]["rcept_dt"]
-			clousure_q3 = df_closure[df_closure['report_nm'].str.contains(f'분기보고서 ({year}.09)', regex=False)].iloc[-1]["rcept_dt"]
-			clousure_q4 = df_closure[df_closure['report_nm'].str.contains(f'사업보고서 ({year}.12)', regex=False)].iloc[-1]["rcept_dt"]
+			clousure_q1 = df_closure[df_closure['report_nm'].str.contains(f'({year}.03)', regex=False)].iloc[-1]["rcept_dt"]
+			clousure_q2 = df_closure[df_closure['report_nm'].str.contains(f'({year}.06)', regex=False)].iloc[-1]["rcept_dt"]
+			clousure_q3 = df_closure[df_closure['report_nm'].str.contains(f'({year}.09)', regex=False)].iloc[-1]["rcept_dt"]
+			clousure_q4 = df_closure[df_closure['report_nm'].str.contains(f'({year}.12)', regex=False)].iloc[-1]["rcept_dt"]
 
 			annual_df["공시일"] = None
 			if (annual_df["Quarter"] == "Q1").any(): annual_df.loc[annual_df["Quarter"] == "Q1", "공시일"] = clousure_q1

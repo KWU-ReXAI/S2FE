@@ -6,3 +6,4 @@ preprocessed_data/
 .vscode/
 __pycache__/
 audio/
+.ipynb_checkpoints

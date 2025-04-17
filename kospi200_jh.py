@@ -96,7 +96,7 @@ for corp_code, corp_name in kospi_200.items():
 			# 분기보고서 가져오기
 			df = dart.list(corp=corp_code, start=f'{year}0401', end=f'{year+1}0415', kind='A', final=False)
 			# 정정 보고서 제외 (report_nm 앞에 '[기재정정]'이 있는 행 제거)
-			df = df[~df['report_nm'].str.contains(r'^\[기재정정\]|^\[첨부정정\]', regex=True)].reset_index(drop=True)
+			df = df[~df['report_nm'].str.contains(r'^\[기재정정\]|^\[첨부정정\]|^\[첨부추가\]|^\[변경등록\]|^\[연장결정\]|^\[발행조건확정\]|^\[정정명령부과\]|^\[정정제출요구\]', regex=True)].reset_index(drop=True)
 
 			annual_df["공시일"] = None
 			if (annual_df["Quarter"] == "Q1").any(): annual_df.loc[annual_df["Quarter"] == "Q1", "공시일"] = df.loc[3, "rcept_dt"]

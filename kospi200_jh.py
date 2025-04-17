@@ -66,7 +66,9 @@ for corp_code, corp_name in kospi_200.items():
 	if set(valid_years) == set(years):  # 모든 연도 데이터가 존재하는 경우
 		folder_path = f'./data_kr/financial_statements/{corp_code}'
 		os.makedirs(folder_path, exist_ok=True)  # 폴더 생성 (필요할 때만)
-
+  
+		# 분기보고서 가져오기
+		df_closure = dart.list(corp=corp_code, start=f'{year}0401', end=f'{year+1}0415', kind='A', final=False)
 		for year, annual_df in annual_data_dict.items():
 			file_name = f'{folder_path}/{corp_code}_{year}.csv'
 
@@ -93,16 +95,17 @@ for corp_code, corp_name in kospi_200.items():
 			annual_df['thstrm_amount'] = annual_df['thstrm_amount'].fillna(0)
 
 			##### 분기보고서 최초제출일 구하기 #####
-			# 분기보고서 가져오기
-			df = dart.list(corp=corp_code, start=f'{year}0401', end=f'{year+1}0415', kind='A', final=False)
-			# 정정 보고서 제외 (report_nm 앞에 '[기재정정]'이 있는 행 제거)
-			df = df[~df['report_nm'].str.contains(r'^\[기재정정\]|^\[첨부정정\]|^\[첨부추가\]|^\[변경등록\]|^\[연장결정\]|^\[발행조건확정\]|^\[정정명령부과\]|^\[정정제출요구\]', regex=True)].reset_index(drop=True)
+			# 정정 보고서 제외 (각 분기 보고서들 중 제출일자가 가장 빠른 것 고르기)
+			clousure_q1 = df_closure[df_closure['report_nm'].str.contains(f'분기보고서 ({year}.03)', regex=False)].iloc[-1]["rcept_dt"]
+			clousure_q2 = df_closure[df_closure['report_nm'].str.contains(f'반기보고서 ({year}.06)', regex=False)].iloc[-1]["rcept_dt"]
+			clousure_q3 = df_closure[df_closure['report_nm'].str.contains(f'분기보고서 ({year}.09)', regex=False)].iloc[-1]["rcept_dt"]
+			clousure_q4 = df_closure[df_closure['report_nm'].str.contains(f'사업보고서 ({year}.12)', regex=False)].iloc[-1]["rcept_dt"]
 
 			annual_df["공시일"] = None
-			if (annual_df["Quarter"] == "Q1").any(): annual_df.loc[annual_df["Quarter"] == "Q1", "공시일"] = df.loc[3, "rcept_dt"]
-			if (annual_df["Quarter"] == "Q2").any(): annual_df.loc[annual_df["Quarter"] == "Q2", "공시일"] = df.loc[2, "rcept_dt"]
-			if (annual_df["Quarter"] == "Q3").any(): annual_df.loc[annual_df["Quarter"] == "Q3", "공시일"] = df.loc[1, "rcept_dt"]
-			if (annual_df["Quarter"] == "Q4").any(): annual_df.loc[annual_df["Quarter"] == "Q4", "공시일"] = df.loc[0, "rcept_dt"]
+			if (annual_df["Quarter"] == "Q1").any(): annual_df.loc[annual_df["Quarter"] == "Q1", "공시일"] = clousure_q1
+			if (annual_df["Quarter"] == "Q2").any(): annual_df.loc[annual_df["Quarter"] == "Q2", "공시일"] = clousure_q2
+			if (annual_df["Quarter"] == "Q3").any(): annual_df.loc[annual_df["Quarter"] == "Q3", "공시일"] = clousure_q3
+			if (annual_df["Quarter"] == "Q4").any(): annual_df.loc[annual_df["Quarter"] == "Q4", "공시일"] = clousure_q4
 
 			annual_df = annual_df[['Year','Quarter','공시일','sj_div','account_nm','thstrm_dt','thstrm_amount']]
 			annual_df.to_csv(file_name, index=False, encoding='utf-8-sig')

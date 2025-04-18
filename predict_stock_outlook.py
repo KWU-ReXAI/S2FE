@@ -67,7 +67,7 @@ def get_uploads_playlist_id(channel_id):
     return res["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
 
 # -----------------------------
-# playlist ID로 video ID 얻기기
+# playlist ID로 지정기간 내의 모든 video ID 얻기기
 # 입력: playlist id, 기간 시작 & 끝
 # 출력: videos ids
 # -----------------------------
@@ -264,30 +264,34 @@ def predict_market(stock: str, date: str) -> str:
 
 
 if __name__ == "__main__":
-    # 모든 종목의 모든 분기 공시일을 하나의 파일로로
-	root_path = Path('./data_kr/merged')
-	df = pd.DataFrame()
-	for file_path in root_path.rglob("*.csv"):
-		df_ = pd.read_csv(file_path)
-		df_ = df_[["code", "name", "year", "quarter", "disclosure_date"]]
-		df = pd.concat([df, df_])
+	df_disclosure = pd.read_csv('data_kr/disclosure_date_range.csv')
 
-	df.to_csv("./data_kr/all_symbols_disclosure_date.csv", index=False)
+	channel_id = get_channel_id('매일경제TV')
+	playlist_id = get_uploads_playlist_id(channel_id)
+	video_ids = get_video_ids_within_date(playlist_id,)
+	
 
-	df_symbol = pd.read_csv("./data_kr/all_symbols_disclosure_date.csv")
+    # # 모든 종목의 모든 분기 공시일을 하나의 파일로
+	# root_path = Path('./data_kr/merged')
+	# all_symbols_disclosure = pd.DataFrame()
+	# for file_path in root_path.rglob("*.csv"):
+	# 	df_ = pd.read_csv(file_path)
+	# 	df_ = df_[["code", "name", "year", "quarter", "disclosure_date"]]
+	# 	all_symbols_disclosure = pd.concat([all_symbols_disclosure, df_])
 
-	years = [2015] + ([y for y in range(2016, 2025) for _ in range(4)])
-	quarters = ["Q4"] + ([q for _ in range(2016, 2025) for q in ["Q1", "Q2", "Q3", "Q4"]])
-	df_disclosure = pd.DataFrame({
-		"year": years,
-		"quarter": quarters,
-		"min_disclosure_date": [None] * len(years),
-		"max_disclosure_date": [None] * len(years)
-	})
 
-	for i, row in enumerate(df_disclosure.itertuples()):
-		disclosures = df_symbol[(df_symbol["year"] == row.year) & (df_symbol["quarter"] == row.quarter)]["disclosure_date"]
-		df_disclosure.loc[i, "min_disclosure_date"] = disclosures.min()
-		df_disclosure.loc[i, "max_disclosure_date"] = disclosures.max()
+	# years = [2015] + ([y for y in range(2016, 2025) for _ in range(4)])
+	# quarters = ["Q4"] + ([q for _ in range(2016, 2025) for q in ["Q1", "Q2", "Q3", "Q4"]])
+	# df_disclosure = pd.DataFrame({
+	# 	"year": years,
+	# 	"quarter": quarters,
+	# 	"min_disclosure_date": [None] * len(years),
+	# 	"max_disclosure_date": [None] * len(years)
+	# })
 
-	df_disclosure.to_csv("./data_kr/disclosure_date_range.csv", index=False)
+	# for i, row in enumerate(df_disclosure.itertuples()):
+	# 	disclosures = all_symbols_disclosure[(all_symbols_disclosure["year"] == row.year) & (all_symbols_disclosure["quarter"] == row.quarter)]["disclosure_date"]
+	# 	df_disclosure.loc[i, "min_disclosure_date"] = disclosures.min()
+	# 	df_disclosure.loc[i, "max_disclosure_date"] = disclosures.max()
+
+	# df_disclosure.to_csv("./data_kr/disclosure_date_range.csv", index=False)

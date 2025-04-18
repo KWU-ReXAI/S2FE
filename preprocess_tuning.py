@@ -12,12 +12,12 @@ load_dotenv()
 sweep_config = {
 	"method": "grid",  # grid, random, bayes 중 택1
 	"metric": {
-		"name": "cagr",
+		"name": "CAGR",
 		"goal": "maximize"
 	},
 	"parameters": {
-		"DR" : {"values" : ['a', 'b']},
-		"FS" : {"values" : ['c', 'd', 'e']}
+		"DR" : {"values" : ['VIF', 'PC', 'False']},
+		"FS" : {"values" : ['RF', 'FS', 'BE']}
 	}
 }
 
@@ -26,10 +26,10 @@ def sweep():
 		config = run.config
 		# 포멧에 맞게 파일들을 수정해야 함.
 		# 인자를 추가하기!
-		subprocess.run(f"python datapreprocessing.py --isall True --DR {config.DF} --FS {config.FS}", shell=True)
-		subprocess.run(f"python datapreprocessing.py --isall cluster --DR {config.DF} --FS {config.FS}", shell=True)
+		subprocess.run(f"python datapreprocessing.py --isall True --DR {config.DR} --FS {config.FS}", shell=True)
+		subprocess.run(f"python datapreprocessing.py --isall cluster --DR {config.DR} --FS {config.FS}", shell=True)
 		subprocess.run(f"python clustering.py", shell=True)
-		subprocess.run(f"python datapreprocessing.py --isall False --DR {config.DF} --FS {config.FS}", shell=True)
+		subprocess.run(f"python datapreprocessing.py --isall False --DR {config.DR} --FS {config.FS}", shell=True)
 		subprocess.run(f"python train.py --testNum 5 --cluster_n", shell=True)
 
 		cagr = []

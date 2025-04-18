@@ -66,12 +66,9 @@ for trainNum in range(0, args.testNum):
         mymodel.trainClusterModels(withValidation=True)
 
         cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.aggregate,
-                                                                            use_all=args.use_all, isTest=False,
-                                                                            dir=dir)  # 백테스팅 수행
-        # 기존:
-        # result[phase] = {"CAGR": cagr, "Sharpe Ratio": sharpe, "MDD": mdd}
+                                                                            use_all=args.use_all, withValidation= True, isTest=False,
+                                                                            dir=dir)
 
-        # 수정 예시:
         result[phase] = {
             "CAGR": cagr,
             "Sharpe Ratio": sharpe,

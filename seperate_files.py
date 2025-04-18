@@ -437,7 +437,10 @@ def add_disclosure_date(file_path, save_path=None):
 
 
 if __name__ == "__main__":
-   add_disclosure_date("./data_kr/merged/KS200.csv")
+    compareFolderAndSymbol(
+        folder_path='./data_kr/merged',
+        symbol_path='./data_kr/symbol.csv'
+    )
 """
 # 198: symbol
 #12 18 13 5 29 5 7 1 13 22 33 14 4 2 1

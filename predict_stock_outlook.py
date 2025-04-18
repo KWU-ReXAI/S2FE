@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
 from pathlib import Path
-import datetime
+from datetime import datetime, timedelta
 
 from googleapiclient.discovery import build
 import yt_dlp
@@ -67,57 +67,140 @@ def get_uploads_playlist_id(channel_id):
     return res["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
 
 # -----------------------------
-# playlist ID로 지정기간 내의 모든 video ID 얻기기
-# 입력: playlist id, 기간 시작 & 끝
-# 출력: videos ids
+# playlist ID로 플레이리스트 내 모든 video ID와 업로드 날짜 얻기
+# 입력: playlist id
+# 출력: type: 튜플 리스트  ex) [(id1, date1, 조회수1), (id2, date2, 조회수2) ...]
 # -----------------------------
-def get_video_ids_within_date(playlist_id, start_date, end_date):
-	video_ids = []
-	next_page_token = None
+def get_video_datas_from_playlist(playlist_id):
+    video_list = []
+    next_page_token = None
+    video_id_date_pairs = []
 
-	while True:
-		res = youtube.playlistItems().list(
-			part="snippet",
-			playlistId=playlist_id,
-			maxResults=50,
-			pageToken=next_page_token
-		).execute()
-
-		for item in res["items"]:
-			published_at = item["snippet"]["publishedAt"]
-			pub_date = datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%SZ")
-
-			if start_date <= pub_date <= end_date:
-				video_id = item["snippet"]["resourceId"]["videoId"]
-				video_ids.append(video_id)
-
-		next_page_token = res.get("nextPageToken")
-		if not next_page_token:
-			break
-
-	if not video_ids:
-		print("조건에 맞는 영상 없음")
-
-	return video_ids
-
-# -----------------------------
-# 조회수 기준 필터링
-# 입력: videos id, 최소조회수수
-# 출력: videos id
-# -----------------------------
-def filter_by_view_count(video_ids, min_views):
-    filtered_ids = []
-    for i in range(0, len(video_ids), 50):  # 50개씩 요청
-        res = youtube.videos().list(
-            part="statistics",
-            id=",".join(video_ids[i:i+50])
+    # 1. playlistItems API로 video ID + 업로드 날짜 가져오기
+    while True:
+        res = youtube.playlistItems().list(
+            part="snippet",
+            playlistId=playlist_id,
+            maxResults=50,
+            pageToken=next_page_token
         ).execute()
 
         for item in res["items"]:
-            view_count = int(item["statistics"].get("viewCount", 0))
+            snippet = item["snippet"]
+            video_id = snippet["resourceId"]["videoId"]
+            published_at = snippet["publishedAt"]
+            video_id_date_pairs.append((video_id, published_at))
+
+        next_page_token = res.get("nextPageToken")
+        if not next_page_token:
+            break
+
+    # 2. video ID로 조회수 가져오기
+    for i in range(0, len(video_id_date_pairs), 50):
+        batch = video_id_date_pairs[i:i+50]
+        ids_only = [vid for vid, _ in batch]
+
+        res = youtube.videos().list(
+            part="statistics",
+            id=",".join(ids_only)
+        ).execute()
+
+        stats = {item["id"]: int(item["statistics"].get("viewCount", 0)) for item in res["items"]}
+
+        # 3. 튜플로 저장: (video_id, published_at, view_count)
+        for video_id, published_at in batch:
+            view_count = stats.get(video_id, 0)
+            video_list.append((video_id, published_at, view_count))
+
+    return video_list
+
+# -----------------------------
+# video ids로 업로드 날짜 필터링하기
+# 입력: video_datas(type 튜플 리스트), 시작날짜, 끝날짜 ("2001-04-30" 형식으로 입력)
+# 출력: 필터링 된 video_datas(type 튜플 리스트)
+# -----------------------------
+def filter_by_date(video_datas, start_date, end_date):
+    # 문자열 → datetime 객체로 변환
+    start_dt = datetime.strptime(start_date + "T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ")
+    end_dt = datetime.strptime(end_date + "T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ")
+
+    filtered = []
+    for video_id, published_at, view_count in video_datas:
+        pub_date = datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%SZ")
+        if start_dt <= pub_date < end_dt:
+            filtered.append((video_id, published_at, view_count))
+
+    return filtered
+    
+# -----------------------------
+# 조회수 기준 필터링
+# 입력: video_datas(type 튜플 리스트), 최소조회수
+# 출력: video_datas(type 튜플 리스트)
+# -----------------------------
+def filter_videos_by_view_count(video_tuples, min_views=0, max_views=float("inf")):
+    return [
+        (video_id, published_at, view_count)
+        for video_id, published_at, view_count in video_tuples
+        if min_views <= view_count <= max_views
+    ]
+    
+# -----------------------------
+# 채널영상을 날짜, 조회수 기준 필터링
+# 입력: channel_id, 기간, 최소조회수
+# 출력: video_datas(type 튜플 리스트)
+# -----------------------------
+def get_filtered_videos_by_channel(channel_id, start_date, end_date, min_views=0):
+    video_results = []
+    next_page_token = None
+
+    # 날짜 문자열 → datetime 객체 → ISO 형식으로 변환
+    start_iso = (datetime.strptime(start_date, "%Y-%m-%d") - timedelta(days=7)).isoformat("T") + "Z"
+    end_iso = datetime.strptime(end_date, "%Y-%m-%d").isoformat("T") + "Z"
+
+    # 1. search().list() → video ID + publishedAt
+    temp_videos = []
+    while True:
+        res = youtube.search().list(
+            part="snippet",
+            channelId=channel_id,
+            publishedAfter=start_iso,
+            publishedBefore=end_iso,
+            maxResults=50,
+            pageToken=next_page_token,
+            type="video",
+            order="date"
+        ).execute()
+
+        for item in res["items"]:
+            video_id = item["id"]["videoId"]
+            published_at = item["snippet"]["publishedAt"]
+            temp_videos.append((video_id, published_at))
+
+        next_page_token = res.get("nextPageToken")
+        if not next_page_token:
+            break
+
+    # 2. videos().list() → 조회수 붙이기
+    for i in range(0, len(temp_videos), 50):
+        batch = temp_videos[i:i+50]
+        ids = [vid for vid, _ in batch]
+
+        res = youtube.videos().list(
+            part="statistics",
+            id=",".join(ids)
+        ).execute()
+
+        stats = {
+            item["id"]: int(item["statistics"].get("viewCount", 0))
+            for item in res["items"]
+        }
+
+        for video_id, published_at in batch:
+            view_count = stats.get(video_id, 0)
             if view_count >= min_views:
-                filtered_ids.append(item["id"])
-    return filtered_ids
+                video_results.append((video_id, published_at, view_count))
+
+    return video_results
 
 # -----------------------------
 # 유튜브 영상 검색
@@ -264,12 +347,23 @@ def predict_market(stock: str, date: str) -> str:
 
 
 if __name__ == "__main__":
+	dailyeco_id = get_channel_id('매일경제TV') 
+ 
 	df_disclosure = pd.read_csv('data_kr/disclosure_date_range.csv')
+	for row in df_disclosure.itertuples():
+		dir = f'./audio/daily_economy'
+		os.makedirs(dir, exist_ok=True)
+  
+		start = datetime.strptime(row.min_disclosure_date, "%Y-%m-%d")
+		start -= timedelta(days=7)
+		start = start.strftime("%Y-%m-%d")
+		end = row.max_disclosure_date
 
-	channel_id = get_channel_id('매일경제TV')
-	playlist_id = get_uploads_playlist_id(channel_id)
-	video_ids = get_video_ids_within_date(playlist_id,)
-	
+		
+		video_datas = get_filtered_videos_by_channel(dailyeco_id, start, end, 1000)
+		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{row.year}-{row.quarter}', index=False)
+  
+  
 
     # # 모든 종목의 모든 분기 공시일을 하나의 파일로
 	# root_path = Path('./data_kr/merged')

@@ -1,9 +1,7 @@
 preprocessed_data/
 result/
-preprocessed_data/
 .idea/
 .env
 .vscode/
 __pycache__/
-audio/
-.ipynb_checkpoints
+.ipynb_checkpoints/

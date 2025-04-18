@@ -153,8 +153,8 @@ class MyModel(nn.Module):
         df = pd.concat([df, pd.DataFrame(new_data)], ignore_index=True)
         df.to_csv(file_path, index=False)
 
-    def trainSectorModelsWithValid(self):
-        print(f"trainSectorModelsWithValid ({self.phase}): ")
+    def trainClusterModels(self, withValidation=False):
+        print(f"trainClusterModels ({self.phase}), with validation: {withValidation}: ")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
         test_start = self.DM.phase_list[self.phase][2]
@@ -165,7 +165,7 @@ class MyModel(nn.Module):
             f" / test: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end - 1)}")
         for sector in self.topK_sectors:
             train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
-            train_data = np.concatenate((train_data, valid_data), axis=0)
+            if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
             a, b = train_data.shape[0], train_data.shape[1]
             train_data = train_data.reshape(a * b, -1)
             train_data = torch.Tensor(train_data, ).to(self.device)
@@ -175,9 +175,9 @@ class MyModel(nn.Module):
 
             self.sector_models[sector] = the_model
 
-    def trainALLSectorModelWithValid(self): # 전체 섹터를 하나의 모델로 학습
+    def trainALLSectorModels(self, withValidation = False): # 전체 섹터를 하나의 모델로 학습
         # 전체 섹터 학습 모델
-        print(f"trainALLSectorModelsWithValid ({self.phase}): ")
+        print(f"trainALLSectorModels ({self.phase}), with validation: {withValidation}: ")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
         test_start = self.DM.phase_list[self.phase][2]
@@ -188,7 +188,7 @@ class MyModel(nn.Module):
             f" / test: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end - 1)}")
         train_data = np.ndarray([0])
         train_tmp, valid_tmp, _ = self.DM.data_phase("ALL",self.phase)
-        train_tmp = np.concatenate((train_tmp, valid_tmp))
+        if withValidation: train_tmp = np.concatenate((train_tmp, valid_tmp))
         train_data = train_tmp.reshape(train_tmp.shape[0]*train_tmp.shape[1],-1)
         # 전체 데이터를 가져와 train_data로 변환
 
@@ -205,11 +205,11 @@ class MyModel(nn.Module):
     def save_models(self,dir):
         joblib.dump(self,f"{dir}/model.joblib")
 
-    def backtest(self, verbose=True, use_all='SectorAll', agg='avg', inter_n=0.1, isTest=True, testNum=0, dir=""):  # 백테스팅 수행
+    def backtest(self, verbose=True, use_all='SectorAll', agg='avg', inter_n=0.1,withValidation = False, isTest=True, testNum=0, dir=""):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
         # 과거 데이터를 사용하여 모델의 예측이 실제 시장에서 얼마나 잘 맞았는지를 검증하는 과정
-        test_start = self.DM.phase_list[self.phase][2]
-        test_end = self.DM.phase_list[self.phase][3]  # 테스트 데이터의 인덱스를 가져옴
+        test_start = self.DM.phase_list[self.phase][2 if withValidation else 1]
+        test_end = self.DM.phase_list[self.phase][3 if withValidation else 2]
         # 테스트 시작과 종료 시점 설정
         test_data = {}  # 섹터별 테스트 데이터를 저장할 딕셔너리
         symbols = {}  # 각 섹터별 종목(Symbol) 정보를 저장할 딕셔너리

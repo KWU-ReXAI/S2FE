@@ -59,7 +59,7 @@ for K in range(1,args.testNum+1): # 한번만 실행
         num_stocks = [] # 각 phase에서 선택된 주식 개수를 저장하는 리스트
         for phase in tqdm(phase_list): # 각 phase 별 진행상태를 시각적으로 출력
             model = joblib.load(f"{dir}/{args.train_dir}_{K}/train_result_model_{K}_{phase}/model.joblib")  # 저장된 모델 불러옴
-            cagr, sharpe, mdd, num_stock_tmp,cagr_ks,sharpe_ks,mdd_ks = model.backtest(verbose=True,agg=agg,use_all="SectorAll",inter_n=inter_n,isTest=True, testNum=K, dir=args.test_dir) # 백테스팅 실행
+            cagr, sharpe, mdd, num_stock_tmp,cagr_ks,sharpe_ks,mdd_ks = model.backtest(verbose=True,agg=agg,use_all="SectorAll",inter_n=inter_n,withValidation= True, isTest=True, testNum=K, dir=args.test_dir) # 백테스팅 실행
                 
             # 상위 20% 주식만을 선택
             num_stocks.append(num_stock_tmp) # 선택된 주식 개수를 저장

@@ -59,19 +59,16 @@ for trainNum in range(0, args.testNum):
         mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
                           args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n)
 
-        mymodel.trainALLSectorModelWithValid()
+        mymodel.trainALLSectorModels(withValidation=True)
 
         mymodel.topK_sectors = DM.cluster_list
 
-        mymodel.trainSectorModelsWithValid()  # 검증 데이터를 포함하여 모델을 추가 학습
+        mymodel.trainClusterModels(withValidation=True)
 
         cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.aggregate,
-                                                                            use_all=args.use_all, isTest=False,
-                                                                            dir=dir)  # 백테스팅 수행
-        # 기존:
-        # result[phase] = {"CAGR": cagr, "Sharpe Ratio": sharpe, "MDD": mdd}
+                                                                            use_all=args.use_all, withValidation= True, isTest=False,
+                                                                            dir=dir)
 
-        # 수정 예시:
         result[phase] = {
             "CAGR": cagr,
             "Sharpe Ratio": sharpe,

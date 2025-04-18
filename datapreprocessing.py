@@ -399,7 +399,9 @@ if args.isall == "False":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        if args.DR == "VIF":
+        if args.DR == "False":
+            continue;
+        elif args.DR == "VIF":
             remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
             df_processing_data.drop(columns=remove_features, inplace=True)
             vif_data.to_csv(f"{save_folder}/cluster_{cluster_index}/vif_data.csv", index=False, encoding='utf-8-sig')
@@ -645,7 +647,9 @@ elif args.isall == "cluster":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        if args.DR == "VIF":
+        if args.DR == "False":
+            continue;
+        elif args.DR == "VIF":
             remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
             df_processing_data.drop(columns=remove_features, inplace=True)
             vif_data.to_csv(f"{save_folder}/{sector_list[0]}/vif_data.csv", index=False, encoding='utf-8-sig')
@@ -887,7 +891,9 @@ elif args.isall == "True":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        if args.DR == "VIF":
+        if args.DR == "False":
+            continue;
+        elif args.DR == "VIF":
             remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
             df_processing_data.drop(columns=remove_features, inplace=True)
             vif_data.to_csv(f"{save_folder}/ALL/vif_data.csv", index=False, encoding='utf-8-sig')

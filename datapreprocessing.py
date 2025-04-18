@@ -648,7 +648,7 @@ elif args.isall == "cluster":
                                                          index=df_processing_data.index)
 
         if args.DR == "False":
-            print("skip DR");
+            print("skip DR")
         elif args.DR == "VIF":
             remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
             df_processing_data.drop(columns=remove_features, inplace=True)
@@ -892,7 +892,7 @@ elif args.isall == "True":
                                                          index=df_processing_data.index)
 
         if args.DR == "False":
-            print("skip DR");
+            print("skip DR")
         elif args.DR == "VIF":
             remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
             df_processing_data.drop(columns=remove_features, inplace=True)

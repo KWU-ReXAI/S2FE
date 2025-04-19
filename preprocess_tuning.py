@@ -30,7 +30,7 @@ def sweep():
 		subprocess.run(f"python datapreprocessing.py --isall cluster --DR {config.DR} --FS {config.FS}", shell=True)
 		subprocess.run(f"python clustering.py", shell=True)
 		subprocess.run(f"python datapreprocessing.py --isall False --DR {config.DR} --FS {config.FS}", shell=True)
-		subprocess.run(f"python train.py --testNum 5 --cluster_n", shell=True)
+		subprocess.run(f"python train.py --testNum 5", shell=True)
 
 		cagr = []
 		sharpe_ratio = []

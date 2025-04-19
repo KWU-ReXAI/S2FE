@@ -348,20 +348,18 @@ def predict_market(stock: str, date: str) -> str:
 
 if __name__ == "__main__":
 	dailyeco_id = get_channel_id('매일경제TV') 
+	dir = f'.data_kr/audio/daily_economy'
+	os.makedirs(dir, exist_ok=True)
  
 	df_disclosure = pd.read_csv('data_kr/disclosure_date_range.csv')
 	for row in df_disclosure.itertuples():
-		dir = f'./audio/daily_economy'
-		os.makedirs(dir, exist_ok=True)
-  
 		start = datetime.strptime(row.min_disclosure_date, "%Y-%m-%d")
 		start -= timedelta(days=7)
 		start = start.strftime("%Y-%m-%d")
 		end = row.max_disclosure_date
 
-		
 		video_datas = get_filtered_videos_by_channel(dailyeco_id, start, end, 1000)
-		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{row.year}-{row.quarter}', index=False)
+		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{row.year}-{row.quarter}.csv', index=False)
   
   
 

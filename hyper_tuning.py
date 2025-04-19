@@ -45,7 +45,7 @@ def sweep():
 		# 포멧에 맞게 파일들을 수정해야 함.
 		# 인자를 추가하기!
 		
-		subprocess.run(f"python train.py --testNum 5", shell=True)
+		subprocess.run(f"python train.py --testNum 5 --lr_MLP {config.lr_MLP} --lr_anfis {config.lr_anfis} --epochs_MLP {config.epochs_MLP} --epochs_anfis {config.epochs_anfis} --hidden {config.hidden}", shell=True)
 
 		cagr = []
 		sharpe_ratio = []

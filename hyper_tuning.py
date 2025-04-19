@@ -45,7 +45,7 @@ def sweep():
 		# 포멧에 맞게 파일들을 수정해야 함.
 		# 인자를 추가하기!
 		
-		subprocess.run(f"python train.py --testNum 5 --cluster_n {config.cluster_n}", shell=True)
+		subprocess.run(f"python train.py --testNum 5", shell=True)
 
 		cagr = []
 		sharpe_ratio = []
@@ -68,5 +68,5 @@ def sweep():
 
 # wandb api key 입력하기
 wandb.login(key=os.getenv("WANDB_API_KEY"))
-sweep_id = wandb.sweep(sweep_config, project="s3ce_optimizer")
+sweep_id = wandb.sweep(sweep_config, project="s3ce_hyper_tuning")
 wandb.agent(sweep_id, function=sweep, count=30)

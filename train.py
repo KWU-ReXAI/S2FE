@@ -69,14 +69,14 @@ for trainNum in range(0, args.testNum):
         mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
                           args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden)
 
-        mymodel.trainALLSectorModels(withValidation=True)
+        mymodel.trainALLSectorModels(withValidation=False)
 
         mymodel.topK_sectors = DM.cluster_list
 
-        mymodel.trainClusterModels(withValidation=True)
+        mymodel.trainClusterModels(withValidation=False)
 
         cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.agg, inter_n=args.inter_n,
-                                                                            use_all=args.use_all, withValidation= True, isTest=False,
+                                                                            use_all=args.use_all, withValidation= False, isTest=False,
                                                                             dir=dir)
 
         result[phase] = {

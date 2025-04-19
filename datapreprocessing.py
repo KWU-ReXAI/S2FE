@@ -20,8 +20,6 @@ from dimensionality_reduction import *
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--isall',type=str,nargs='?',default="False")
-parser.add_argument('--DR',type=str,nargs='?',default="False")
-parser.add_argument('--FS',type=str,nargs='?',default="RF")
 args = parser.parse_args()
 
 ks200_price = pd.read_csv("./data_kr/price/KS200.csv")
@@ -399,40 +397,18 @@ if args.isall == "False":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        if args.DR == "False":
-            print("skip DR")
-        elif args.DR == "VIF":
-            remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
-            df_processing_data.drop(columns=remove_features, inplace=True)
-            vif_data.to_csv(f"{save_folder}/cluster_{cluster_index}/vif_data.csv", index=False, encoding='utf-8-sig')
-        elif args.DR == "PC":
-            remove_features, corr_matrix = remove_highly_correlated_features(df_processing_data.iloc[:, 5:-2], 0.99)
-            df_processing_data.drop(columns=remove_features, inplace=True)
-            corr_matrix.to_csv(f"{save_folder}/cluster_{cluster_index}/corr_matrix.csv", index=False,
-                               encoding='utf-8-sig')
+        remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
+        df_processing_data.drop(columns=remove_features, inplace=True)
+        vif_data.to_csv(f"{save_folder}/cluster_{cluster_index}/vif_data.csv", index=False, encoding='utf-8-sig')
 
         df_processing_data.to_csv(f"{save_folder}/cluster_{cluster_index}/after_DR.csv", index=False,
                                   encoding='utf-8-sig')
 
-        if args.FS == "RF":
-            print("Using Random Forest for feature selection")
-            selected_features = random_forest_feature_selection(df_processing_data.iloc[:, 5:-3],
-                                                                df_processing_data["Label"], n_features_t)
-            selected_features.to_csv(f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
-                                     encoding='utf-8-sig')
-        elif args.FS == "FS":
-            print("Using Forward Selection for feature selection")
-            selected_features = forward_selection(df_processing_data.iloc[:, 5:-3],
-                                                  df_processing_data["Label"], n_features_t)
-            selected_features.to_csv(
-                f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
-                encoding='utf-8-sig')
-        elif args.FS == "BE":
-            print("Using Backward Elimination for feature selection")
-            selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3],
-                                                     df_processing_data["Label"], n_features_t)
-            selected_features.to_csv(f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
-                                     encoding='utf-8-sig')
+        print("Using Backward Elimination for feature selection")
+        selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3],
+                                                 df_processing_data["Label"], n_features_t)
+        selected_features.to_csv(f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
+                                 encoding='utf-8-sig')
 
         df_processed_data = pd.concat(
             [df_processing_data.iloc[:, 1:5],
@@ -647,39 +623,17 @@ elif args.isall == "cluster":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        if args.DR == "False":
-            print("skip DR")
-        elif args.DR == "VIF":
-            remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
-            df_processing_data.drop(columns=remove_features, inplace=True)
-            vif_data.to_csv(f"{save_folder}/{sector_list[0]}/vif_data.csv", index=False, encoding='utf-8-sig')
-        elif args.DR == "PC":
-            remove_features, corr_matrix = remove_highly_correlated_features(df_processing_data.iloc[:, 5:-2], 0.99)
-            df_processing_data.drop(columns=remove_features, inplace=True)
-            corr_matrix.to_csv(f"{save_folder}/{sector_list[0]}/corr_matrix.csv", index=False, encoding='utf-8-sig')
+        remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
+        df_processing_data.drop(columns=remove_features, inplace=True)
+        vif_data.to_csv(f"{save_folder}/{sector_list[0]}/vif_data.csv", index=False, encoding='utf-8-sig')
 
         df_processing_data.to_csv(f"{save_folder}/{sector_list[0]}/after_DR.csv", index=False, encoding='utf-8-sig')
 
-        if args.FS == "RF":
-            print("Using Random Forest for feature selection")
-            selected_features = random_forest_feature_selection(df_processing_data.iloc[:, 5:-3],
-                                                                df_processing_data["Label"], n_features_t)
-            selected_features.to_csv(
-                f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
-                encoding='utf-8-sig')
-        elif args.FS == "FS":
-            print("Using Forward Selection for feature selection")
-            selected_features = forward_selection(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
-                                                  n_features_t)
-            selected_features.to_csv(
-                f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
-                encoding='utf-8-sig')
-        elif args.FS == "BE":
-            print("Using Backward Elimination for feature selection")
-            selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
-                                                     n_features_t)
-            selected_features.to_csv(f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
-                                     encoding='utf-8-sig')
+        print("Using Backward Elimination for feature selection")
+        selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
+                                                 n_features_t)
+        selected_features.to_csv(f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
+                                 encoding='utf-8-sig')
 
         df_processed_data = pd.concat(
             [df_processing_data.iloc[:, 1:5],
@@ -891,34 +845,16 @@ elif args.isall == "True":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        if args.DR == "False":
-            print("skip DR")
-        elif args.DR == "VIF":
-            remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
-            df_processing_data.drop(columns=remove_features, inplace=True)
-            vif_data.to_csv(f"{save_folder}/ALL/vif_data.csv", index=False, encoding='utf-8-sig')
-        elif args.DR == "PC":
-            remove_features, corr_matrix = remove_highly_correlated_features(df_processing_data.iloc[:, 5:-2], 0.99)
-            df_processing_data.drop(columns=remove_features, inplace=True)
-            corr_matrix.to_csv(f"{save_folder}/ALL/corr_matrix.csv", index=False, encoding='utf-8-sig')
+        remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
+        df_processing_data.drop(columns=remove_features, inplace=True)
+        vif_data.to_csv(f"{save_folder}/ALL/vif_data.csv", index=False, encoding='utf-8-sig')
 
         df_processing_data.to_csv(f"{save_folder}/ALL/after_DR.csv", index=False, encoding='utf-8-sig')
 
-        if args.FS == "RF":
-            print("Using Random Forest for feature selection")
-            selected_features = random_forest_feature_selection(df_processing_data.iloc[:, 5:-3],
-                                                                df_processing_data["Label"], n_features_t)
-            selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
-        elif args.FS == "FS":
-            print("Using Forward Selection for feature selection")
-            selected_features = forward_selection(df_processing_data.iloc[:, 5:-3],
-                                                  df_processing_data["Label"], n_features_t)
-            selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
-        elif args.FS == "BE":
-            print("Using Backward Elimination for feature selection")
-            selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3],
-                                                     df_processing_data["Label"], n_features_t)
-            selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
+        print("Using Backward Elimination for feature selection")
+        selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3],
+                                                 df_processing_data["Label"], n_features_t)
+        selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
 
         df_processed_data = pd.concat(
             [df_processing_data.iloc[:, 1:5],

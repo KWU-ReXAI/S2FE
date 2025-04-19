@@ -100,7 +100,7 @@ class AggregationModel:
 
 class MyModel(nn.Module):
     def __init__(self, feature_n, valid_stock_k, valid_sector_k, each_sector_stock_k, final_stock_k, phase, device,
-                 ensemble="S3CE", clustering=False, cluster_n=4):
+                 ensemble="S3CE", clustering=False, cluster_n=5, epochs_MLP = 200, epochs_anfis = 200, lr_MLP = 0.001, lr_anfis = 0.01, hidden = 128):
         # 클래스 초기화
         super(MyModel, self).__init__()
         self.feature_n = feature_n  # 사용할 재무 feature 개수
@@ -112,12 +112,12 @@ class MyModel(nn.Module):
         self.ensemble = ensemble  # 사용할 앙상블 기법(MLP, RF, Aggregation 등)
         self.clustering = clustering  # 섹터 군집화 활성화 여부
 
-        self.epochs_MLP = 200  # MLP 학습 epoch
-        self.lr_MLP = 0.001  # 0.001
-        self.hidden = 128  # MLP 은닉층 크기
+        self.epochs_MLP = epochs_MLP  # MLP 학습 epoch
+        self.lr_MLP = lr_MLP  # 0.001
+        self.hidden = hidden  # MLP 은닉층 크기
 
-        self.epochs_anfis = 200
-        self.lr_anfis = 0.01 #0.01
+        self.epochs_anfis = epochs_anfis
+        self.lr_anfis = lr_anfis
         self.n_rules = 10
 
         self.device = device
@@ -154,7 +154,7 @@ class MyModel(nn.Module):
         df.to_csv(file_path, index=False)
 
     def trainClusterModels(self, withValidation=False):
-        print(f"trainClusterModels ({self.phase}), with validation: {withValidation}: ")
+        print(f"trainClusterModels ({self.phase}), with validation {withValidation}: ")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
         test_start = self.DM.phase_list[self.phase][2]
@@ -177,7 +177,7 @@ class MyModel(nn.Module):
 
     def trainALLSectorModels(self, withValidation = False): # 전체 섹터를 하나의 모델로 학습
         # 전체 섹터 학습 모델
-        print(f"trainALLSectorModels ({self.phase}), with validation: {withValidation}: ")
+        print(f"trainALLSectorModels ({self.phase}), with validation {withValidation}: ")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
         test_start = self.DM.phase_list[self.phase][2]

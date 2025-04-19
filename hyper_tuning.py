@@ -8,23 +8,33 @@ import pandas as pd
 
 load_dotenv()
 
+subprocess.run(f"python datapreprocessing.py --isall True", shell=True)
+subprocess.run(f"python datapreprocessing.py --isall cluster", shell=True)
+subprocess.run(f"python clustering.py", shell=True)
+subprocess.run(f"python datapreprocessing.py --isall False", shell=True)
+  
 # 1. Sweep 설정 (Python dict)
 sweep_config = {
 	"method": "grid",  # grid, random, bayes 중 택1
 	"metric": {
-		"name": "cagr",
+		"name": "CAGR",
 		"goal": "maximize"
 	},
 	"parameters": {
-		"n_features_t": {
-			"min": 5,
-			"max": 9,
-			"distribution": "int_uniform"
+		"lr_MLP": {
+			"values": [0.0001, 0.001, 0.01]
 		},
-		"cluster_n": {
-			"min": 2,
-			"max": 5,
-			"distribution": "int_uniform"
+		"lr_anfis": {
+			"values": [0.001, 0.01, 0.1]
+		},
+		"epochs_MLP": {
+			"values": [100, 200, 300]
+		},
+		"epochs_anfis": {
+			"values": [100, 200, 300]
+		},
+		"hidden": {
+			"values": [128, 256]
 		}
 	}
 }
@@ -34,10 +44,7 @@ def sweep():
 		config = run.config
 		# 포멧에 맞게 파일들을 수정해야 함.
 		# 인자를 추가하기!
-		subprocess.run(f"python datapreprocessing_total.py --isall True --n_feature {config.n_features_t}", shell=True)
-		subprocess.run(f"python datapreprocessing_total.py --isall cluster --n_feature {config.n_features_t}", shell=True)
-		subprocess.run(f"python clustering.py --cluster_n {config.cluster_n}", shell=True)
-		subprocess.run(f"python datapreprocessing_total.py --isall False --n_feature {config.n_features_t}", shell=True)
+		
 		subprocess.run(f"python train.py --testNum 5 --cluster_n {config.cluster_n}", shell=True)
 
 		cagr = []

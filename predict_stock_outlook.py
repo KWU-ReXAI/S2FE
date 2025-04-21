@@ -346,44 +346,63 @@ def predict_market(stock: str, date: str) -> str:
 		return 'middle'
 
 
-if __name__ == "__main__":
-	dailyeco_id = get_channel_id('매일경제TV') 
-	dir = f'data_kr/audio/daily_economy'
+
+
+# ------------------------
+# 모든 분기의 범위 구하기
+# disclosure_date_range.csv 파일 생성
+# ------------------------
+def get_disclosure_range():
+    # 모든 종목의 모든 분기 공시일을 하나의 파일로
+	root_path = Path('./data_kr/merged')
+	all_symbols_disclosure = pd.DataFrame()
+	for file_path in root_path.rglob("*.csv"):
+		df_ = pd.read_csv(file_path)
+		df_ = df_[["code", "name", "year", "quarter", "disclosure_date"]]
+		all_symbols_disclosure = pd.concat([all_symbols_disclosure, df_])
+
+
+	years = [2015] + ([y for y in range(2016, 2025) for _ in range(4)])
+	quarters = ["Q4"] + ([q for _ in range(2016, 2025) for q in ["Q1", "Q2", "Q3", "Q4"]])
+	df_disclosure = pd.DataFrame({
+		"year": years,
+		"quarter": quarters,
+		"min_disclosure_date": [None] * len(years),
+		"max_disclosure_date": [None] * len(years)
+	})
+
+	for i, row in enumerate(df_disclosure.itertuples()):
+		disclosures = all_symbols_disclosure[(all_symbols_disclosure["year"] == row.year) & (all_symbols_disclosure["quarter"] == row.quarter)]["disclosure_date"]
+		df_disclosure.loc[i, "min_disclosure_date"] = disclosures.min()
+		df_disclosure.loc[i, "max_disclosure_date"] = disclosures.max()
+
+	os.makedirs('./data_kr/audio', exist_ok=True)
+	df_disclosure.to_csv("./data_kr/audio/disclosure_date_range.csv", index=False)
+ 
+# ------------------------
+# disclosure range를 만족하고 조회수가 min_view_cnt 이상인 video id 구하기
+# channel_name: str
+# min_view_cnt: int
+# data_kr/audoi/에 연도-분기.csv 파일 생성
+# ------------------------
+def get_video_datas(channel_name, min_view_cnt):
+	channel_id = get_channel_id(channel_name) 
+	dir = f'data_kr/audio/{channel_name}'
 	os.makedirs(dir, exist_ok=True)
  
-	df_disclosure = pd.read_csv('data_kr/disclosure_date_range.csv')
+	df_disclosure = pd.read_csv('data_kr/audio/disclosure_date_range.csv')
 	for row in df_disclosure.itertuples():
 		start = datetime.strptime(row.min_disclosure_date, "%Y-%m-%d")
 		start -= timedelta(days=7)
 		start = start.strftime("%Y-%m-%d")
 		end = row.max_disclosure_date
 
-		video_datas = get_filtered_videos_by_channel(dailyeco_id, start, end, 1000)
-		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{row.year}-{row.quarter}.csv', index=False)
-  
-  
-
-    # # 모든 종목의 모든 분기 공시일을 하나의 파일로
-	# root_path = Path('./data_kr/merged')
-	# all_symbols_disclosure = pd.DataFrame()
-	# for file_path in root_path.rglob("*.csv"):
-	# 	df_ = pd.read_csv(file_path)
-	# 	df_ = df_[["code", "name", "year", "quarter", "disclosure_date"]]
-	# 	all_symbols_disclosure = pd.concat([all_symbols_disclosure, df_])
-
-
-	# years = [2015] + ([y for y in range(2016, 2025) for _ in range(4)])
-	# quarters = ["Q4"] + ([q for _ in range(2016, 2025) for q in ["Q1", "Q2", "Q3", "Q4"]])
-	# df_disclosure = pd.DataFrame({
-	# 	"year": years,
-	# 	"quarter": quarters,
-	# 	"min_disclosure_date": [None] * len(years),
-	# 	"max_disclosure_date": [None] * len(years)
-	# })
-
-	# for i, row in enumerate(df_disclosure.itertuples()):
-	# 	disclosures = all_symbols_disclosure[(all_symbols_disclosure["year"] == row.year) & (all_symbols_disclosure["quarter"] == row.quarter)]["disclosure_date"]
-	# 	df_disclosure.loc[i, "min_disclosure_date"] = disclosures.min()
-	# 	df_disclosure.loc[i, "max_disclosure_date"] = disclosures.max()
-
-	# df_disclosure.to_csv("./data_kr/disclosure_date_range.csv", index=False)
+		video_datas = get_filtered_videos_by_channel(channel_id, start, end, min_view_cnt)
+		year_quarter = f'{row.year}-{row.quarter}'
+		os.makedirs(f'{dir}/{year_quarter}', exist_ok=True)
+		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{year_quarter}/{year_quarter}.csv', index=False)
+    
+if __name__ == "__main__":
+	# get_disclosure_range()
+ 
+	get_video_datas("한국경제TV", 1000)

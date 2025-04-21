@@ -348,7 +348,7 @@ def predict_market(stock: str, date: str) -> str:
 
 if __name__ == "__main__":
 	dailyeco_id = get_channel_id('매일경제TV') 
-	dir = f'.data_kr/audio/daily_economy'
+	dir = f'data_kr/audio/daily_economy'
 	os.makedirs(dir, exist_ok=True)
  
 	df_disclosure = pd.read_csv('data_kr/disclosure_date_range.csv')

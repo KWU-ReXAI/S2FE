@@ -3,6 +3,7 @@ import numpy as np
 from FinDataLoader import FinDataLoader as fdpytgho
 from datetime import datetime
 import os
+import ast
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 class DataManager:
@@ -26,6 +27,23 @@ class DataManager:
         return self.sector_list
     def get_ticker_list(self):
         return self.ticker_list
+
+    def get_cluster_of_specific_sector(self, sector_name = "default"):
+        if sector_name == "default": return -1
+
+        filepath = "./preprocessed_data/cluster_result/cluster_result.txt"
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                cluster_data = ast.literal_eval(f.read())  # 문자열을 리스트로 safely 변환
+
+            for idx, cluster in enumerate(cluster_data):
+                if sector_name in cluster:
+                    return idx
+
+            return -1  # 클러스터에 해당 섹터가 없음
+        except Exception as e:
+            print(f"파일을 읽는 도중 오류 발생: {e}")
+            return -1
 
     def date2quarter(date_str):
         year, month, _ = map(int, date_str.split("-"))  # "2023-07-15" → (2023, 7, 15)

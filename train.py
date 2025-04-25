@@ -71,8 +71,6 @@ for trainNum in range(0, args.testNum):
 
         mymodel.trainALLSectorModels(withValidation=True)
 
-        mymodel.topK_sectors = DM.cluster_list
-
         mymodel.trainClusterModels(withValidation=True)
 
         cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.agg, inter_n=args.inter_n,

@@ -128,6 +128,7 @@ class MyModel(nn.Module):
 
         self.valid_models = {}
         self.sector_models = {}
+        self.cluster_list = self.DM.cluster_list
 
     def recordParameter(self):
         file_path = "./result/train_parameter.csv"
@@ -163,7 +164,7 @@ class MyModel(nn.Module):
         print(
             f"train: {self.DM.pno2date(train_start)} ~ {self.DM.pno2date(valid_start - 1)} / valid: {self.DM.pno2date(valid_start)} ~ {self.DM.pno2date(test_start - 1)}"
             f" / test: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end - 1)}")
-        for sector in self.topK_sectors:
+        for sector in self.cluster_list:
             train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
             if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
             a, b = train_data.shape[0], train_data.shape[1]
@@ -221,7 +222,7 @@ class MyModel(nn.Module):
             _, _, all_data = self.DM.data_phase("ALL", self.phase)
             all_symbol = pd.read_csv(f"./data_kr/symbol.csv")  # 전체 섹터 데이터 가져옴
 
-        for sector in self.topK_sectors:  # 저장된 상위 섹터별 데이터를 로드
+        for sector in self.cluster_list:  # 저장된 상위 섹터별 데이터를 로드
             _, _, data_tmp = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
             test_data[sector] = data_tmp
 
@@ -250,7 +251,7 @@ class MyModel(nn.Module):
             real_last_topK_stock = []  # 최종적으로 선택된 상위 주식 저장
 
             if use_all == "Sector" or use_all == "SectorAll":  # SectorAll or Sector일 경우
-                for sector in self.topK_sectors:  # 선택된 섹터별로 종목을 추천
+                for sector in self.cluster_list:  # 선택된 섹터별로 종목을 추천
 
                     model = self.sector_models[sector]
                     topK = model.predict(torch.Tensor(test_data[sector]).to(self.device)[i, :, :-1],

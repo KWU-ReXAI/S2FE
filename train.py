@@ -28,11 +28,11 @@ parser.add_argument('--clustering',action="store_true",default=True) # 클러스
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 
 
-parser.add_argument('--lr_MLP',type=float,nargs='?',default=0.001) # 0.0001, 0.001, 0.01
-parser.add_argument('--lr_anfis',type=float,nargs='?',default=0.01) # 0.001, 0.01, 0.1
-parser.add_argument('--epochs_MLP',type=int,nargs='?',default=200) # 100 200 300
-parser.add_argument('--epochs_anfis',type=int,nargs='?',default=200) # 100 200 300
-parser.add_argument('--hidden',type=int,nargs='?',default=128) # 128 256
+parser.add_argument('--lr_MLP',type=float,nargs='?',default=0.0001) # 0.0001
+parser.add_argument('--lr_anfis',type=float,nargs='?',default=0.01) # 0.01
+parser.add_argument('--epochs_MLP',type=int,nargs='?',default=300) # 300
+parser.add_argument('--epochs_anfis',type=int,nargs='?',default=100) # 100
+parser.add_argument('--hidden',type=int,nargs='?',default=128) # 128
 
 
 parser.add_argument('--agg',type=str,nargs='?',default="inter") # 이건 담에 할게 재리염.

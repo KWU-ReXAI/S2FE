@@ -100,7 +100,7 @@ class AggregationModel:
 
 class MyModel(nn.Module):
     def __init__(self, feature_n, valid_stock_k, valid_sector_k, each_sector_stock_k, final_stock_k, phase, device,
-                 ensemble="S3CE", clustering=False, cluster_n=5, epochs_MLP = 200, epochs_anfis = 200, lr_MLP = 0.001, lr_anfis = 0.01, hidden = 128):
+                 ensemble="S3CE", clustering=False, cluster_n=5, epochs_MLP = 300, epochs_anfis = 100, lr_MLP = 0.0001, lr_anfis = 0.01, hidden = 128):
         # 클래스 초기화
         super(MyModel, self).__init__()
         self.feature_n = feature_n  # 사용할 재무 feature 개수

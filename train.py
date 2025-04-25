@@ -35,8 +35,8 @@ parser.add_argument('--epochs_anfis',type=int,nargs='?',default=100) # 100
 parser.add_argument('--hidden',type=int,nargs='?',default=128) # 128
 
 
-parser.add_argument('--agg',type=str,nargs='?',default="inter") # 이건 담에 할게 재리염.
-parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # 이건 담에 할게 재리염.
+parser.add_argument('--agg',type=str,nargs='?',default="inter") # avg, inter
+parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # inter일 때: 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2, 3, 4, 5
 
 args = parser.parse_args()
 DM = DataManager(features_n= args.features_n, cluster_n=cluster_n)

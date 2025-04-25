@@ -67,7 +67,10 @@ for trainNum in range(0, args.testNum):
         if os.path.isdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}") == False:
             os.mkdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}")
         mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
-                          args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden)
+                          args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden,
+                          isLLMexperiment = True, sector_name = ["커뮤니케이션서비스"])
+
+
 
         mymodel.trainALLSectorModels(withValidation=True)
 

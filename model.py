@@ -101,7 +101,7 @@ class AggregationModel:
 class MyModel(nn.Module):
     def __init__(self, feature_n, valid_stock_k, valid_sector_k, each_sector_stock_k, final_stock_k, phase, device,
                  ensemble="S3CE", clustering=False, cluster_n=5, epochs_MLP = 300, epochs_anfis = 100, lr_MLP = 0.0001, lr_anfis = 0.01, hidden = 128
-                 ,isLLMexperiment = False):
+                 ,isLLMexperiment = False, sector_name = []):
         # 클래스 초기화
         super(MyModel, self).__init__()
         self.feature_n = feature_n  # 사용할 재무 feature 개수
@@ -129,7 +129,7 @@ class MyModel(nn.Module):
 
         self.valid_models = {}
         self.sector_models = {}
-        if isLLMexperiment: self.cluster_list = self.DM.get_cluster_of_specific_sector(self.sector_name)
+        if isLLMexperiment: self.cluster_list = self.DM.get_clusters_of_sectors(sector_name)
         else: self.cluster_list = self.DM.sector_list
 
     def recordParameter(self):

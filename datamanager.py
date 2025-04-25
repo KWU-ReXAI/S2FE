@@ -28,22 +28,26 @@ class DataManager:
     def get_ticker_list(self):
         return self.ticker_list
 
-    def get_cluster_of_specific_sector(self, sector_name = "default"):
-        if sector_name == "default": return -1
+    def get_clusters_of_sectors(self, sector_names):
+        filepath="./preprocessed_data/cluster_result/cluster_result.txt"
+        if not isinstance(sector_names, list) or not sector_names:
+            return []
 
-        filepath = "./preprocessed_data/cluster_result/cluster_result.txt"
         try:
             with open(filepath, "r", encoding="utf-8") as f:
-                cluster_data = ast.literal_eval(f.read())  # 문자열을 리스트로 safely 변환
+                cluster_data = ast.literal_eval(f.read())
+
+            cluster_names = set()
 
             for idx, cluster in enumerate(cluster_data):
-                if sector_name in cluster:
-                    return idx
+                if any(sector in cluster for sector in sector_names):
+                    cluster_names.add(f"cluster_{idx}")
 
-            return -1  # 클러스터에 해당 섹터가 없음
+            return sorted(list(cluster_names))
+
         except Exception as e:
             print(f"파일을 읽는 도중 오류 발생: {e}")
-            return -1
+            return []
 
     def date2quarter(date_str):
         year, month, _ = map(int, date_str.split("-"))  # "2023-07-15" → (2023, 7, 15)

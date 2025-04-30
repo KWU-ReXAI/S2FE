@@ -37,7 +37,7 @@ parser.add_argument('--hidden',type=int,nargs='?',default=128) # 128
 
 
 parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
-parser.add_argument('--inter_n',type=float,nargs='?',default=0.2) # 0.2
+parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # 0.1
 
 args = parser.parse_args()
 

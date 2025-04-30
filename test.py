@@ -18,7 +18,7 @@ parser.add_argument('--train_dir',type=str,nargs='?',default="train_result_dir")
 parser.add_argument('--test_dir',type=str,nargs='?',default="test_result_dir") # 결과 디렉토리 명
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
-parser.add_argument('--inter_n',type=float,nargs='?',default=0.2) # 0.2
+parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # 0.1
 args = parser.parse_args()
 
 if isinstance(args.inter_n, float) and args.inter_n.is_integer():

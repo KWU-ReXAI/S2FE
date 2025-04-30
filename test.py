@@ -17,8 +17,8 @@ parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
 parser.add_argument('--train_dir',type=str,nargs='?',default="train_result_dir") # 결과 파일명
 parser.add_argument('--test_dir',type=str,nargs='?',default="test_result_dir") # 결과 디렉토리 명
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
-parser.add_argument('--agg',type=str,nargs='?',default="inter") # avg, inter
-parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, 6
+parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
+parser.add_argument('--inter_n',type=float,nargs='?',default=0.2) # 0.2
 args = parser.parse_args()
 
 

@@ -26,6 +26,7 @@ parser.add_argument('--use_all',type=str,nargs="?",default="SectorAll") # 모델
 parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE") # 사용할 앙상블 방법
 parser.add_argument('--clustering',action="store_true",default=True) # 클러스터링 여부
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
+parser.add_argument('--Validation',action="store_true") # 클러스터링 여부
 
 
 parser.add_argument('--lr_MLP',type=float,nargs='?',default=0.0001) # 0.0001
@@ -69,13 +70,13 @@ for trainNum in range(0, args.testNum):
         mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
                           args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden)
 
-        mymodel.trainALLSectorModels(withValidation=True)
+        mymodel.trainALLSectorModels(withValidation= not args.Validation)
 
-        mymodel.trainClusterModels(withValidation=True)
+        mymodel.trainClusterModels(withValidation=not args.Validation)
 
         cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.agg, inter_n=args.inter_n,
-                                                                            use_all=args.use_all, withValidation= True, isTest=False,
-                                                                            dir=dir)
+                                                                            use_all=args.use_all, withValidation= not args.Validation,
+                                                                            isTest=False, dir=dir)
 
         result[phase] = {
             "CAGR": cagr,

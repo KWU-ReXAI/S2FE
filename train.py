@@ -40,6 +40,10 @@ parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
 parser.add_argument('--inter_n',type=float,nargs='?',default=0.2) # 0.2
 
 args = parser.parse_args()
+
+if isinstance(args.inter_n, float) and args.inter_n.is_integer():
+    args.inter_n = int(args.inter_n)
+
 DM = DataManager(features_n= args.features_n, cluster_n=cluster_n)
 DM.create_date_list()
 result = {}

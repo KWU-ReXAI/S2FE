@@ -228,13 +228,19 @@ def search_videos(query, date):
 	return video_ids
 
 # -----------------------------
-# 유튜브 id에서 음성파일 추출
-# INPUT: youtube id, 오디오 다운로드 경로
+# 유튜브 링크 or id에서 음성파일 추출
+# INPUT: method(link or id), youtube id or link, 오디오 다운로드 경로
 # -----------------------------
-def extract_video_audio(video_id, audio_dir):
+def extract_video_audio(method, video_id, audio_dir):
 	os.makedirs('./audio', exist_ok=True)
 	
-	url = "https://www.youtube.com/watch?v=" + video_id
+	if method == "link":
+		url = video_id
+	elif method == "id":
+		url = "https://www.youtube.com/watch?v=" + video_id
+	else:
+		print('method인자로 link or id를 입력하세요')
+		return False
 
 	ydl_opts = {
 		'format': 'bestaudio/best',
@@ -403,6 +409,11 @@ def get_video_datas(channel_name, min_view_cnt):
 		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{year_quarter}/{year_quarter}.csv', index=False)
     
 if __name__ == "__main__":
-	# get_disclosure_range()
- 
-	get_video_datas("한국경제TV", 1000)
+    ### 오디오 다운로드 ###
+	df = pd.read_csv('data_kr/audio/동영상 수집 통합본.csv')
+	for row in df.itertuples():
+		code = str(row.code).zfill(6)
+		directory = f'data_kr/audio/{row.sector}/{code}/'
+		os.makedirs(directory, exist_ok=True)
+		
+		extract_video_audio("link", row.url, directory + f'{row.year}-{row.quarter}')

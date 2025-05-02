@@ -412,6 +412,9 @@ if __name__ == "__main__":
     ### 오디오 다운로드 ###
 	df = pd.read_csv('data_kr/audio/동영상 수집 통합본.csv')
 	for row in df.itertuples():
+		if pd.isna(row.url) and row.url == '':
+			continue
+
 		code = str(row.code).zfill(6)
 		directory = f'data_kr/audio/{row.sector}/{code}/'
 		os.makedirs(directory, exist_ok=True)

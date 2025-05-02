@@ -100,7 +100,7 @@ class AggregationModel:
 
 class MyModel(nn.Module):
     def __init__(self, feature_n, valid_stock_k, valid_sector_k, each_sector_stock_k, final_stock_k, phase, device,
-                 ensemble="S3CE", clustering=False, cluster_n=4):
+                 ensemble="S3CE", clustering=False, cluster_n=5, epochs_MLP = 300, epochs_anfis = 100, lr_MLP = 0.0001, lr_anfis = 0.01, hidden = 128):
         # 클래스 초기화
         super(MyModel, self).__init__()
         self.feature_n = feature_n  # 사용할 재무 feature 개수
@@ -112,12 +112,12 @@ class MyModel(nn.Module):
         self.ensemble = ensemble  # 사용할 앙상블 기법(MLP, RF, Aggregation 등)
         self.clustering = clustering  # 섹터 군집화 활성화 여부
 
-        self.epochs_MLP = 200  # MLP 학습 epoch
-        self.lr_MLP = 0.001  # 0.001
-        self.hidden = 128  # MLP 은닉층 크기
+        self.epochs_MLP = epochs_MLP  # MLP 학습 epoch
+        self.lr_MLP = lr_MLP  # 0.001
+        self.hidden = hidden  # MLP 은닉층 크기
 
-        self.epochs_anfis = 200
-        self.lr_anfis = 0.01 #0.01
+        self.epochs_anfis = epochs_anfis
+        self.lr_anfis = lr_anfis
         self.n_rules = 10
 
         self.device = device
@@ -128,6 +128,7 @@ class MyModel(nn.Module):
 
         self.valid_models = {}
         self.sector_models = {}
+        self.cluster_list = self.DM.cluster_list
 
     def recordParameter(self):
         file_path = "./result/train_parameter.csv"
@@ -154,7 +155,7 @@ class MyModel(nn.Module):
         df.to_csv(file_path, index=False)
 
     def trainClusterModels(self, withValidation=False):
-        print(f"trainClusterModels ({self.phase}), with validation: {withValidation}: ")
+        print(f"trainClusterModels ({self.phase}), with validation {withValidation}: ")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
         test_start = self.DM.phase_list[self.phase][2]
@@ -163,7 +164,7 @@ class MyModel(nn.Module):
         print(
             f"train: {self.DM.pno2date(train_start)} ~ {self.DM.pno2date(valid_start - 1)} / valid: {self.DM.pno2date(valid_start)} ~ {self.DM.pno2date(test_start - 1)}"
             f" / test: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end - 1)}")
-        for sector in self.topK_sectors:
+        for sector in self.cluster_list:
             train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
             if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
             a, b = train_data.shape[0], train_data.shape[1]
@@ -177,7 +178,7 @@ class MyModel(nn.Module):
 
     def trainALLSectorModels(self, withValidation = False): # 전체 섹터를 하나의 모델로 학습
         # 전체 섹터 학습 모델
-        print(f"trainALLSectorModels ({self.phase}), with validation: {withValidation}: ")
+        print(f"trainALLSectorModels ({self.phase}), with validation {withValidation}: ")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
         test_start = self.DM.phase_list[self.phase][2]
@@ -205,7 +206,7 @@ class MyModel(nn.Module):
     def save_models(self,dir):
         joblib.dump(self,f"{dir}/model.joblib")
 
-    def backtest(self, verbose=True, use_all='SectorAll', agg='avg', inter_n=0.1,withValidation = False, isTest=True, testNum=0, dir=""):  # 백테스팅 수행
+    def backtest(self, verbose=True, use_all='SectorAll', agg='inter', inter_n=0.1,withValidation = False, isTest=True, testNum=0, dir=""):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
         # 과거 데이터를 사용하여 모델의 예측이 실제 시장에서 얼마나 잘 맞았는지를 검증하는 과정
         test_start = self.DM.phase_list[self.phase][2 if withValidation else 1]
@@ -221,7 +222,7 @@ class MyModel(nn.Module):
             _, _, all_data = self.DM.data_phase("ALL", self.phase)
             all_symbol = pd.read_csv(f"./data_kr/symbol.csv")  # 전체 섹터 데이터 가져옴
 
-        for sector in self.topK_sectors:  # 저장된 상위 섹터별 데이터를 로드
+        for sector in self.cluster_list:  # 저장된 상위 섹터별 데이터를 로드
             _, _, data_tmp = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
             test_data[sector] = data_tmp
 
@@ -250,7 +251,7 @@ class MyModel(nn.Module):
             real_last_topK_stock = []  # 최종적으로 선택된 상위 주식 저장
 
             if use_all == "Sector" or use_all == "SectorAll":  # SectorAll or Sector일 경우
-                for sector in self.topK_sectors:  # 선택된 섹터별로 종목을 추천
+                for sector in self.cluster_list:  # 선택된 섹터별로 종목을 추천
 
                     model = self.sector_models[sector]
                     topK = model.predict(torch.Tensor(test_data[sector]).to(self.device)[i, :, :-1],

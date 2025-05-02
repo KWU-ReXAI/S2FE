@@ -22,13 +22,28 @@ parser.add_argument('--each_sector_stock_k',type=int,nargs='?',default=5) # 각 
 parser.add_argument('--final_stock_k',type=int,nargs='?',default=10) # 최종적으로 선택할 주식 개수
 parser.add_argument('--result_name',type=str,nargs='?',default="train_result_model") # 결과 파일명
 parser.add_argument('--dir_name',type=str,nargs='?',default="train_result_dir") # 결과 디렉토리 명
-parser.add_argument('--aggregate',type=str,nargs='?',default="inter") # 교집합 또는 평균 방식을 선택
 parser.add_argument('--use_all',type=str,nargs="?",default="SectorAll") # 모델을 평가하는 방식 설정
 parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE") # 사용할 앙상블 방법
 parser.add_argument('--clustering',action="store_true",default=True) # 클러스터링 여부
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
+parser.add_argument('--Validation',action="store_true") # 클러스터링 여부
+
+
+parser.add_argument('--lr_MLP',type=float,nargs='?',default=0.0001) # 0.0001
+parser.add_argument('--lr_anfis',type=float,nargs='?',default=0.01) # 0.01
+parser.add_argument('--epochs_MLP',type=int,nargs='?',default=300) # 300
+parser.add_argument('--epochs_anfis',type=int,nargs='?',default=100) # 100
+parser.add_argument('--hidden',type=int,nargs='?',default=128) # 128
+
+
+parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
+parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # 0.1
 
 args = parser.parse_args()
+
+if isinstance(args.inter_n, float) and args.inter_n.is_integer():
+    args.inter_n = int(args.inter_n)
+
 DM = DataManager(features_n= args.features_n, cluster_n=cluster_n)
 DM.create_date_list()
 result = {}
@@ -44,30 +59,28 @@ os.makedirs(os.path.dirname(file_path), exist_ok=True)
 df = pd.DataFrame(columns=["Parameter"," ", "Value"])
 df.to_csv(file_path, index=False)
 recordmodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
-                          args.final_stock_k, " ", device, args.ensemble, args.clustering)
+                          args.final_stock_k, " ", device, args.ensemble, args.clustering, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden)
 recordmodel.recordParameter()
 
 for trainNum in range(0, args.testNum):
     print(f"\nTrain for Train_Model_{trainNum+1}")
-    dir = f"./result/{args.dir_name}_{trainNum+1}"  # 결과를 저장할 디렉토리 생성
+    dir = f"./result/{args.dir_name}_{trainNum+1}"
     if os.path.isdir(dir) == False:
         os.mkdir(dir)
-    for phase in tqdm(DM.phase_list):  # 각 phase 별로 모델 학습 및 평가
+    for phase in tqdm(DM.phase_list):
         print(f"\nTrain Phase of Model {trainNum+1}: {phase}")
         if os.path.isdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}") == False:
             os.mkdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}")
         mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
-                          args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n)
+                          args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden)
 
-        mymodel.trainALLSectorModels(withValidation=True)
+        mymodel.trainALLSectorModels(withValidation= not args.Validation)
 
-        mymodel.topK_sectors = DM.cluster_list
+        mymodel.trainClusterModels(withValidation=not args.Validation)
 
-        mymodel.trainClusterModels(withValidation=True)
-
-        cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.aggregate,
-                                                                            use_all=args.use_all, withValidation= True, isTest=False,
-                                                                            dir=dir)
+        cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.agg, inter_n=args.inter_n,
+                                                                            use_all=args.use_all, withValidation= not args.Validation,
+                                                                            isTest=False, dir=dir)
 
         result[phase] = {
             "CAGR": cagr,
@@ -82,13 +95,10 @@ for trainNum in range(0, args.testNum):
 
     result_df = pd.DataFrame(result)
     result_df["Average"] = result_df.mean(axis=1)
-    # 음수 기호 깨짐 방지
     plt.rcParams['axes.unicode_minus'] = False
-    # 그래프에는 "Average" 열은 제외하도록 함
     plot_columns = [col for col in result_df.columns if col != "Average"]
 
     plt.figure(figsize=(10, 6))
-    # 각 평가 지표(CAGR, Sharpe Ratio, MDD)를 개별 선으로 그립니다.
     for indicator in result_df.index:
         plt.plot(plot_columns, result_df.loc[indicator, plot_columns],
                  marker='o', label=indicator)
@@ -100,14 +110,12 @@ for trainNum in range(0, args.testNum):
     plt.grid(True)
     plt.savefig(f"{dir}/train_result_graph.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
 
-    # CSV 파일로 저장 (평균 열 포함)
     result_df.to_csv(f"{dir}/train_result_file_{trainNum+1}.csv", encoding='utf-8-sig')
 
 result_df_ks = pd.DataFrame(result_ks)
 result_df_ks["Average"] = result_df_ks.mean(axis=1)
 plot_columns = [col for col in result_df_ks.columns if col != "Average"]
 plt.figure(figsize=(10, 6))
-    # 각 평가 지표(CAGR, Sharpe Ratio, MDD)를 개별 선으로 그립니다.
 for indicator in result_df_ks.index:
     plt.plot(plot_columns, result_df_ks.loc[indicator, plot_columns],marker='o', label=indicator)
 

@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from FinDataLoader import FinDataLoader as fd
+from FinDataLoader import FinDataLoader as fdpytgho
 from datetime import datetime
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))

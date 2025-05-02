@@ -7,12 +7,13 @@ import joblib
 import shap
 import matplotlib.pyplot as plt
 import numpy as np
+import argparse
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-def xai(trainNum=5, cluster_n=5, train_dir="train_result_dir", xai_dir="xai_result_dir"):
+def xai(testNum=5, cluster_n=5, train_dir="train_result_dir", xai_dir="xai_tmp_result_dir"):
     DM = DataManager(features_n=6,cluster_n=cluster_n)
     DM.create_date_list()
     phase_list = DM.phase_list.keys()
@@ -42,7 +43,7 @@ def xai(trainNum=5, cluster_n=5, train_dir="train_result_dir", xai_dir="xai_resu
         data_list.append(phase_data)
 
     sectors_shap = [] # shape: (1 + cluster_n, phase)
-    for num in tqdm(range(1, trainNum+1), desc="Test Progress"):
+    for num in tqdm(range(1, testNum+1), desc="Test Progress"):
         models = [] # 페이즈 별 모델 저장
         for phase in phase_list:
             model = joblib.load(f"./result/{train_dir}_{num}/train_result_model_{num}_{phase}/model.joblib")  # 페이즈 별 저장된 모델 불러옴
@@ -92,10 +93,22 @@ def xai(trainNum=5, cluster_n=5, train_dir="train_result_dir", xai_dir="xai_resu
         if not os.path.isdir(sector_dir):
             os.mkdir(sector_dir)
         for phase in range(len(phase_list)):
+            # 각 column 간의 피어슨 상관계수 계산
+            # df_shap = pd.DataFrame(sectors_shap[idx][phase])
+            # df_data = pd.DataFrame(data_list[idx][phase])
+            # df_shap.columns = feature_names[idx]
+            # df_data.columns = feature_names[idx]
+            # correlations = df_shap.corrwith(df_data)
+            # correlations.to_csv(f"{sector_dir}/phase_{phase+1}_shap_feature_correlations.csv")
+
+            # plot 작성
             shap.plots.violin(shap_values=sectors_shap[idx][phase], features=data_list[idx][phase], feature_names=feature_names[idx], show=False, color_bar=False)
             plt.title(f"Analysis for {sector} Phase {phase+1}")
             plt.savefig(f"{sector_dir}/phase_{phase+1}.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
             plt.clf()
 
 if __name__ == "__main__":
-    xai()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--testNum', type=int, nargs='?', default=5)
+    args = parser.parse_args()
+    xai(testNum=args.testNum)

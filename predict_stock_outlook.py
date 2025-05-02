@@ -420,3 +420,16 @@ if __name__ == "__main__":
 		os.makedirs(directory, exist_ok=True)
 		
 		extract_video_audio("link", row.url, directory + f'{row.year}-{row.quarter}')
+	
+	### 텍스트로 변환 ###
+	for row in df.itertuples():
+		if pd.isna(row.url) and row.url == '':
+			continue
+
+		code = str(row.code).zfill(6)
+		directory = f'data_kr/audio/{row.sector}/{code}/'
+		os.makedirs(directory, exist_ok=True)
+		
+		text = audio2text(directory + f'{row.year}-{row.quarter}')
+		with open(directory + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
+			f.write(text)

@@ -412,16 +412,17 @@ def get_video_datas(channel_name, min_view_cnt):
     
 if __name__ == "__main__":    
     ### 오디오 다운로드 ###
-	df = pd.read_csv('data_kr/audio/동영상 수집 통합본.csv')
+	df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
 	for row in df.itertuples():
 		if pd.isna(row.url) or row.url == '':
 			continue
 
 		code = str(row.code).zfill(6)
-		directory = f'data_kr/audio/{row.sector}/{code}/'
-		os.makedirs(directory, exist_ok=True)
+		audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
+		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+		os.makedirs(audio_dir, exist_ok=True)
 		
-		extract_video_audio("link", row.url, directory + f'{row.year}-{row.quarter}')
+		extract_video_audio("link", row.url, audio_dir + f'{row.year}-{row.quarter}')
 	
 	### 텍스트로 변환 ###
 	# for row in df.itertuples():
@@ -429,9 +430,10 @@ if __name__ == "__main__":
 	# 		continue
 
 	# 	code = str(row.code).zfill(6)
-	# 	directory = f'data_kr/audio/{row.sector}/{code}/'
-	# 	os.makedirs(directory, exist_ok=True)
+	#	audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
+	#	text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+	# 	os.makedirs(text_dir, exist_ok=True)
 		
-	# 	text = audio2text(directory + f'{row.year}-{row.quarter}')
-	# 	with open(directory + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
+	# 	text = audio2text(audio_dir + f'{row.year}-{row.quarter}')
+	# 	with open(text_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
 	# 		f.write(text)

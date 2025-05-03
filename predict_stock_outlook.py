@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from datetime import datetime, timedelta
 
+import torch
 from googleapiclient.discovery import build
 import yt_dlp
 import whisper
@@ -20,7 +21,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 # whisper 모델 로드 (base, small, medium, large 중 선택 가능)
-whisper_model = whisper.load_model("small")
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = whisper.load_model("large").to(device)
 
 # gemini 모델 로드
 genai.configure(api_key=GEMINI_API_KEY)

@@ -1,3 +1,6 @@
+[오디오 파일]
+https://drive.google.com/drive/folders/1y2yT0Tq5XbcGzJMK-QSnUAuOkXdwhJHE?usp=drive_link
+
 [실행 순서]
 
 1. python datapreprocessing.py --isall True

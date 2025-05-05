@@ -22,7 +22,7 @@ YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 # whisper 모델 로드 (base, small, medium, large 중 선택 가능)
 device = "cuda" if torch.cuda.is_available() else "cpu"
-model = whisper.load_model("large").to(device)
+whisper_model = whisper.load_model("medium").to(device)
 
 # gemini 모델 로드
 genai.configure(api_key=GEMINI_API_KEY)
@@ -268,7 +268,7 @@ def extract_video_audio(method, video_id, audio_dir):
 # -----------------------------
 def audio2text(audio_dir):
 	# 음성 파일 STT 수행
-	result = whisper_model.transcribe(f'{audio_dir}.mp3')  # wav, mp4 등도 OK
+	result = whisper_model.transcribe(f'{audio_dir}.mp3', language="ko")  # wav, mp4 등도 OK
 
 	# 텍스트 출력
 	print(result["text"])
@@ -421,19 +421,36 @@ if __name__ == "__main__":
 		audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
 		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
 		os.makedirs(audio_dir, exist_ok=True)
-		
-		extract_video_audio("link", row.url, audio_dir + f'{row.year}-{row.quarter}')
+
+		try:
+			extract_video_audio("link", row.url, audio_dir + f'{row.year}-{row.quarter}')
+			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} audio download completed: {audio_dir + f'{row.year}-{row.quarter}'}\n")
+		except Exception as e:
+			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} audio download error: {audio_dir + f'{row.year}-{row.quarter}'}\n")
 	
 	### 텍스트로 변환 ###
-	# for row in df.itertuples():
-	# 	if pd.isna(row.url) or row.url == '':
-	# 		continue
+	df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
+	for row in df.itertuples():
+		if pd.isna(row.url) or row.url == '':
+			continue
 
-	# 	code = str(row.code).zfill(6)
-	#	audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
-	#	text_dir = f'data_kr/video/text/{row.sector}/{code}/'
-	# 	os.makedirs(text_dir, exist_ok=True)
+		code = str(row.code).zfill(6)
+		audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
+		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+		os.makedirs(text_dir, exist_ok=True)
 		
-	# 	text = audio2text(audio_dir + f'{row.year}-{row.quarter}')
-	# 	with open(text_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
-	# 		f.write(text)
+		try:
+			text = audio2text(audio_dir + f'{row.year}-{row.quarter}')
+			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} whisper completed: {text_dir + f'{row.year}-{row.quarter}'}\n")
+				with open(text_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
+					f.write(text)
+		except Exception as e:
+			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} whisper error: {text_dir + f'{row.year}-{row.quarter}'}\n")

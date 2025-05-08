@@ -1,8 +1,9 @@
 from dotenv import load_dotenv
 import os
 from pathlib import Path
-import datetime
+from datetime import datetime, timedelta
 
+import torch
 from googleapiclient.discovery import build
 import yt_dlp
 import whisper
@@ -20,7 +21,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 # whisper 모델 로드 (base, small, medium, large 중 선택 가능)
-whisper_model = whisper.load_model("small")
+device = "cuda" if torch.cuda.is_available() else "cpu"
+whisper_model = whisper.load_model("medium").to(device)
 
 # gemini 모델 로드
 genai.configure(api_key=GEMINI_API_KEY)
@@ -67,57 +69,140 @@ def get_uploads_playlist_id(channel_id):
     return res["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
 
 # -----------------------------
-# playlist ID로 video ID 얻기기
-# 입력: playlist id, 기간 시작 & 끝
-# 출력: videos ids
+# playlist ID로 플레이리스트 내 모든 video ID와 업로드 날짜 얻기
+# 입력: playlist id
+# 출력: type: 튜플 리스트  ex) [(id1, date1, 조회수1), (id2, date2, 조회수2) ...]
 # -----------------------------
-def get_video_ids_within_date(playlist_id, start_date, end_date):
-	video_ids = []
-	next_page_token = None
+def get_video_datas_from_playlist(playlist_id):
+    video_list = []
+    next_page_token = None
+    video_id_date_pairs = []
 
-	while True:
-		res = youtube.playlistItems().list(
-			part="snippet",
-			playlistId=playlist_id,
-			maxResults=50,
-			pageToken=next_page_token
-		).execute()
-
-		for item in res["items"]:
-			published_at = item["snippet"]["publishedAt"]
-			pub_date = datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%SZ")
-
-			if start_date <= pub_date <= end_date:
-				video_id = item["snippet"]["resourceId"]["videoId"]
-				video_ids.append(video_id)
-
-		next_page_token = res.get("nextPageToken")
-		if not next_page_token:
-			break
-
-	if not video_ids:
-		print("조건에 맞는 영상 없음")
-
-	return video_ids
-
-# -----------------------------
-# 조회수 기준 필터링
-# 입력: videos id, 최소조회수수
-# 출력: videos id
-# -----------------------------
-def filter_by_view_count(video_ids, min_views):
-    filtered_ids = []
-    for i in range(0, len(video_ids), 50):  # 50개씩 요청
-        res = youtube.videos().list(
-            part="statistics",
-            id=",".join(video_ids[i:i+50])
+    # 1. playlistItems API로 video ID + 업로드 날짜 가져오기
+    while True:
+        res = youtube.playlistItems().list(
+            part="snippet",
+            playlistId=playlist_id,
+            maxResults=50,
+            pageToken=next_page_token
         ).execute()
 
         for item in res["items"]:
-            view_count = int(item["statistics"].get("viewCount", 0))
+            snippet = item["snippet"]
+            video_id = snippet["resourceId"]["videoId"]
+            published_at = snippet["publishedAt"]
+            video_id_date_pairs.append((video_id, published_at))
+
+        next_page_token = res.get("nextPageToken")
+        if not next_page_token:
+            break
+
+    # 2. video ID로 조회수 가져오기
+    for i in range(0, len(video_id_date_pairs), 50):
+        batch = video_id_date_pairs[i:i+50]
+        ids_only = [vid for vid, _ in batch]
+
+        res = youtube.videos().list(
+            part="statistics",
+            id=",".join(ids_only)
+        ).execute()
+
+        stats = {item["id"]: int(item["statistics"].get("viewCount", 0)) for item in res["items"]}
+
+        # 3. 튜플로 저장: (video_id, published_at, view_count)
+        for video_id, published_at in batch:
+            view_count = stats.get(video_id, 0)
+            video_list.append((video_id, published_at, view_count))
+
+    return video_list
+
+# -----------------------------
+# video ids로 업로드 날짜 필터링하기
+# 입력: video_datas(type 튜플 리스트), 시작날짜, 끝날짜 ("2001-04-30" 형식으로 입력)
+# 출력: 필터링 된 video_datas(type 튜플 리스트)
+# -----------------------------
+def filter_by_date(video_datas, start_date, end_date):
+    # 문자열 → datetime 객체로 변환
+    start_dt = datetime.strptime(start_date + "T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ")
+    end_dt = datetime.strptime(end_date + "T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ")
+
+    filtered = []
+    for video_id, published_at, view_count in video_datas:
+        pub_date = datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%SZ")
+        if start_dt <= pub_date < end_dt:
+            filtered.append((video_id, published_at, view_count))
+
+    return filtered
+    
+# -----------------------------
+# 조회수 기준 필터링
+# 입력: video_datas(type 튜플 리스트), 최소조회수
+# 출력: video_datas(type 튜플 리스트)
+# -----------------------------
+def filter_videos_by_view_count(video_tuples, min_views=0, max_views=float("inf")):
+    return [
+        (video_id, published_at, view_count)
+        for video_id, published_at, view_count in video_tuples
+        if min_views <= view_count <= max_views
+    ]
+    
+# -----------------------------
+# 채널영상을 날짜, 조회수 기준 필터링
+# 입력: channel_id, 기간, 최소조회수
+# 출력: video_datas(type 튜플 리스트)
+# -----------------------------
+def get_filtered_videos_by_channel(channel_id, start_date, end_date, min_views=0):
+    video_results = []
+    next_page_token = None
+
+    # 날짜 문자열 → datetime 객체 → ISO 형식으로 변환
+    start_iso = (datetime.strptime(start_date, "%Y-%m-%d") - timedelta(days=7)).isoformat("T") + "Z"
+    end_iso = datetime.strptime(end_date, "%Y-%m-%d").isoformat("T") + "Z"
+
+    # 1. search().list() → video ID + publishedAt
+    temp_videos = []
+    while True:
+        res = youtube.search().list(
+            part="snippet",
+            channelId=channel_id,
+            publishedAfter=start_iso,
+            publishedBefore=end_iso,
+            maxResults=50,
+            pageToken=next_page_token,
+            type="video",
+            order="date"
+        ).execute()
+
+        for item in res["items"]:
+            video_id = item["id"]["videoId"]
+            published_at = item["snippet"]["publishedAt"]
+            temp_videos.append((video_id, published_at))
+
+        next_page_token = res.get("nextPageToken")
+        if not next_page_token:
+            break
+
+    # 2. videos().list() → 조회수 붙이기
+    for i in range(0, len(temp_videos), 50):
+        batch = temp_videos[i:i+50]
+        ids = [vid for vid, _ in batch]
+
+        res = youtube.videos().list(
+            part="statistics",
+            id=",".join(ids)
+        ).execute()
+
+        stats = {
+            item["id"]: int(item["statistics"].get("viewCount", 0))
+            for item in res["items"]
+        }
+
+        for video_id, published_at in batch:
+            view_count = stats.get(video_id, 0)
             if view_count >= min_views:
-                filtered_ids.append(item["id"])
-    return filtered_ids
+                video_results.append((video_id, published_at, view_count))
+
+    return video_results
 
 # -----------------------------
 # 유튜브 영상 검색
@@ -145,13 +230,19 @@ def search_videos(query, date):
 	return video_ids
 
 # -----------------------------
-# 유튜브 id에서 음성파일 추출
-# INPUT: youtube id, 오디오 다운로드 경로
+# 유튜브 링크 or id에서 음성파일 추출
+# INPUT: method(link or id), youtube id or link, 오디오 다운로드 경로
 # -----------------------------
-def extract_video_audio(video_id, audio_dir):
+def extract_video_audio(method, video_id, audio_dir):
 	os.makedirs('./audio', exist_ok=True)
 	
-	url = "https://www.youtube.com/watch?v=" + video_id
+	if method == "link":
+		url = video_id
+	elif method == "id":
+		url = "https://www.youtube.com/watch?v=" + video_id
+	else:
+		print('method인자로 link or id를 입력하세요')
+		return False
 
 	ydl_opts = {
 		'format': 'bestaudio/best',
@@ -177,7 +268,7 @@ def extract_video_audio(video_id, audio_dir):
 # -----------------------------
 def audio2text(audio_dir):
 	# 음성 파일 STT 수행
-	result = whisper_model.transcribe(f'{audio_dir}.mp3')  # wav, mp4 등도 OK
+	result = whisper_model.transcribe(f'{audio_dir}.mp3', language="ko")  # wav, mp4 등도 OK
 
 	# 텍스트 출력
 	print(result["text"])
@@ -263,18 +354,21 @@ def predict_market(stock: str, date: str) -> str:
 		return 'middle'
 
 
-if __name__ == "__main__":
-    # 모든 종목의 모든 분기 공시일을 하나의 파일로로
+
+
+# ------------------------
+# 모든 분기의 범위 구하기
+# disclosure_date_range.csv 파일 생성
+# ------------------------
+def get_disclosure_range():
+    # 모든 종목의 모든 분기 공시일을 하나의 파일로
 	root_path = Path('./data_kr/merged')
-	df = pd.DataFrame()
+	all_symbols_disclosure = pd.DataFrame()
 	for file_path in root_path.rglob("*.csv"):
 		df_ = pd.read_csv(file_path)
 		df_ = df_[["code", "name", "year", "quarter", "disclosure_date"]]
-		df = pd.concat([df, df_])
+		all_symbols_disclosure = pd.concat([all_symbols_disclosure, df_])
 
-	df.to_csv("./data_kr/all_symbols_disclosure_date.csv", index=False)
-
-	df_symbol = pd.read_csv("./data_kr/all_symbols_disclosure_date.csv")
 
 	years = [2015] + ([y for y in range(2016, 2025) for _ in range(4)])
 	quarters = ["Q4"] + ([q for _ in range(2016, 2025) for q in ["Q1", "Q2", "Q3", "Q4"]])
@@ -286,8 +380,77 @@ if __name__ == "__main__":
 	})
 
 	for i, row in enumerate(df_disclosure.itertuples()):
-		disclosures = df_symbol[(df_symbol["year"] == row.year) & (df_symbol["quarter"] == row.quarter)]["disclosure_date"]
+		disclosures = all_symbols_disclosure[(all_symbols_disclosure["year"] == row.year) & (all_symbols_disclosure["quarter"] == row.quarter)]["disclosure_date"]
 		df_disclosure.loc[i, "min_disclosure_date"] = disclosures.min()
 		df_disclosure.loc[i, "max_disclosure_date"] = disclosures.max()
 
-	df_disclosure.to_csv("./data_kr/disclosure_date_range.csv", index=False)
+	os.makedirs('./data_kr/audio', exist_ok=True)
+	df_disclosure.to_csv("./data_kr/audio/disclosure_date_range.csv", index=False)
+ 
+# ------------------------
+# disclosure range를 만족하고 조회수가 min_view_cnt 이상인 video id 구하기
+# channel_name: str
+# min_view_cnt: int
+# data_kr/audoi/에 연도-분기.csv 파일 생성
+# ------------------------
+def get_video_datas(channel_name, min_view_cnt):
+	channel_id = get_channel_id(channel_name) 
+	dir = f'data_kr/audio/{channel_name}'
+	os.makedirs(dir, exist_ok=True)
+ 
+	df_disclosure = pd.read_csv('data_kr/audio/disclosure_date_range.csv')
+	for row in df_disclosure.itertuples():
+		start = datetime.strptime(row.min_disclosure_date, "%Y-%m-%d")
+		start -= timedelta(days=7)
+		start = start.strftime("%Y-%m-%d")
+		end = row.max_disclosure_date
+
+		video_datas = get_filtered_videos_by_channel(channel_id, start, end, min_view_cnt)
+		year_quarter = f'{row.year}-{row.quarter}'
+		os.makedirs(f'{dir}/{year_quarter}', exist_ok=True)
+		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{year_quarter}/{year_quarter}.csv', index=False)
+    
+if __name__ == "__main__":    
+    ### 오디오 다운로드 ###
+	df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
+	for row in df.itertuples():
+		if pd.isna(row.url) or row.url == '':
+			continue
+
+		code = str(row.code).zfill(6)
+		audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
+		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+		os.makedirs(audio_dir, exist_ok=True)
+
+		try:
+			extract_video_audio("link", row.url, audio_dir + f'{row.year}-{row.quarter}')
+			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} audio download completed: {audio_dir + f'{row.year}-{row.quarter}'}\n")
+		except Exception as e:
+			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} audio download error: {audio_dir + f'{row.year}-{row.quarter}'}\n")
+	
+	### 텍스트로 변환 ###
+	df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
+	for row in df.itertuples():
+		if pd.isna(row.url) or row.url == '':
+			continue
+
+		code = str(row.code).zfill(6)
+		audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
+		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+		os.makedirs(text_dir, exist_ok=True)
+		
+		try:
+			text = audio2text(audio_dir + f'{row.year}-{row.quarter}')
+			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} whisper completed: {text_dir + f'{row.year}-{row.quarter}'}\n")
+				with open(text_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
+					f.write(text)
+		except Exception as e:
+			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} whisper error: {text_dir + f'{row.year}-{row.quarter}'}\n")

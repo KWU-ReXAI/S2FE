@@ -17,10 +17,12 @@ parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
 parser.add_argument('--train_dir',type=str,nargs='?',default="train_result_dir") # 결과 파일명
 parser.add_argument('--test_dir',type=str,nargs='?',default="test_result_dir") # 결과 디렉토리 명
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
-parser.add_argument('--agg',type=str,nargs='?',default="inter") # avg, inter
-parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, 6
+parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
+parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # 0.1
 args = parser.parse_args()
 
+if isinstance(args.inter_n, float) and args.inter_n.is_integer():
+    args.inter_n = int(args.inter_n)
 
 cluster_n = 5
 
@@ -77,7 +79,6 @@ avg_df.to_csv(f"{dir}/test_result_dir/test_result_average.csv", encoding='utf-8-
 final_df_combined = pd.concat([final_df, avg_df], axis=1)
 final_df_combined.to_csv(f"{dir}/test_result_dir/test_result_file.csv", encoding='utf-8-sig')
 
-import matplotlib.pyplot as plt
 
 # 평가지표 리스트
 metrics = ["CAGR", "Sharpe Ratio", "MDD"]
@@ -88,7 +89,7 @@ phases = avg_df["Average"].columns
 # 각 평가지표마다 하나의 그래프로 나타내도록 subplot 생성 (가로로 배열)
 fig, axs = plt.subplots(nrows=1, ncols=len(metrics), figsize=(6 * len(metrics), 6))
 
-for i, metric in enumerate(metrics):
+"""for i, metric in enumerate(metrics):
     ax = axs[i] if len(metrics) > 1 else axs
 
     # 그래프 출력: Average는 빨간 실선, KOSPI200은 노란 점선으로 표시
@@ -116,7 +117,48 @@ for i, metric in enumerate(metrics):
 
     # y축 하한값 조정하여 그래프와 표가 겹치지 않도록 함
     lower_bound = min(min(avg_df["Average"].loc[metric]), min(result_df_ks.loc[metric]))
-    ax.set_ylim(bottom=lower_bound - 0.3 * abs(lower_bound))
+    ax.set_ylim(bottom=lower_bound - 0.3 * abs(lower_bound))"""
+
+for i, metric in enumerate(metrics):
+    ax = axs[i] if len(metrics) > 1 else axs
+
+    ax.plot(phases, avg_df["Average"].loc[metric], 'r-', marker='o', label='Average')
+    ax.plot(phases, result_df_ks.loc[metric], 'y--', marker='o', label='KOSPI200')
+    ax.set_title(metric)
+    ax.set_xlabel("Phase",labelpad=-0.5)
+    ax.set_ylabel(metric)
+    ax.grid(True)
+    ax.legend(loc='upper left')
+
+    # 소수점 4자리로 포맷팅한 Phase별 값 생성
+    avg_values = [f"{val:.4f}" for val in avg_df["Average"].loc[metric]]
+    ks_values  = [f"{val:.4f}" for val in result_df_ks.loc[metric]]
+
+    # ── 여기부터 수정 ──
+    # 전체 평균값 계산
+    overall_avg = avg_df["Average"].loc[metric].mean()
+    overall_ks  = result_df_ks.loc[metric].mean()
+
+    # Phase별 값 리스트에 전체 평균 추가
+    avg_values.append(f"{overall_avg:.4f}")
+    ks_values.append(f"{overall_ks:.4f}")
+
+    # 테이블에 들어갈 텍스트와 컬럼 레이블 정의
+    cell_text = [avg_values, ks_values]
+    col_labels = list(phases) + ["Average"]
+
+    # 테이블 생성
+    table = ax.table(
+        cellText=cell_text,
+        rowLabels=["Model", "KOSPI200"],
+        colLabels=col_labels,
+        cellLoc='center',
+        bbox=[0, -0.40, 1, 0.30]  # 높이를 약간 늘려 표가 그래프와 겹치지 않도록 조정
+    )
+    # ── 수정 끝 ──
+
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
 
 # 전체 서브플롯 간의 좌우 간격 및 하단 여백 조정
 plt.subplots_adjust(bottom=0.5, wspace=0.3)

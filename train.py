@@ -26,6 +26,7 @@ parser.add_argument('--use_all',type=str,nargs="?",default="SectorAll") # 모델
 parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE") # 사용할 앙상블 방법
 parser.add_argument('--clustering',action="store_true",default=True) # 클러스터링 여부
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
+parser.add_argument('--Validation',action="store_true") # 클러스터링 여부
 
 
 parser.add_argument('--lr_MLP',type=float,nargs='?',default=0.0001) # 0.0001
@@ -35,10 +36,14 @@ parser.add_argument('--epochs_anfis',type=int,nargs='?',default=100) # 100
 parser.add_argument('--hidden',type=int,nargs='?',default=128) # 128
 
 
-parser.add_argument('--agg',type=str,nargs='?',default="inter") # avg, inter
-parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # inter일 때: 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2, 3, 4, 5
+parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
+parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # 0.1
 
 args = parser.parse_args()
+
+if isinstance(args.inter_n, float) and args.inter_n.is_integer():
+    args.inter_n = int(args.inter_n)
+
 DM = DataManager(features_n= args.features_n, cluster_n=cluster_n)
 DM.create_date_list()
 result = {}
@@ -67,18 +72,15 @@ for trainNum in range(0, args.testNum):
         if os.path.isdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}") == False:
             os.mkdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}")
         mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
-                          args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden,
-                          isLLMexperiment = True, sector_name = ["커뮤니케이션서비스"])
+                          args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden)
 
+        mymodel.trainALLSectorModels(withValidation= not args.Validation)
 
-
-        mymodel.trainALLSectorModels(withValidation=True)
-
-        mymodel.trainClusterModels(withValidation=True)
+        mymodel.trainClusterModels(withValidation=not args.Validation)
 
         cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.agg, inter_n=args.inter_n,
-                                                                            use_all=args.use_all, withValidation= True, isTest=False,
-                                                                            dir=dir)
+                                                                            use_all=args.use_all, withValidation= not args.Validation,
+                                                                            isTest=False, dir=dir)
 
         result[phase] = {
             "CAGR": cagr,

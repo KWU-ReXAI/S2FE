@@ -11,6 +11,7 @@ from tqdm import tqdm
 import torch
 import joblib
 import argparse
+import numpy as np
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
@@ -130,33 +131,42 @@ for i, metric in enumerate(metrics):
     ax.grid(True)
     ax.legend(loc='upper left')
 
-    # 소수점 4자리로 포맷팅한 Phase별 값 생성
     avg_values = [f"{val:.4f}" for val in avg_df["Average"].loc[metric]]
-    ks_values  = [f"{val:.4f}" for val in result_df_ks.loc[metric]]
+    ks_values = [f"{val:.4f}" for val in result_df_ks.loc[metric]]
 
-    # ── 여기부터 수정 ──
-    # 전체 평균값 계산
-    overall_avg = avg_df["Average"].loc[metric].mean()
-    overall_ks  = result_df_ks.loc[metric].mean()
+    # Phase별 실수 배열
+    phase_vals = avg_df["Average"].loc[metric].values
+    phase_vals_ks = result_df_ks.loc[metric].values
 
-    # Phase별 값 리스트에 전체 평균 추가
-    avg_values.append(f"{overall_avg:.4f}")
-    ks_values.append(f"{overall_ks:.4f}")
+    if metric == "CAGR":
+        # 1) 산술평균
+        arith_avg = phase_vals.mean()
+        arith_ks = phase_vals_ks.mean()
+        # 2) 기하평균 (기존 방식 유지)
+        # 원시 returns 대신 (1 + returns) 에서 기하평균을 구하고 다시 1을 빼기
+        geo_avg = np.prod(1 + phase_vals) ** (1.0 / len(phases)) - 1
+        geo_ks = np.prod(1 + phase_vals_ks) ** (1.0 / len(phases)) - 1
 
-    # 테이블에 들어갈 텍스트와 컬럼 레이블 정의
-    cell_text = [avg_values, ks_values]
-    col_labels = list(phases) + ["Average"]
+        # 두 개 모두 리스트에 추가
+        avg_values.extend([f"{arith_avg:.4f}", f"{geo_avg:.4f}"])
+        ks_values.extend([f"{arith_ks:.4f}", f"{geo_ks:.4f}"])
+        col_labels = list(phases) + ["Average", "Total"]
+    else:
+        # Sharpe, MDD는 기존 산술평균만
+        overall_avg = phase_vals.mean()
+        overall_ks = phase_vals_ks.mean()
+        avg_values.append(f"{overall_avg:.4f}")
+        ks_values.append(f"{overall_ks:.4f}")
+        col_labels = list(phases) + ["Average"]
 
     # 테이블 생성
     table = ax.table(
-        cellText=cell_text,
+        cellText=[avg_values, ks_values],
         rowLabels=["Model", "KOSPI200"],
         colLabels=col_labels,
         cellLoc='center',
-        bbox=[0, -0.40, 1, 0.30]  # 높이를 약간 늘려 표가 그래프와 겹치지 않도록 조정
+        bbox=[0, -0.40, 1, 0.30]
     )
-    # ── 수정 끝 ──
-
     table.auto_set_font_size(False)
     table.set_fontsize(10)
 

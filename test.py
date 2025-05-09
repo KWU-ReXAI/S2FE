@@ -11,6 +11,7 @@ from tqdm import tqdm
 import torch
 import joblib
 import argparse
+import numpy as np
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
@@ -79,7 +80,6 @@ avg_df.to_csv(f"{dir}/test_result_dir/test_result_average.csv", encoding='utf-8-
 final_df_combined = pd.concat([final_df, avg_df], axis=1)
 final_df_combined.to_csv(f"{dir}/test_result_dir/test_result_file.csv", encoding='utf-8-sig')
 
-import matplotlib.pyplot as plt
 
 # 평가지표 리스트
 metrics = ["CAGR", "Sharpe Ratio", "MDD"]
@@ -90,7 +90,7 @@ phases = avg_df["Average"].columns
 # 각 평가지표마다 하나의 그래프로 나타내도록 subplot 생성 (가로로 배열)
 fig, axs = plt.subplots(nrows=1, ncols=len(metrics), figsize=(6 * len(metrics), 6))
 
-for i, metric in enumerate(metrics):
+"""for i, metric in enumerate(metrics):
     ax = axs[i] if len(metrics) > 1 else axs
 
     # 그래프 출력: Average는 빨간 실선, KOSPI200은 노란 점선으로 표시
@@ -118,7 +118,57 @@ for i, metric in enumerate(metrics):
 
     # y축 하한값 조정하여 그래프와 표가 겹치지 않도록 함
     lower_bound = min(min(avg_df["Average"].loc[metric]), min(result_df_ks.loc[metric]))
-    ax.set_ylim(bottom=lower_bound - 0.3 * abs(lower_bound))
+    ax.set_ylim(bottom=lower_bound - 0.3 * abs(lower_bound))"""
+
+for i, metric in enumerate(metrics):
+    ax = axs[i] if len(metrics) > 1 else axs
+
+    ax.plot(phases, avg_df["Average"].loc[metric], 'r-', marker='o', label='Average')
+    ax.plot(phases, result_df_ks.loc[metric], 'y--', marker='o', label='KOSPI200')
+    ax.set_title(metric)
+    ax.set_xlabel("Phase",labelpad=-0.5)
+    ax.set_ylabel(metric)
+    ax.grid(True)
+    ax.legend(loc='upper left')
+
+    avg_values = [f"{val:.4f}" for val in avg_df["Average"].loc[metric]]
+    ks_values = [f"{val:.4f}" for val in result_df_ks.loc[metric]]
+
+    # Phase별 실수 배열
+    phase_vals = avg_df["Average"].loc[metric].values
+    phase_vals_ks = result_df_ks.loc[metric].values
+
+    if metric == "CAGR":
+        # 1) 산술평균
+        arith_avg = phase_vals.mean()
+        arith_ks = phase_vals_ks.mean()
+        # 2) 기하평균 (기존 방식 유지)
+        # 원시 returns 대신 (1 + returns) 에서 기하평균을 구하고 다시 1을 빼기
+        geo_avg = np.prod(1 + phase_vals) ** (1.0 / len(phases)) - 1
+        geo_ks = np.prod(1 + phase_vals_ks) ** (1.0 / len(phases)) - 1
+
+        # 두 개 모두 리스트에 추가
+        avg_values.extend([f"{arith_avg:.4f}", f"{geo_avg:.4f}"])
+        ks_values.extend([f"{arith_ks:.4f}", f"{geo_ks:.4f}"])
+        col_labels = list(phases) + ["Average", "Total"]
+    else:
+        # Sharpe, MDD는 기존 산술평균만
+        overall_avg = phase_vals.mean()
+        overall_ks = phase_vals_ks.mean()
+        avg_values.append(f"{overall_avg:.4f}")
+        ks_values.append(f"{overall_ks:.4f}")
+        col_labels = list(phases) + ["Average"]
+
+    # 테이블 생성
+    table = ax.table(
+        cellText=[avg_values, ks_values],
+        rowLabels=["Model", "KOSPI200"],
+        colLabels=col_labels,
+        cellLoc='center',
+        bbox=[0, -0.40, 1, 0.30]
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
 
 # 전체 서브플롯 간의 좌우 간격 및 하단 여백 조정
 plt.subplots_adjust(bottom=0.5, wspace=0.3)

@@ -422,12 +422,11 @@ if __name__ == "__main__":
 		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
 		os.makedirs(audio_dir, exist_ok=True)
 
-		try:
-			extract_video_audio("link", row.url, audio_dir + f'{row.year}-{row.quarter}')
+		if extract_video_audio("link", row.url, audio_dir + f'{row.year}-{row.quarter}'):
 			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 				log_file.write(f"{timestamp} audio download completed: {audio_dir + f'{row.year}-{row.quarter}'}\n")
-		except Exception as e:
+		else:
 			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 				log_file.write(f"{timestamp} audio download error: {audio_dir + f'{row.year}-{row.quarter}'}\n")
@@ -454,3 +453,5 @@ if __name__ == "__main__":
 			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 				log_file.write(f"{timestamp} whisper error: {text_dir + f'{row.year}-{row.quarter}'}\n")
+
+	

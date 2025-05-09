@@ -284,22 +284,22 @@ def clean_srt(srt_text: str) -> str:
 
 
 # ------------------------
-# Gemini 요약
+# GPT-4o 요약
 # ------------------------
-def summarize_with_gemini(text: str) -> str:
+def summarize_text(text: str) -> str:
 	prompt = f"""
-다음은 경제 관련 영상 자막입니다.
-핵심 내용 위주로 간결하게 뉴스 스타일로 요약해주세요:
-
-{text}
+The following is a transcript from a YouTube video about economics. Please summarize the content by extracting key economic ideas, arguments, data, and cited examples.  
+Your summary should be **concise and well-organized**, capturing the **main points** and **logical structure** of the video.  
+A **section-based summary** or **bullet-point outline** is preferred if appropriate.
+Transcript: {text}
 """
-	response = gemini_model.generate_content(prompt)
-	return response.text.strip()
+	response = gpt_model([HumanMessage(content=prompt)])
+	return response.content.strip()
 
 
 
 # ------------------------
-# GPT-4 등락 예측
+# GPT-4o 등락 예측
 # ------------------------
 def predict_market_from_summary(summary: str, stock: str) -> str:
 	prompt = f"""
@@ -338,7 +338,7 @@ def predict_market(stock: str, date: str) -> str:
 	print("전처리:\n", cleaned)
 
 	# 전처리 자막 요약
-	summary = summarize_with_gemini(cleaned)
+	summary = summarize_text(cleaned)
 
 	# 주식 등락 예측
 	prediction = predict_market_from_summary(summary, stock)
@@ -444,14 +444,37 @@ if __name__ == "__main__":
 		
 		try:
 			text = audio2text(audio_dir + f'{row.year}-{row.quarter}')
+			with open(text_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
+				f.write(text)
 			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 				log_file.write(f"{timestamp} whisper completed: {text_dir + f'{row.year}-{row.quarter}'}\n")
-				with open(text_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
-					f.write(text)
 		except Exception as e:
 			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 				log_file.write(f"{timestamp} whisper error: {text_dir + f'{row.year}-{row.quarter}'}\n")
 
-	
+	### LLM으로 요약 ###
+	df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
+	for row in df.itertuples():
+		if pd.isna(row.url) or row.url == '':
+			continue
+
+		code = str(row.code).zfill(6)
+		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+		summary_dir = f'preprocessed_data/llm/{row.sector}/{code}/'
+		os.makedirs(summary_dir, exist_ok=True)
+
+		try:
+			with open(text_dir + f'{row.year}-{row.quarter}', "r", encoding="utf-8") as file:
+				text = file.read()
+			summary = summarize_text(text)
+			with open(summary_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
+				f.write(summary)
+			with open('preprocessed_data/llm/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} summary completed: {text_dir + f'{row.year}-{row.quarter}'}\n")
+		except Exception as e:
+			with open('preprocessed_data/llm/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} summary error: {text_dir + f'{row.year}-{row.quarter}'}\n")

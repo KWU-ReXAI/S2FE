@@ -1,0 +1,13 @@
+The transcript discusses a government initiative in South Korea focused on the application of 3D printing technology in the medical field. Here is a concise summary of the key points:
+
+- **Initiative Overview**: The Ministry of Science and ICT in South Korea is launching a project to produce medical devices tailored to individual patients using 3D printing technology.
+
+- **Call for Participation**: The ministry is seeking institutions to participate in this project, with applications open until the 11th of the following month.
+
+- **Project Timeline and Funding**: The selected institutions will begin the project at the end of June and will receive a total of 1.35 billion Korean won over one year to develop and test 3D-printed medical devices based on hospital needs.
+
+- **Implementation and Testing**: The institutions will create these devices and conduct performance tests before supplying them to the respective hospitals.
+
+- **Further Information**: Details on how to participate in the project can be found on the website of the National IT Industry Promotion Agency.
+
+This initiative highlights the integration of advanced technology in healthcare to enhance personalized medical solutions.

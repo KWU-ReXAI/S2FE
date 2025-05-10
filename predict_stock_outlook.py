@@ -8,6 +8,7 @@ from googleapiclient.discovery import build
 import yt_dlp
 import whisper
 import re
+from tqdm import tqdm
 
 import google.generativeai as genai
 from langchain.chat_models import ChatOpenAI
@@ -303,11 +304,17 @@ Transcript: {text}
 # ------------------------
 def predict_market_from_summary(summary: str, stock: str) -> str:
 	prompt = f"""
-아래는 경제 뉴스의 요약입니다.
+You are a financial analyst AI.
 
-"{summary}"
+Based on the following summary of an economics-related YouTube video transcript, assess whether the stock of **{stock}** is likely to go up, down, or remain neutral based on the video's content. 
 
-이 뉴스의 내용이 주식 종목 "{stock}"에 긍정적인 영향을 미칠 가능성이 있을까요? 그렇다면 '오를 가능성 있음', 아니라면 '오를 가능성 낮음'이라고만 답해 주세요.
+If the content has **no meaningful connection** to the stock or its industry, clearly state:  
+"이 영상 요약본은 {stock} 주가와 관련이 없습니다."
+
+Respond in Korean with a short but insightful analysis.
+
+Summary:
+{summary}
 """
 	response = gpt_model([HumanMessage(content=prompt)])
 	return response.content.strip()
@@ -411,70 +418,128 @@ def get_video_datas(channel_name, min_view_cnt):
 		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{year_quarter}/{year_quarter}.csv', index=False)
     
 if __name__ == "__main__":    
-    ### 오디오 다운로드 ###
-	df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
-	for row in df.itertuples():
-		if pd.isna(row.url) or row.url == '':
-			continue
+    # ### 오디오 다운로드 ###
+	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
+	# for row in df.itertuples():
+	# 	if pd.isna(row.url) or row.url == '':
+	# 		continue
 
-		code = str(row.code).zfill(6)
-		audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
-		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
-		os.makedirs(audio_dir, exist_ok=True)
+	# 	code = str(row.code).zfill(6)
+	# 	audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
+	# 	text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+	# 	os.makedirs(audio_dir, exist_ok=True)
 
-		if extract_video_audio("link", row.url, audio_dir + f'{row.year}-{row.quarter}'):
-			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
-				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-				log_file.write(f"{timestamp} audio download completed: {audio_dir + f'{row.year}-{row.quarter}'}\n")
-		else:
-			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
-				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-				log_file.write(f"{timestamp} audio download error: {audio_dir + f'{row.year}-{row.quarter}'}\n")
+	# 	if extract_video_audio("link", row.url, audio_dir + f'{row.year}-{row.quarter}'):
+	# 		with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 			log_file.write(f"{timestamp} audio download completed: {audio_dir + f'{row.year}-{row.quarter}'}\n")
+	# 	else:
+	# 		with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 			log_file.write(f"{timestamp} audio download error: {audio_dir + f'{row.year}-{row.quarter}'}\n")
 	
-	### 텍스트로 변환 ###
-	df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
-	for row in df.itertuples():
-		if pd.isna(row.url) or row.url == '':
-			continue
+	# ### 텍스트로 변환 ###
+	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
+	# for row in df.itertuples():
+	# 	if pd.isna(row.url) or row.url == '':
+	# 		continue
 
-		code = str(row.code).zfill(6)
-		audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
-		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
-		os.makedirs(text_dir, exist_ok=True)
+	# 	code = str(row.code).zfill(6)
+	# 	audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
+	# 	text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+	# 	os.makedirs(text_dir, exist_ok=True)
 		
-		try:
-			text = audio2text(audio_dir + f'{row.year}-{row.quarter}')
-			with open(text_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
-				f.write(text)
-			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
-				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-				log_file.write(f"{timestamp} whisper completed: {text_dir + f'{row.year}-{row.quarter}'}\n")
-		except Exception as e:
-			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
-				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-				log_file.write(f"{timestamp} whisper error: {text_dir + f'{row.year}-{row.quarter}'}\n")
+	# 	try:
+	# 		text = audio2text(audio_dir + f'{row.year}-{row.quarter}')
+	# 		with open(text_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
+	# 			f.write(text)
+	# 		with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 			log_file.write(f"{timestamp} whisper completed: {text_dir + f'{row.year}-{row.quarter}'}\n")
+	# 	except Exception as e:
+	# 		with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 			log_file.write(f"{timestamp} whisper error: {text_dir + f'{row.year}-{row.quarter}'}\n")
 
-	### LLM으로 요약 ###
+	# ### 텍스트 token 수 확인  ###
+	# import tiktoken
+	# # 예: GPT-4용 인코더 불러오기
+	# encoding = tiktoken.encoding_for_model("gpt-4")
+	# total_tokens = 0
+
+	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
+	# for row in df.itertuples():
+	# 	if pd.isna(row.url) or row.url == '':
+	# 		continue
+
+	# 	code = str(row.code).zfill(6)
+	# 	audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
+	# 	text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+	# 	os.makedirs(text_dir, exist_ok=True)
+		
+	# 	try:
+	# 		with open(text_dir + f'{row.year}-{row.quarter}.txt', "r", encoding="utf-8") as file:
+	# 			text = file.read()
+	# 			tokens = encoding.encode(text)
+	# 			total_tokens += len(tokens)
+	# 		with open('data_kr/video/num_token.txt', "a", encoding="utf-8") as log_file:
+	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 			log_file.write(f"{text_dir}{row.year}-{row.quarter} len: {len(text)}, token: {len(tokens)}\n")
+	# 	except Exception as e:
+	# 		with open('data_kr/video/num_token.txt', "a", encoding="utf-8") as log_file:
+	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 			log_file.write(f"{text_dir}" + f"{row.year}-{row.quarter} error: " + e + "\n")
+
+	# with open('data_kr/video/num_token.txt', "a", encoding="utf-8") as log_file:
+	# 	log_file.write(f"total tokens: {total_tokens}\n")
+
+	# ### LLM으로 영상 자막 요약 ###
+	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
+	# for row in tqdm(df.itertuples(), total=len(df), desc="LLM summarizing"):
+	# 	if pd.isna(row.url) or row.url == '':
+	# 		continue
+
+	# 	code = str(row.code).zfill(6)
+	# 	text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+	# 	summary_dir = f'preprocessed_data/llm/summary/{row.sector}/{code}/'
+	# 	os.makedirs(summary_dir, exist_ok=True)
+
+	# 	try:
+	# 		with open(text_dir + f'{row.year}-{row.quarter}.txt', "r", encoding="utf-8") as file:
+	# 			text = file.read()
+	# 		summary = summarize_text(text)
+	# 		with open(summary_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
+	# 			f.write(summary)
+	# 		with open('preprocessed_data/llm/summary/log.txt', "a", encoding="utf-8") as log_file:
+	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 			log_file.write(f"{timestamp} summary completed: {summary_dir + f'{row.year}-{row.quarter}'}\n")
+	# 	except Exception as e:
+	# 		with open('preprocessed_data/llm/summary/log.txt', "a", encoding="utf-8") as log_file:
+	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 			log_file.write(f"{timestamp} summary error: {summary_dir + f'{row.year}-{row.quarter}'}\n")
+
+	### LLM으로 자막요약을 통해 등락 예측 ###
 	df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
-	for row in df.itertuples():
+	for row in tqdm(df.itertuples(), total=len(df), desc="LLM predicting"):
 		if pd.isna(row.url) or row.url == '':
 			continue
 
-		code = str(row.code).zfill(6)
-		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
-		summary_dir = f'preprocessed_data/llm/{row.sector}/{code}/'
+		code = str(row.code).zfill(6)	
+		name = row.name
+		summary_dir = f'preprocessed_data/llm/summary/{row.sector}/{code}/'
+		predict_dir = f'preprocessed_data/llm/predict/{row.sector}/{code}/'
 		os.makedirs(summary_dir, exist_ok=True)
 
 		try:
-			with open(text_dir + f'{row.year}-{row.quarter}', "r", encoding="utf-8") as file:
-				text = file.read()
-			summary = summarize_text(text)
-			with open(summary_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
-				f.write(summary)
-			with open('preprocessed_data/llm/log.txt', "a", encoding="utf-8") as log_file:
+			with open(summary_dir + f'{row.year}-{row.quarter}.txt', "r", encoding="utf-8") as file:
+				summary = file.read()
+			predict = predict_market_from_summary(summary, f'{name}({code})')
+			with open(predict_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
+				f.write(predict)
+			with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-				log_file.write(f"{timestamp} summary completed: {text_dir + f'{row.year}-{row.quarter}'}\n")
+				log_file.write(f"{timestamp} predict completed: {predict_dir + f'{row.year}-{row.quarter}'}\n")
 		except Exception as e:
-			with open('preprocessed_data/llm/log.txt', "a", encoding="utf-8") as log_file:
+			with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-				log_file.write(f"{timestamp} summary error: {text_dir + f'{row.year}-{row.quarter}'}\n")
+				log_file.write(f"{timestamp} predict error: {predict_dir + f'{row.year}-{row.quarter}'}\n")

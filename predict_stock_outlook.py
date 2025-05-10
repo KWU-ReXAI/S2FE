@@ -306,15 +306,30 @@ def predict_market_from_summary(summary: str, stock: str) -> str:
 	prompt = f"""
 You are a financial analyst AI.
 
-Based on the following summary of an economics-related YouTube video transcript, assess whether the stock of **{stock}** is likely to go up, down, or remain neutral based on the video's content. 
+Below is a summary of a YouTube video related to economic or financial issues.
 
-If the content has **no meaningful connection** to the stock or its industry, clearly state:  
-"이 영상 요약본은 {stock} 주가와 관련이 없습니다."
+Your task is to assess how this content could potentially affect the stock price of a **Korean company** named **{stock}**.
 
-Respond in Korean with a short but insightful analysis.
+⚠️ Strict constraints:
+- The company is a **Korean stock**.
+- You must **NOT use any prior knowledge** about the company, its stock, industry, or any real-world information outside of the summary.
+- **Only use the summary provided below** to make your judgment.
+- Determine whether the summary logically implies a positive, negative, or no impact on the company.
+- You MUST choose one and only one of the three options: "up", "down", or "irrelevant" (in English, lowercase).
+- The reason must be written in Korean.
+
+Respond in the following format (in Korean):
+결과: [up/down/irrelevant]
+이유: [요약본을 근거로 한 간단한 한국어 설명]
+
+
+example:
+결과: up  
+이유: 영상에서는 반도체 수요 증가와 정부 정책이 언급되어 주가에 긍정적인 영향을 줄 수 있습니다.
 
 Summary:
 {summary}
+
 """
 	response = gpt_model([HumanMessage(content=prompt)])
 	return response.content.strip()
@@ -520,26 +535,42 @@ if __name__ == "__main__":
 
 	### LLM으로 자막요약을 통해 등락 예측 ###
 	df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
-	for row in tqdm(df.itertuples(), total=len(df), desc="LLM predicting"):
-		if pd.isna(row.url) or row.url == '':
-			continue
+	for code in df["code"].unique():
+		df_ = df[df["code"] == code].reset_index(drop=True)
+		
+		predict_list = []
+		reason_list = []
 
-		code = str(row.code).zfill(6)	
-		name = row.name
-		summary_dir = f'preprocessed_data/llm/summary/{row.sector}/{code}/'
-		predict_dir = f'preprocessed_data/llm/predict/{row.sector}/{code}/'
-		os.makedirs(summary_dir, exist_ok=True)
+		for row in tqdm(df_.itertuples(), total=len(df_), desc=f"{code}LLM predicting"):
+			if pd.isna(row.url) or row.url == '':
+				predict_list.append(None)
+				reason_list.append(None)
+				continue
+			
+			code = str(row.code).zfill(6)	
+			name = row.name
+			summary_dir = f'preprocessed_data/llm/summary/{row.sector}/{code}/'
+			predict_dir = f'preprocessed_data/llm/predict/{row.sector}/'
+			os.makedirs(predict_dir, exist_ok=True)
 
-		try:
-			with open(summary_dir + f'{row.year}-{row.quarter}.txt', "r", encoding="utf-8") as file:
-				summary = file.read()
-			predict = predict_market_from_summary(summary, f'{name}({code})')
-			with open(predict_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
-				f.write(predict)
-			with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
-				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-				log_file.write(f"{timestamp} predict completed: {predict_dir + f'{row.year}-{row.quarter}'}\n")
-		except Exception as e:
-			with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
-				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-				log_file.write(f"{timestamp} predict error: {predict_dir + f'{row.year}-{row.quarter}'}\n")
+			try:
+				with open(summary_dir + f'{row.year}-{row.quarter}.txt', "r", encoding="utf-8") as file:
+					summary = file.read()
+				data = predict_market_from_summary(summary, f'{name}({code})')
+				predict = data.split('\n')[0].split(':')[1].strip()
+				reason = data.split('\n')[1].split(':')[1].strip()
+				predict_list.append(predict)
+				reason_list.append(reason)
+				
+				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
+					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+					log_file.write(f"{timestamp} predict completed: {predict_dir + f'{row.year}-{row.quarter}'}\n")
+			except Exception as e:
+				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
+					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+					log_file.write(f"{timestamp} predict error: {predict_dir + f'{row.year}-{row.quarter}'}\n")
+
+		df_predict = df_[["year", "quarter", "disclosure_date", "code", "name", "sector"]]
+		df_predict["prediction"] = predict_list
+		df_predict["reason"] = reason_list
+		df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8-sig")

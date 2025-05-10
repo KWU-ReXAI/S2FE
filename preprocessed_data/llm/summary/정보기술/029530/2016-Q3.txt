@@ -1,0 +1,8 @@
+The transcript provided is not related to economics; instead, it discusses advancements in 3D printing technology. Here is a summary of the key points:
+
+- **Traditional FDM 3D Printers**: These printers require sharp tools to remove the printed object, which can be somewhat dangerous.
+
+- **New 3D Printer Model (3DW-DP201)**: 
+  - Developed by Sindoh, this model features a globally patented flexible bed.
+  - The flexible bed allows for the removal of the printed object by simply bending the bed, eliminating the need for sharp tools.
+  - This innovation is expected to be particularly beneficial for the educational market due to its enhanced safety and ease of use.

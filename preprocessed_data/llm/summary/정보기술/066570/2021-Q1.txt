@@ -1,0 +1,23 @@
+**Summary of Key Economic Ideas and Developments in LG Electronics' Robotics Business:**
+
+- **Focus on Robotics as Future Growth Area:**
+  - LG Electronics is intensifying its efforts in the robotics sector, identifying it as a key area for future growth.
+
+- **Trademark Applications:**
+  - The company has recently filed trademarks for "CLOi Sterilization Bot" and "CLOi Guide Bot," indicating a strategic focus on expanding its robotics brand, CLOi.
+
+- **Types of Robots:**
+  - **Sterilization Bot:** Designed for non-contact disinfection tasks to maintain hygiene in specific spaces.
+  - **Guide Bot:** Assists consumers with product purchases and provides guidance.
+
+- **Product Launches and Developments:**
+  - The Sterilization Bot was first unveiled in December at the Korea Electronics Show.
+  - The Guide Bot gained attention during a speech by LG's CTO at the 2019 International Consumer Electronics Show.
+
+- **Expansion of Services:**
+  - LG has launched a delivery service using the CLOi ServeBot to transport goods within buildings, showcasing the practical application of its robotics technology.
+
+- **Future Plans:**
+  - LG Electronics plans to continue developing robotic service solutions that enhance everyday life, indicating a long-term commitment to innovation in this field.
+
+This summary highlights LG Electronics' strategic initiatives and developments in the robotics industry, emphasizing their commitment to leveraging technology for practical applications and future growth.

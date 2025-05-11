@@ -525,8 +525,8 @@ elif args.isall == "cluster":
             df_data = df_data.iloc[::-1].reset_index(drop=True)
             for i in range(0, len(df_data) - 1):
 
-                start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str)
-                end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
+                start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str) # 2024_Q3
+                end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str) # 2024_Q4
 
                 ks200_start_price = get_start_price(df_data.iloc[i + 1, 3], df_data.iloc[i + 1, 4], ticker_str, True)
                 ks200_end_price = get_end_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True)
@@ -574,8 +574,8 @@ elif args.isall == "cluster":
                 start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str)
                 end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str)
 
-                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True)
-                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str, True)
+                ks200_start_price = get_start_price(df_data.iloc[i, 3], df_data.iloc[i, 4], ticker_str, True) # Q3
+                ks200_end_price = get_end_price(df_data.iloc[i - 1, 3], df_data.iloc[i - 1, 4], ticker_str, True) # Q4
                 if start_price == 0 or ks200_start_price == 0:
                     relative_return = 0.0
                 else:

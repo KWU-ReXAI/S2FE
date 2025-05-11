@@ -434,13 +434,53 @@ def add_disclosure_date(file_path, save_path=None):
     df.to_csv(save_path, index=False)
     print(f"저장 완료: {save_path}")
 
+def merge_LLM_date_regression(sector=" "):
+    merged_folder = f"../preprocessed_data/llm/predict/{sector}"
+    output_folder = f"../preprocessed_data/llm/date_regression/{sector}"
+    os.makedirs(output_folder, exist_ok=True)
 
+    file_paths = glob.glob(os.path.join(merged_folder, "*.csv"))
+    if not file_paths:
+        print("merged 폴더 내 CSV 파일이 없습니다.")
+        return
+
+    all_data = []
+    for file in file_paths:
+        try:
+            df = pd.read_csv(file, encoding='utf-8-sig')
+        except Exception as e:
+            print(f"{file} 파일을 읽는 중 오류 발생: {e}")
+            continue
+
+        # 여기서 drop & 컬럼 순서 재정렬
+        df = process_columns(df)
+
+        if 'year' in df.columns and 'quarter' in df.columns:
+            all_data.append(df)
+        else:
+            print(f"{file} 파일에 'year' 또는 'quarter' 컬럼이 없습니다.")
+
+    if not all_data:
+        print("병합할 데이터가 없습니다.")
+        return
+
+    combined_df = pd.concat(all_data, ignore_index=True)
+
+    # 그룹화 이전에 drop & 재정렬을 또 하고 싶다면 이곳에서도 가능
+    # combined_df = process_columns(combined_df)
+
+    groups = combined_df.groupby(['year', 'quarter'])
+    for (year, quarter), group in groups:
+        # 그룹별로도 drop & 재정렬을 적용할 수 있음
+        group = process_columns(group)
+
+        output_file = os.path.join(output_folder, f"{year}_{quarter}.csv")
+        group.to_csv(output_file, index=False, encoding='utf-8-sig')
+        print(f"연도 {year}, 분기 {quarter} 데이터가 {output_file}에 저장되었습니다.")
 
 if __name__ == "__main__":
-    compareFolderAndSymbol(
-        folder_path='./data_kr/merged',
-        symbol_path='./data_kr/symbol.csv'
-    )
+    merge_LLM_date_regression(sector="산업재")
+    merge_LLM_date_regression(sector="정보기술")
 """
 # 198: symbol
 #12 18 13 5 29 5 7 1 13 22 33 14 4 2 1

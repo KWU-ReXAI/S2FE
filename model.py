@@ -130,7 +130,7 @@ class MyModel(nn.Module):
         self.valid_models = {}
         self.sector_models = {}
         if isLLMexperiment: self.cluster_list = self.DM.get_clusters_of_sectors(sector_name)
-        else: self.cluster_list = self.DM.sector_list
+        else: self.cluster_list = self.DM.cluster_list
 
     def recordParameter(self):
         file_path = "./result/train_parameter.csv"
@@ -156,8 +156,8 @@ class MyModel(nn.Module):
         df = pd.concat([df, pd.DataFrame(new_data)], ignore_index=True)
         df.to_csv(file_path, index=False)
 
-    def trainClusterModels(self, withValidation=False):
-        print(f"trainClusterModels ({self.phase}), with validation {withValidation}: ")
+    def trainClusterModels(self, withValidation=False, withLLM=False):
+        print(f"trainClusterModels ({self.phase}), with validation {withValidation}, with LLM {withLLM}:")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
         test_start = self.DM.phase_list[self.phase][2]
@@ -167,7 +167,7 @@ class MyModel(nn.Module):
             f"train: {self.DM.pno2date(train_start)} ~ {self.DM.pno2date(valid_start - 1)} / valid: {self.DM.pno2date(valid_start)} ~ {self.DM.pno2date(test_start - 1)}"
             f" / test: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end - 1)}")
         for sector in self.cluster_list:
-            train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
+            train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering, LLM = withLLM)
             if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
             a, b = train_data.shape[0], train_data.shape[1]
             train_data = train_data.reshape(a * b, -1)
@@ -208,7 +208,7 @@ class MyModel(nn.Module):
     def save_models(self,dir):
         joblib.dump(self,f"{dir}/model.joblib")
 
-    def backtest(self, verbose=True, use_all='SectorAll', agg='inter', inter_n=0.1,withValidation = False, isTest=True, testNum=0, dir=""):  # 백테스팅 수행
+    def backtest(self, verbose=True, use_all='SectorAll', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
         # 과거 데이터를 사용하여 모델의 예측이 실제 시장에서 얼마나 잘 맞았는지를 검증하는 과정
         test_start = self.DM.phase_list[self.phase][2 if withValidation else 1]
@@ -225,7 +225,7 @@ class MyModel(nn.Module):
             all_symbol = pd.read_csv(f"./data_kr/symbol.csv")  # 전체 섹터 데이터 가져옴
 
         for sector in self.cluster_list:  # 저장된 상위 섹터별 데이터를 로드
-            _, _, data_tmp = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
+            _, _, data_tmp = self.DM.data_phase(sector, self.phase, cluster=self.clustering, LLM = withLLM)
             test_data[sector] = data_tmp
 
             symbol_index = pd.read_csv(f"./preprocessed_data/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
@@ -283,7 +283,11 @@ class MyModel(nn.Module):
                             real_last_topK_stock.extend(inter_stocks)
 
                     elif use_all == "Sector":  # Sector인 경우
-                        real_last_topK_stock.extend(topK.index[:2].to_list())  # 상위 2개의 종목을 선택
+                        #real_last_topK_stock.extend(topK.index[:2].to_list())  # 상위 2개의 종목을 선택
+                        cnt = len(topK)
+                        if cnt > 0:
+                            topK = topK[:int(cnt * inter_n)]  # 상위 10% 종목 선택
+                            real_last_topK_stock.extend(topK.index.to_list())
 
             elif use_all == "All":  # 전체 데이터 기반 종목 선택
                 model = self.all_sector_model
@@ -295,7 +299,7 @@ class MyModel(nn.Module):
 
             if use_all == "SectorAll" and agg == 'avg':  # SectorAll 모드에서
                 real_last_topK_stock = stocks.sort_values(ascending=False).index.to_list()[:self.final_stock_k]
-                # 개별 섹터와 전체 섹터 모델의 예측값 평균을 사용하여 종목을 결정
+
             clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)
             idx += 1
             self.final_stock_k = len(real_last_topK_stock)  # 최종적으로 선택된 주식 개수를 저장

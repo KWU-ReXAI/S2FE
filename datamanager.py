@@ -89,8 +89,45 @@ class DataManager:
         except IndexError:
             raise ValueError(f"pno {pno}은 date_list의 범위를 벗어났습니다. date_list 길이: {len(self.date_list)}")
 
+    def get_llm_data(self, cluster_name,strdate):
+        cluster_idx = int(cluster_name.split('_')[-1])
+        filepath = "./preprocessed_data/cluster_result/cluster_result.txt"
 
-    def data_phase(self, sector: str, phase: str, pandas_format=False, cluster=False, isall=False):
+        # 3. 파일에서 클러스터 리스트 로드
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                cluster_list = ast.literal_eval(f.read())
+        except Exception as e:
+            raise RuntimeError(f"클러스터 파일을 읽는 중 오류 발생: {e}")
+
+        # 4. 인덱스 범위 확인 후 반환
+        if cluster_idx < 0 or cluster_idx >= len(cluster_list):
+            raise IndexError(f"cluster_name에서 추출한 인덱스 {cluster_idx}가 범위를 벗어났습니다.")
+
+        sector_list = cluster_list[cluster_idx]
+        result = []
+
+        for sector in sector_list:
+            llm_data = pd.read_csv(f"./preprocessed_data/llm/date_regression/{sector}/{strdate}.csv")
+            llm_data.drop(["year","quarter","disclosure_date","name","sector","reason"], axis=1, inplace=True)
+            result.append(llm_data)
+
+        if result:
+            combined_df = pd.concat(result, ignore_index=True)
+            combined_df.sort_values(by="code", inplace=True)
+            combined_df["prediction"] = combined_df["prediction"].map({
+                "down": -1,
+                "up": 1
+            }).fillna(0)
+            combined_df.drop(["code"],axis=1, inplace=True)
+            return combined_df
+
+
+
+
+
+
+    def data_phase(self, sector: str, phase: str, pandas_format=False, cluster=False, isall=False, LLM = False):
         train_start = self.phase_list[phase][0]
         valid_start = self.phase_list[phase][1]
         test_start = self.phase_list[phase][2]
@@ -163,20 +200,44 @@ class DataManager:
             for pno in range(train_start, valid_start):
                 strdate = self.pno2date(pno)
                 fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
-                fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
-                train_list.append(fs_data)
+                if LLM:
+                    llm_data = self.get_llm_data(sector, strdate)
+                    llm_data.index = fs_data.index
+                label_data = fs_data["Label"]
+                fs_data.drop(["name", "sector", "year", "quarter", "Code","Label"], axis=1, inplace=True)
+                if LLM:
+                    merged_data = pd.concat([fs_data, llm_data, label_data], axis=1)
+                else:
+                    merged_data = pd.concat([fs_data, label_data], axis=1)
+
+                train_list.append(merged_data)
 
             for pno in range(valid_start, test_start):
                 strdate = self.pno2date(pno)
                 fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv", index_col=[0])
-                fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
-                valid_list.append(fs_data)
+                if LLM:
+                    llm_data = self.get_llm_data(sector, strdate)
+                    llm_data.index = fs_data.index
+                label_data = fs_data["Label"]
+                fs_data.drop(["name", "sector", "year", "quarter", "Code", "Label"], axis=1, inplace=True)
+                if LLM:
+                    merged_data = pd.concat([fs_data, llm_data, label_data], axis=1)
+                else:
+                    merged_data = pd.concat([fs_data, label_data], axis=1)
+
+                valid_list.append(merged_data)
 
             for pno in range(test_start, test_end):
                 strdate = self.pno2date(pno)
                 fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv", index_col=[0])
-                fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
-                test_list.append(fs_data)
+                if LLM:
+                    llm_data = self.get_llm_data(sector, strdate)
+                    llm_data.index = fs_data.index
+                label_data = fs_data["Label"]
+                fs_data.drop(["name", "sector", "year", "quarter", "Code", "Label"], axis=1, inplace=True)
+                if LLM: merged_data = pd.concat([fs_data, llm_data, label_data], axis=1)
+                else: merged_data = pd.concat([fs_data,label_data],axis=1)
+                test_list.append(merged_data)
 
             return np.array(train_list), np.array(valid_list), np.array(test_list)
 

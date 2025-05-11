@@ -3,6 +3,7 @@ import pandas as pd
 import torch
 import warnings
 import matplotlib.pyplot as plt
+
 from datamanager import DataManager
 from model import MyModel
 from tqdm import tqdm
@@ -27,6 +28,7 @@ parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE") # 사용할 
 parser.add_argument('--clustering',action="store_true",default=True) # 클러스터링 여부
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 parser.add_argument('--Validation',action="store_true") # 클러스터링 여부
+parser.add_argument('--LLM',action="store_true") # 클러스터링 여부
 
 
 parser.add_argument('--lr_MLP',type=float,nargs='?',default=0.0001) # 0.0001
@@ -68,19 +70,20 @@ for trainNum in range(0, args.testNum):
     if os.path.isdir(dir) == False:
         os.mkdir(dir)
     for phase in tqdm(DM.phase_list):
-        print(f"\nTrain Phase of Model {trainNum+1}: {phase}")
+        print(f"\nTrain Phase of Model {trainNum+1}: {phase}, isLLMexperiment: {args.LLM}")
         if os.path.isdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}") == False:
             os.mkdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}")
         mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
-                          args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden)
+                          args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden
+                          ,isLLMexperiment = True, sector_name = ["산업재","정보기술"])
 
-        mymodel.trainALLSectorModels(withValidation= not args.Validation)
+        #mymodel.trainALLSectorModels(withValidation= not args.Validation)
 
-        mymodel.trainClusterModels(withValidation=not args.Validation)
+        mymodel.trainClusterModels(withValidation=not args.Validation, withLLM =args.LLM)
 
         cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.agg, inter_n=args.inter_n,
-                                                                            use_all=args.use_all, withValidation= not args.Validation,
-                                                                            isTest=False, dir=dir)
+                                                                            use_all="Sector", withValidation= not args.Validation,
+                                                                            isTest=False, dir=dir,withLLM = args.LLM)
 
         result[phase] = {
             "CAGR": cagr,

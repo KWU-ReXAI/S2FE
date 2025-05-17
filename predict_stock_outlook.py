@@ -570,7 +570,7 @@ if __name__ == "__main__":
 					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 					log_file.write(f"{timestamp} predict error: {predict_dir + f'{row.year}-{row.quarter}'}\n")
 
-		df_predict = df_[["year", "quarter", "disclosure_date", "code", "name", "sector"]]
 		df_predict["prediction"] = predict_list
 		df_predict["reason"] = reason_list
+		df_predict = df_[["year", "quarter", "upload_date", "disclosure_date", "code", "name", "sector", "prediction", "reason"]]
 		df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8-sig")

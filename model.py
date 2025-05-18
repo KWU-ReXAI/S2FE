@@ -208,7 +208,7 @@ class MyModel(nn.Module):
     def save_models(self,dir):
         joblib.dump(self,f"{dir}/model.joblib")
 
-    def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, isIntersect = False):  # 백테스팅 수행
+    def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, LLMagg = "False"):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
         # 과거 데이터를 사용하여 모델의 예측이 실제 시장에서 얼마나 잘 맞았는지를 검증하는 과정
         test_start = self.DM.phase_list[self.phase][2 if withValidation else 1]
@@ -261,9 +261,17 @@ class MyModel(nn.Module):
                 up_code = self.DM.get_only_up_code(strdate, sector)
                 cnt = len(topK)
                 topK = topK[:int(cnt * inter_n)]  # 상위 10% 종목 선택
-                if isIntersect:
-                    topK = topK[topK.index.isin(up_code)]
-                real_last_topK_stock.extend(topK.index.to_list())
+                if LLMagg == "inter":
+                    # 교집합: topK와 up_code 모두에 있는 종목만
+                    selected = topK[topK.index.isin(up_code)].index.to_list()
+                elif LLMagg == "union":
+                    # 합집합: topK와 up_code의 모든 종목
+                    selected = list(set(topK.index.to_list()) | set(up_code))
+                else:
+                    # 기본: topK만
+                    selected = topK.index.to_list()
+
+                real_last_topK_stock.extend(selected)
 
             clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)
             idx += 1

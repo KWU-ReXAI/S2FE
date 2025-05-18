@@ -116,13 +116,24 @@ class DataManager:
             combined_df = pd.concat(result, ignore_index=True)
             combined_df.sort_values(by="code", inplace=True)
             combined_df["prediction"] = combined_df["prediction"].map({
-                "down": -1,
+                "down": 0,
                 "up": 1
             }).fillna(0)
             combined_df.drop(["code"],axis=1, inplace=True)
             return combined_df
 
+    def get_only_up_code(self, strdate,sector):
+        filepath = f"./preprocessed_data/llm/date_regression/{sector}/{strdate}.csv"
 
+        if not os.path.exists(filepath):
+            return []
+
+        df = pd.read_csv(filepath)
+
+        # 'predict' 열이 'up'인 경우만 필터링
+        df_up = df[df["prediction"] == "up"]
+
+        return df_up["code"].tolist()
 
 
 

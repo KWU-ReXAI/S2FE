@@ -478,9 +478,45 @@ def merge_LLM_date_regression(sector=" "):
         group.to_csv(output_file, index=False, encoding='utf-8-sig')
         print(f"연도 {year}, 분기 {quarter} 데이터가 {output_file}에 저장되었습니다.")
 
+
+def merge_all_sectors_to_date_regression(base_merged_folder="../preprocessed_data/llm/predict",
+                                          output_folder="../preprocessed_data/llm/date_regression/cluster_1"):
+    os.makedirs(output_folder, exist_ok=True)
+
+    # 모든 섹터 폴더의 모든 CSV 수집
+    all_csv_files = glob.glob(os.path.join(base_merged_folder, "*", "*.csv"))
+    if not all_csv_files:
+        print("병합할 CSV 파일이 없습니다.")
+        return
+
+    all_data = []
+    for file in all_csv_files:
+        try:
+            df = pd.read_csv(file, encoding='utf-8-sig')
+            df = process_columns(df)
+            if 'year' in df.columns and 'quarter' in df.columns:
+                all_data.append(df)
+            else:
+                print(f"{file} → 'year' 또는 'quarter' 컬럼이 없습니다.")
+        except Exception as e:
+            print(f"{file} → 파일 읽는 중 오류 발생: {e}")
+
+    if not all_data:
+        print("유효한 데이터가 없습니다.")
+        return
+
+    # 모든 섹터의 데이터 하나로 병합
+    combined_df = pd.concat(all_data, ignore_index=True)
+
+    # 연도/분기별로 그룹화하여 저장
+    groups = combined_df.groupby(['year', 'quarter'])
+    for (year, quarter), group in groups:
+        group = process_columns(group)
+        output_file = os.path.join(output_folder, f"{year}_{quarter}.csv")
+        group.to_csv(output_file, index=False, encoding='utf-8-sig')
+        print(f"✓ 연도 {year}, 분기 {quarter} 데이터가 {output_file}에 저장되었습니다.")
 if __name__ == "__main__":
-    merge_LLM_date_regression(sector="산업재")
-    merge_LLM_date_regression(sector="정보기술")
+    merge_all_sectors_to_date_regression()
 """
 # 198: symbol
 #12 18 13 5 29 5 7 1 13 22 33 14 4 2 1

@@ -208,7 +208,7 @@ class MyModel(nn.Module):
     def save_models(self,dir):
         joblib.dump(self,f"{dir}/model.joblib")
 
-    def backtest(self, verbose=True, use_all='SectorAll', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False):  # 백테스팅 수행
+    def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, isIntersect = False):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
         # 과거 데이터를 사용하여 모델의 예측이 실제 시장에서 얼마나 잘 맞았는지를 검증하는 과정
         test_start = self.DM.phase_list[self.phase][2 if withValidation else 1]
@@ -252,53 +252,18 @@ class MyModel(nn.Module):
             stocks = pd.Series()  # 모든 섹터에서 선택된 주식을 저장
             real_last_topK_stock = []  # 최종적으로 선택된 상위 주식 저장
 
-            if use_all == "Sector" or use_all == "SectorAll":  # SectorAll or Sector일 경우
-                for sector in self.cluster_list:  # 선택된 섹터별로 종목을 추천
+            for sector in self.cluster_list:  # 선택된 섹터별로 종목을 추천
 
-                    model = self.sector_models[sector]
-                    topK = model.predict(torch.Tensor(test_data[sector]).to(self.device)[i, :, :-1],
-                                         symbols[sector])
+                model = self.sector_models[sector]
+                topK = model.predict(torch.Tensor(test_data[sector]).to(self.device)[i, :, :-1],
+                                     symbols[sector])
 
-                    if use_all == "SectorAll":  # SectorAll 모드: 전체 섹터 모델 활용, 전체 섹터 데이터를 기반으로 종목을 추천
-                        self.all_sector_model.anfis = self.all_sector_model.anfis.type(torch.float64)
-                        model = self.all_sector_model
-                        if not isinstance(all_data, torch.Tensor):
-                            all_data = torch.Tensor(all_data).to(self.device)
-                        top_all = model.predict(all_data[i, :, :-1], all_symbol["code"])
-
-                        inter_symbol = top_all.index.intersection(topK.index)  # 각 섹터의 모델 예측값과 전체 섹터 모델의 예측값을 조합
-
-                        if agg == 'avg':
-                            stocks = pd.concat([stocks, topK + top_all[inter_symbol]])
-                        elif agg == 'inter':
-                            if inter_n < 1:
-                                cnt = len(topK)
-                                topK = topK[:int(cnt * inter_n)]
-                                top_all = top_all[inter_symbol][:int(cnt * inter_n)]
-                            else:
-                                topK = topK[:inter_n]
-                                top_all = top_all[inter_symbol][:inter_n]
-
-                            inter_stocks = top_all.index.intersection(topK.index).to_list()
-                            real_last_topK_stock.extend(inter_stocks)
-
-                    elif use_all == "Sector":  # Sector인 경우
-                        #real_last_topK_stock.extend(topK.index[:2].to_list())  # 상위 2개의 종목을 선택
-                        cnt = len(topK)
-                        if cnt > 0:
-                            topK = topK[:int(cnt * inter_n)]  # 상위 10% 종목 선택
-                            real_last_topK_stock.extend(topK.index.to_list())
-
-            elif use_all == "All":  # 전체 데이터 기반 종목 선택
-                model = self.all_sector_model
-                if not isinstance(all_data, torch.Tensor):
-                    all_data = torch.Tensor(all_data).to(self.device)
-                top_all = model.predict(all_data[i, :, :-1], all_symbol["code"])
-
-                real_last_topK_stock.extend(top_all.index[:self.final_stock_k].to_list())  # 최종 상위 k 개의 주식을 선택 및 추가
-
-            if use_all == "SectorAll" and agg == 'avg':  # SectorAll 모드에서
-                real_last_topK_stock = stocks.sort_values(ascending=False).index.to_list()[:self.final_stock_k]
+                up_code = self.DM.get_only_up_code(strdate, sector)
+                cnt = len(topK)
+                topK = topK[:int(cnt * inter_n)]  # 상위 10% 종목 선택
+                if isIntersect:
+                    topK = topK[topK.index.isin(up_code)]
+                real_last_topK_stock.extend(topK.index.to_list())
 
             clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)
             idx += 1

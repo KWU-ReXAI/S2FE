@@ -432,54 +432,55 @@ def get_video_datas(channel_name, min_view_cnt):
 		os.makedirs(f'{dir}/{year_quarter}', exist_ok=True)
 		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{year_quarter}/{year_quarter}.csv', index=False)
     
-if __name__ == "__main__":    
-    df_f = pd.read_csv("data_kr/video/동영상 수집 통합본_final.csv")
-    df_o = pd.read_csv("data_kr/video/동영상 수집 통합본_origin.csv")
-    
-    
-    
-    # ### 오디오 다운로드 ###
-	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
-	# for row in df.itertuples():
-	# 	if pd.isna(row.url) or row.url == '':
-	# 		continue
-
-	# 	code = str(row.code).zfill(6)
-	# 	audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
-	# 	text_dir = f'data_kr/video/text/{row.sector}/{code}/'
-	# 	os.makedirs(audio_dir, exist_ok=True)
-
-	# 	if extract_video_audio("link", row.url, audio_dir + f'{row.year}-{row.quarter}'):
-	# 		with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
-	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-	# 			log_file.write(f"{timestamp} audio download completed: {audio_dir + f'{row.year}-{row.quarter}'}\n")
-	# 	else:
-	# 		with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
-	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-	# 			log_file.write(f"{timestamp} audio download error: {audio_dir + f'{row.year}-{row.quarter}'}\n")
+if __name__ == "__main__":
+	df = pd.read_csv("data_kr/video/수정된 종목들.csv")
 	
-	# ### 텍스트로 변환 ###
-	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
-	# for row in df.itertuples():
-	# 	if pd.isna(row.url) or row.url == '':
-	# 		continue
+	### 오디오 다운로드 ###
+	for row in df.itertuples():
+		if pd.isna(row.url) or row.url == '' or row.category != "video":
+			continue
 
-	# 	code = str(row.code).zfill(6)
-	# 	audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
-	# 	text_dir = f'data_kr/video/text/{row.sector}/{code}/'
-	# 	os.makedirs(text_dir, exist_ok=True)
+		code = str(row.code).zfill(6)
+		audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
+		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+		os.makedirs(audio_dir, exist_ok=True)
+
+		if audio_dir + f'{row.year}-{row.quarter}' != 'data_kr/video/audio/산업재/003490/2016-Q2':
+			continue
 		
-	# 	try:
-	# 		text = audio2text(audio_dir + f'{row.year}-{row.quarter}')
-	# 		with open(text_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
-	# 			f.write(text)
-	# 		with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
-	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-	# 			log_file.write(f"{timestamp} whisper completed: {text_dir + f'{row.year}-{row.quarter}'}\n")
-	# 	except Exception as e:
-	# 		with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
-	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-	# 			log_file.write(f"{timestamp} whisper error: {text_dir + f'{row.year}-{row.quarter}'}\n")
+		if extract_video_audio("link", row.url, audio_dir + f'{row.year}-{row.quarter}'):
+			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} audio download completed: {audio_dir + f'{row.year}-{row.quarter}'}\n")
+		else:
+			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} audio download error: {audio_dir + f'{row.year}-{row.quarter}'}\n")
+	
+	### 텍스트로 변환 ###
+	for row in df.itertuples():
+		if pd.isna(row.url) or row.url == '' or row.category != "video":
+			continue
+
+		code = str(row.code).zfill(6)
+		audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
+		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+		os.makedirs(text_dir, exist_ok=True)
+		
+		if audio_dir + f'{row.year}-{row.quarter}' != 'data_kr/video/audio/산업재/003490/2016-Q2':
+			continue
+		
+		try:
+			text = audio2text(audio_dir + f'{row.year}-{row.quarter}')
+			with open(text_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
+				f.write(text)
+			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} whisper completed: {text_dir + f'{row.year}-{row.quarter}'}\n")
+		except Exception as e:
+			with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
+				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+				log_file.write(f"{timestamp} whisper error: {text_dir + f'{row.year}-{row.quarter}'}\n")
 
 	# ### 텍스트 token 수 확인  ###
 	# import tiktoken
@@ -487,7 +488,6 @@ if __name__ == "__main__":
 	# encoding = tiktoken.encoding_for_model("gpt-4")
 	# total_tokens = 0
 
-	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
 	# for row in df.itertuples():
 	# 	if pd.isna(row.url) or row.url == '':
 	# 		continue
@@ -514,7 +514,6 @@ if __name__ == "__main__":
 	# 	log_file.write(f"total tokens: {total_tokens}\n")
 
 	# ### LLM으로 영상 자막 요약 ###
-	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
 	# for row in tqdm(df.itertuples(), total=len(df), desc="LLM summarizing"):
 	# 	if pd.isna(row.url) or row.url == '':
 	# 		continue
@@ -539,7 +538,6 @@ if __name__ == "__main__":
 	# 			log_file.write(f"{timestamp} summary error: {summary_dir + f'{row.year}-{row.quarter}'}\n")
 
 	# ### LLM으로 자막요약을 통해 등락 예측 ###
-	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
 	# for code in df["code"].unique():
 	# 	df_ = df[df["code"] == code].reset_index(drop=True)
 		

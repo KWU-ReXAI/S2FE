@@ -16,13 +16,14 @@ def crawling_news(url: str):
 def save_news(row):
 	if pd.isna(row.text):
 		return
-	news_path = f"{base_url}/text/{row.sector}/{row.code}/{row.year}-{row.quarter}.txt"
+	news_path = f"{base_url}/text/{row.sector}/{str(int(row.code)).zfill(6)}/{int(row.year)}-{row.quarter}.txt"
 	with open(news_path, "w") as file:
 		file.write(row.text)
+	print(f"{row.year}-{row.quarter} {row.name} 추출 완료")
 
 df = pd.read_csv(f"{base_url}/merged.csv")
 
-df[['text', 'upload_date']] = df.apply(lambda row: pd.Series(crawling_news(row['url']))
+df[['text', 'upload_dt']] = df.apply(lambda row: pd.Series(crawling_news(row['url']))
 	if row['category'] == 'article' else pd.Series([pd.NA, pd.NA]), axis=1)
 
 df.apply(save_news, axis=1)

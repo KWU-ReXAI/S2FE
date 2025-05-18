@@ -433,6 +433,11 @@ def get_video_datas(channel_name, min_view_cnt):
 		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{year_quarter}/{year_quarter}.csv', index=False)
     
 if __name__ == "__main__":    
+    df_f = pd.read_csv("data_kr/video/동영상 수집 통합본_final.csv")
+    df_o = pd.read_csv("data_kr/video/동영상 수집 통합본_origin.csv")
+    
+    
+    
     # ### 오디오 다운로드 ###
 	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
 	# for row in df.itertuples():
@@ -533,44 +538,44 @@ if __name__ == "__main__":
 	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 	# 			log_file.write(f"{timestamp} summary error: {summary_dir + f'{row.year}-{row.quarter}'}\n")
 
-	### LLM으로 자막요약을 통해 등락 예측 ###
-	df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
-	for code in df["code"].unique():
-		df_ = df[df["code"] == code].reset_index(drop=True)
+	# ### LLM으로 자막요약을 통해 등락 예측 ###
+	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
+	# for code in df["code"].unique():
+	# 	df_ = df[df["code"] == code].reset_index(drop=True)
 		
-		predict_list = []
-		reason_list = []
+	# 	predict_list = []
+	# 	reason_list = []
 
-		for row in tqdm(df_.itertuples(), total=len(df_), desc=f"{code}LLM predicting"):
-			if pd.isna(row.url) or row.url == '':
-				predict_list.append(None)
-				reason_list.append(None)
-				continue
+	# 	for row in tqdm(df_.itertuples(), total=len(df_), desc=f"{code}LLM predicting"):
+	# 		if pd.isna(row.url) or row.url == '':
+	# 			predict_list.append(None)
+	# 			reason_list.append(None)
+	# 			continue
 			
-			code = str(row.code).zfill(6)	
-			name = row.name
-			summary_dir = f'preprocessed_data/llm/summary/{row.sector}/{code}/'
-			predict_dir = f'preprocessed_data/llm/predict/{row.sector}/'
-			os.makedirs(predict_dir, exist_ok=True)
+	# 		code = str(row.code).zfill(6)	
+	# 		name = row.name
+	# 		summary_dir = f'preprocessed_data/llm/summary/{row.sector}/{code}/'
+	# 		predict_dir = f'preprocessed_data/llm/predict/{row.sector}/'
+	# 		os.makedirs(predict_dir, exist_ok=True)
 
-			try:
-				with open(summary_dir + f'{row.year}-{row.quarter}.txt', "r", encoding="utf-8") as file:
-					summary = file.read()
-				data = predict_market_from_summary(summary, f'{name}({code})')
-				predict = data.split('\n')[0].split(':')[1].strip()
-				reason = data.split('\n')[1].split(':')[1].strip()
-				predict_list.append(predict)
-				reason_list.append(reason)
+	# 		try:
+	# 			with open(summary_dir + f'{row.year}-{row.quarter}.txt', "r", encoding="utf-8") as file:
+	# 				summary = file.read()
+	# 			data = predict_market_from_summary(summary, f'{name}({code})')
+	# 			predict = data.split('\n')[0].split(':')[1].strip()
+	# 			reason = data.split('\n')[1].split(':')[1].strip()
+	# 			predict_list.append(predict)
+	# 			reason_list.append(reason)
 				
-				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
-					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-					log_file.write(f"{timestamp} predict completed: {predict_dir + f'{row.year}-{row.quarter}'}\n")
-			except Exception as e:
-				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
-					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-					log_file.write(f"{timestamp} predict error: {predict_dir + f'{row.year}-{row.quarter}'}\n")
+	# 			with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
+	# 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 				log_file.write(f"{timestamp} predict completed: {predict_dir + f'{row.year}-{row.quarter}'}\n")
+	# 		except Exception as e:
+	# 			with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
+	# 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 				log_file.write(f"{timestamp} predict error: {predict_dir + f'{row.year}-{row.quarter}'}\n")
 
-		df_predict["prediction"] = predict_list
-		df_predict["reason"] = reason_list
-		df_predict = df_[["year", "quarter", "upload_date", "disclosure_date", "code", "name", "sector", "prediction", "reason"]]
-		df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8-sig")
+	# 	df_predict["prediction"] = predict_list
+	# 	df_predict["reason"] = reason_list
+	# 	df_predict = df_[["year", "quarter", "upload_date", "disclosure_date", "code", "name", "sector", "prediction", "reason"]]
+	# 	df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8-sig")

@@ -13,7 +13,7 @@ plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-def xai(testNum=5, cluster_n=5, train_dir="train_result_dir", xai_dir="xai_tmp_result_dir"):
+def xai_value(testNum=5, cluster_n=5, train_dir="train_result_dir", xai_dir="xai_result_dir"):
     DM = DataManager(features_n=6,cluster_n=cluster_n)
     DM.create_date_list()
     phase_list = DM.phase_list.keys()
@@ -61,12 +61,11 @@ def xai(testNum=5, cluster_n=5, train_dir="train_result_dir", xai_dir="xai_tmp_r
                 explainer_anfis = shap.GradientExplainer(sector_model.anfis, torch.Tensor(data).to(sector_model.device))
                 explainer_rf = shap.TreeExplainer(sector_model.rf, data)
 
-                shap_values_mlp = explainer_mlp.shap_values(torch.Tensor(data).to(sector_model.device), check_additivity=False)
+                shap_values_mlp = explainer_mlp.shap_values(torch.Tensor(data).to(sector_model.device), check_additivity=True)
                 shap_values_anfis = explainer_anfis.shap_values(torch.Tensor(data).to(sector_model.device))
-                shap_values_rf = explainer_rf.shap_values(data, check_additivity=False)
+                shap_values_rf = explainer_rf.shap_values(data, check_additivity=True)
 
                 shap_values = shap_values_mlp[:, :, 0] + shap_values_anfis[:, :, 0] + shap_values_rf
-                shap_values /= 3
                 phase_shap.append(shap_values)
 
             if num == 1:
@@ -93,22 +92,61 @@ def xai(testNum=5, cluster_n=5, train_dir="train_result_dir", xai_dir="xai_tmp_r
         if not os.path.isdir(sector_dir):
             os.mkdir(sector_dir)
         for phase in range(len(phase_list)):
-            # 각 column 간의 피어슨 상관계수 계산
-            # df_shap = pd.DataFrame(sectors_shap[idx][phase])
-            # df_data = pd.DataFrame(data_list[idx][phase])
-            # df_shap.columns = feature_names[idx]
-            # df_data.columns = feature_names[idx]
-            # correlations = df_shap.corrwith(df_data)
-            # correlations.to_csv(f"{sector_dir}/phase_{phase+1}_shap_feature_correlations.csv")
-
             # plot 작성
-            shap.plots.violin(shap_values=sectors_shap[idx][phase], features=data_list[idx][phase], feature_names=feature_names[idx], show=False, color_bar=False)
+            np.save(f"{sector_dir}/phase{phase+1}", sectors_shap[idx][phase])
+            shap.plots.violin(shap_values=sectors_shap[idx][phase], features=data_list[idx][phase],
+                              feature_names=feature_names[idx], show=False)
             plt.title(f"Analysis for {sector} Phase {phase+1}")
             plt.savefig(f"{sector_dir}/phase_{phase+1}.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
             plt.clf()
+        # all phase
+        all_shap_value = np.concatenate(sectors_shap[idx], axis=0)
+        all_features = np.concatenate(data_list[idx], axis=0)
+        np.save(f"{sector_dir}/phaseAll", all_shap_value)
+        shap.plots.violin(shap_values=all_shap_value, features=all_features,
+                          feature_names=feature_names[idx], show=False)
+        plt.title(f"Analysis for {sector}")
+        plt.savefig(f"{sector_dir}/phase_All.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
+        plt.clf()
+
+def xai_edited_plot(cluster_n=5, xai_dir="xai_result_dir"):
+    DM = DataManager(features_n=6, cluster_n=cluster_n)
+    DM.create_date_list()
+    phase_list = DM.phase_list.keys()
+
+    dir = f"./result/{xai_dir}"
+    if not os.path.isdir(dir):
+        os.mkdir(dir)
+
+    for sector in ["ALL"] + DM.cluster_list:
+        cluster_dir = f"{dir}/{sector}"
+        if not os.path.isdir(dir):
+            raise Exception('먼저 전체 plot을 출력하십시오.')
+        column_path = f"./preprocessed_data/{sector}/{sector}_feature_imp.csv"
+        df = pd.read_csv(column_path, index_col=0 if sector == "ALL" else 1)
+        feature_names = df.index.tolist()
+        feature_names.insert(0, "Relative Return")  # RR 제외하고 feature selection 했을 때
+        for idx, phase in enumerate(phase_list):
+            _, _, test_tmp = DM.data_phase(sector, phase)
+            test_data = test_tmp.reshape(test_tmp.shape[0] * test_tmp.shape[1], -1)
+            data = test_data[:, :-1]
+            shap_v = np.load(f"{cluster_dir}/phase{idx+1}.npy")
+
+            if sector == "cluster_4" and idx == 3:
+                indices = [1, 5]
+                selected = [feature_names[i] for i in indices]
+                shap.plots.violin(shap_values=shap_v[:, [1,5]], features=data[:, [1,5]],
+                                  feature_names=selected, show=False)
+                # plt.title()
+                plt.savefig(f"sample_result.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
+                plt.clf()
+
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--testNum', type=int, nargs='?', default=5)
     args = parser.parse_args()
-    xai(testNum=args.testNum)
+    # xai_value(testNum=args.testNum)
+    xai_edited_plot()

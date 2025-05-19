@@ -531,7 +531,7 @@ if __name__ == "__main__":
 	# 	os.makedirs(summary_dir, exist_ok=True)
 
 	# 	if row.category == "article":
-	# 		shutil.copy(f'{text_dir}/{row.year}-{row.quarter}.txt', summary_dir)
+	# 		shutil.copy(f'{text_dir}{row.year}-{row.quarter}.txt', summary_dir)
 	# 		continue
 			
 	# 	try:
@@ -578,11 +578,11 @@ if __name__ == "__main__":
 				
 				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
 					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-					log_file.write(f"{timestamp} predict completed: {predict_dir + f'{row.year}-{row.quarter}'}\n")
+					log_file.write(f"{timestamp} predict completed: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
 			except Exception as e:
 				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
 					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-					log_file.write(f"{timestamp} predict error: {predict_dir + f'{row.year}-{row.quarter}'}\n")
+					log_file.write(f"{timestamp} predict error: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
 
 		df_predict = df_.copy()
 		df_predict["prediction"] = predict_list

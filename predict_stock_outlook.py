@@ -321,8 +321,13 @@ Your task is to assess how this content could potentially affect the stock price
 - You must **NOT use any prior knowledge** about the company, its stock, industry, or any real-world information outside of the summary.
 - **Only use the summary provided below** to make your judgment.
 - Determine whether the summary logically implies a positive or negative.
-- You MUST choose one and only one of the three options: "up" or "down" (in English, lowercase).
+- You MUST choose one and only one of the two options: "up" or "down" (in English, lowercase).
 - The reason must be written in Korean.
+
+If the summary does not contain any information relevant to stock price movement,  
+you MUST still choose "down",
+and explain that the information is insufficient but a default judgment was made.
+
 
 Respond in the following format (in Korean):
 결과: [up/down]

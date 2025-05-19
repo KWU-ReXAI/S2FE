@@ -1,43 +1,19 @@
-**Summary of Key Economic Ideas and Arguments:**
+[딜사이트 이소영 기자] 한미반도체가 400억원의 규모 자기 주식 취득 신탁계약을 체결했다고 12일 밝혔다. 계약기간은 오늘부터 2025년 5월 12일까지며 계약체결기관은 삼성증권이다.
 
-1. **Exchange Rate and Stock Market Impact:**
-   - The exchange rate is currently at 1,407 won, which is considered high.
-   - A high exchange rate can negatively impact stock prices.
 
-2. **Samsung and TSMC Collaboration:**
-   - Samsung Electronics is collaborating with TSMC to develop HBM4.
-   - This partnership highlights the business principle that there are no permanent allies or enemies, only financial interests.
 
-3. **Samsung's Equipment Strategy:**
-   - Samsung is considering diversifying its equipment suppliers beyond its subsidiary, CEMES.
-   - Potential new suppliers include Hanmi Semiconductor and ASMPT.
 
-4. **SK Hynix's Advancements:**
-   - SK Hynix has developed HBM3e with 16 layers, leading the market.
-   - They are also working on hybrid bonding technology for future HBM4E.
 
-5. **Micron's Strategy:**
-   - Micron is adopting Hanmi Semiconductor's equipment, improving their HBM yield significantly.
-   - They are also considering ASMPT equipment for further advancements.
+한미반도체 관계자는 "이번 자사주 취득 신탁계약은 주주가치 제고와 인공지능 반도체 시장의 성장과 함께 한미반도체 미래 가치에 대한 자신감을 바탕으로 내린 결정"이라고 설명했다.
 
-6. **Samsung's Internal Changes:**
-   - Samsung is undergoing organizational restructuring, which may lead to changes in their equipment strategy.
-   - They are focusing on enhancing the competitiveness of their logic die in HBM.
 
-7. **Technological Developments:**
-   - Samsung is working on 4th generation 10nm DRAM and HBM4 logic die.
-   - They are also exploring hybrid bonding technology with Dutch company BESI.
 
-8. **Market Competition and Strategy:**
-   - Samsung is facing increased competition from SK Hynix and Micron.
-   - They are expanding their supplier network and technology partnerships to stay competitive.
 
-9. **Policy Suggestions for Economic Stability:**
-   - The speaker suggests policy changes like mandatory share buyback cancellations and tax reforms to strengthen the domestic capital market.
-   - These changes aim to improve the resilience of South Korean companies and the stock market.
 
-10. **Current Market Challenges:**
-    - Both Samsung and Hyundai have seen significant stock price declines.
-    - The speaker emphasizes the need for strategic adjustments to navigate the current economic environment.
+한미반도체는 2022년 500억원, 2023년 300억원에 이어 올해 2000억원까지 최근 3년 동안 총 2800억원 규모의 자사주 취득 신탁계약을 체결했다. 최근 3년 동안 자사주 약 192만6120주(장부가액 기준 약 400억원)를 소각하며 주주가치 제고를 위해 지속적으로 실천하고 있다.
 
-This summary captures the main points and logical structure of the video, focusing on the economic ideas, arguments, and examples discussed.
+
+
+
+
+곽동신 한미반도체 대표이사 부회장은 "한미반도체는 SK하이닉스와 미국 마이크론 테크놀지의 고대역폭 메모리(HBM) 생산용 열압착(TC) 본더의 주력 메인 공급사로서 고객사와 친밀하게 협력을 하고 있다"며 "끊임없는 노력과 기술력을 바탕으로 고객만족을 극대화해 세계 점유율 1위 지위를 굳건히 유지하고 있다"고 밝혔다.

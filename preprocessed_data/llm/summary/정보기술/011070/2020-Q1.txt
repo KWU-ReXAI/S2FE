@@ -1,24 +1,23 @@
-**Summary of Key Economic Ideas and Arguments:**
+"글로벌 1등 제품으로 시장 선도"
 
-1. **Stock Analysis of LG Innotek:**
-   - The video discusses the stock performance of LG Innotek, noting a recent decline of 0.73% to 136,500 KRW per share after two days of gains.
-   - The gains were attributed to purchases by foreign investors and institutions, while the current decline is not due to significant selling pressure.
+서울 마곡 LG사이언스파크에 위치한 LG이노텍 본사
 
-2. **Historical Performance and Investment Strategy:**
-   - LG Innotek's stock had previously fallen to 75,000 KRW but has since risen by approximately 70-80%.
-   - The speaker suggests that buying at the low point would have been advantageous, similar to a successful investment example involving Hyundai Motor Company by Vice Chairman Jeong Il-sun.
+LG이노텍이 "기판소재사업을 핵심 성장동력으로 키우겠다"고 11일 밝혔다.
 
-3. **Current Market Conditions and Recommendations:**
-   - The speaker advises against aggressive buying at the current price level, as the stock has nearly returned to pre-COVID levels.
-   - For stocks with visible strong performance, like Inseon ENT, aggressive betting is recommended, but for LG Innotek, a more cautious approach is suggested.
+LG이노텍 기판소재사업부는 반도체 패키지나 디스플레이 패널용 기판소재부품을 생산한다. 통신용 반도체 기판, 디스플레이용 테이프 서브스트레이트, 포토마스크 등이 주요 제품이다.
 
-4. **Technical Analysis and Buying Strategy:**
-   - The speaker recommends waiting for the stock to reach the 21-day moving average price of approximately 129,500 KRW before purchasing.
-   - The current price is 137,000 KRW, and waiting for a dip to the moving average is advised for a more strategic entry point.
+회사 1분기 매출 2조109억원 중 기판소재사업 매출은 2897억원이다. 전사 매출의 14% 수준이지만 전년 동기보다 13% 늘었다. LG이노텍은 1분기 흑자전환(영업이익 1380억원) 배경으로 기판소재사업 선전을 꼽고 있다.
 
-5. **Sector and Company Evaluation:**
-   - LG Innotek is highlighted as the best company within LG Group's IT and electronics sector, making it a favorable investment choice.
-   - The speaker emphasizes the importance of timing, suggesting that buying at the 21-day moving average price is a reasonable strategy.
+기판소재사업부 대표 제품 RF-SiP(Radio Frequency- System in Package), 테이프 서브스트레이트, 포토마스크 등은 글로벌 1등 제품이다.
 
-**Conclusion:**
-- The video provides a detailed analysis of LG Innotek's stock, recommending a cautious investment approach by waiting for a more favorable price point based on technical indicators. The company is recognized as a strong player within its sector, but strategic timing is emphasized for potential investors.
+모바일·IoT 통신용 반도체 기판인 RF-SiP는 스마트폰·웨어러블의 통신칩·AP 등을 메인 기판과 연결해 전기신호를 전달한다. 기기 슬림·고성능·대용량화에 맞춘 고부가 제품이다. 연평균 매출 성장률은 40%다. 5G 및 폴더블폰 확산, 반도체 메모리 용량 증가로 첨단 반도체 기판 수요는 확대될 전망이다. 지난해 이 제품의 글로벌 시장 점유율은 32%다. 2018년부터 1위다.
+
+테이프 서브스트레이트는 디스플레이 패널과 메인 기판 사이 전기 신호를 전달하는 얇은 테이프 형태 부품이다. 지난해 글로벌 시장 점유율 40%를 차지했다. 2009년부터 글로벌 1위다. 포토마스크는 미세회로가 새겨진 차단막이다. 패널에 빛을 쪼여 회로를 새길 때 사용한다. 이 제품도 지난해 글로벌 시장 점유율 33%를 차지했다. 2000년부터 글로벌 1위다. 테이프 서브스트레이트와 포토마스크 모두 디스플레이용 핵심 부품이다. OLED 적용이 늘면서 이들 부품 수요는 매년 증가세다.
+
+LG이노텍은 "기판소재사업 호조세가 당분간 이어질 것"이라며 "통신용 반도체 기판은 독자 고집적·미세회로 기술을 확보하며 경쟁사와 기술 격차를 크게 벌렸다"고 밝혔다. 이어 "테이프 서브스트레이트는 핵심 기술을 갖춘 업체가 적어 공급 부족 현상이 계속되고 있다"며 "포토마스크도 대규모 설비 투자와 높은 기술력이 요구돼 진입 장벽이 높다"고 덧붙였다.
+
+회사는 체질도 개선하고 있다. 지난해 11월에는 사업 효율화 차원에서 스마트폰 주기판(HDI) 사업에서 철수했다. HDI 사업은 주요 고객사인 LG전자 스마트폰 시장 점유율 하락 및 중국 업체의 저가 공세로 적자가 이어졌다.
+
+LG이노텍은 지난 3년 간 반도체 기판, 대형 디스플레이 패널용 포토마스크, 차세대 테이프 서브스트레이트 등 설비에 투자하며 생산역량을 강화했다. 한국 산업기술진흥원에 따르면 지난해 LG이노텍은 국내 연구개발(R&D) 투자 상위 100대 기업 중 12위를 차지했다.
+
+저작권자 © 전자부품 전문 미디어 디일렉 무단전재 및 재배포 금지

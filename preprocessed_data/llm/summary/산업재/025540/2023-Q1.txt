@@ -1,41 +1,5 @@
-### Summary of Key Economic Ideas and Arguments:
+전기전자업
 
-1. **Market Conditions and Economic Outlook:**
-   - The current market atmosphere is described as "chilly," but not negatively so. The speaker anticipates that the adjustments made in the first quarter will benefit the market in the latter half of the year.
+< 저작권자 ⓒ 서울경제, 무단 전재 및 재배포 금지 >
 
-2. **Electric Vehicle (EV) Sector:**
-   - The focus is on the electric vehicle sector, particularly Hyundai's progress.
-   - Hyundai has surpassed 4 million cumulative sales of electric vehicles, including pure electric, plug-in hybrid, and hybrid models, since 2009.
-   - The company plans to sell 3.64 million electric vehicles annually by 2030, with 31 different models.
-
-3. **Hyundai's Performance and Strategy:**
-   - Hyundai's first-quarter performance exceeded expectations, surpassing Samsung Electronics in operating profit.
-   - The company is focusing on expanding in emerging markets like India and established markets like the U.S.
-   - Hyundai's global factory utilization rate is nearing 95%, excluding China, where its market share has dwindled to 1%.
-
-4. **Supply Chain and Production Challenges:**
-   - The automotive industry faced semiconductor shortages, affecting production. However, demand remains strong, and Hyundai plans to increase production by 21% compared to the previous year.
-
-5. **Investment Opportunities:**
-   - The speaker highlights the potential in the automotive connector sector, specifically mentioning Korea Electric Terminal as a company to watch.
-   - The company specializes in automotive connectors, which are crucial as vehicles become more electrified.
-
-6. **Cost and Pricing Dynamics:**
-   - The company increased the average price of automotive connectors by 7% in 2022.
-   - Raw material costs, particularly copper and resin, are stabilizing, which could improve profit margins.
-
-7. **Financial Projections:**
-   - Korea Electric Terminal's revenue and operating profit projections for 2023 are conservative, with potential for upward revision based on market conditions.
-
-8. **Technological Advancements:**
-   - Discussion on the transition from DDR4 to DDR5 technology in electronics, highlighting the role of metal power inductors and the competitive landscape involving domestic and Japanese companies.
-
-### Logical Structure:
-- **Introduction:** Overview of current market conditions and the economic outlook.
-- **Main Content:**
-  - Detailed analysis of the electric vehicle sector, focusing on Hyundai's achievements and future goals.
-  - Examination of Hyundai's market strategy and performance, including production challenges and opportunities.
-  - Investment insights into the automotive connector sector and related cost dynamics.
-- **Conclusion:** Financial projections and technological advancements in the electronics sector, with a focus on DDR5 technology.
-
-This summary captures the main points and logical flow of the video, providing a concise overview of the economic ideas and arguments presented.
+가 12일 오후 3시 16분 현재 4.60% 오른 65,900원에 거래 중이며, 체결강도는 250%로 강세를 유지했다. 총매수체결량은 87,618주, 총매도체결량은 34,979주를 각각 기록했다. (※ 체결강도(%) = (총매수체결량/총매도체결량)*100)지난 1개월간 한국단자는 7.15% 상승했으며, 표준편차는 1.67%를 기록했다. 이 기간 '' 업종 평균 주가수익률은 -0.99% 로 나타났으며, 변동성은 1.07%를 기록했다. 이 시각 현재 '전기전자업'은 0.24% 하락중이며, 34(매도):66(매수)의 매수우위를 기록하고 있다.한국단자의 총 상장 주식수는 10,415,000주이며, 이 시각 현재 거래량은 122,809주로 상장주식수 대비 거래량은 1.18% 로 나타난다. 지난 1개월간 한국단자의 거래량 회전율은 7.17% 를 기록했다.[이 기사는 증시분석 전문기자 서경뉴스봇(newsbot@sedaily.com)이 실시간으로 작성했습니다.]

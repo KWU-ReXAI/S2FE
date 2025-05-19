@@ -1,37 +1,29 @@
-**Summary of Key Economic Ideas and Arguments:**
+한미반도체가 일본 기업이 독과점하고 있는 웨이퍼 절단(소잉) 장비를 개발한다. 패키지 절단 장비에 주력했던 한미반도체가 웨이퍼 절단 시장을 공략하는 건 처음이다. 웨이퍼 절단 장비 시장에 국산 장비가 등장하게 되면 장비 납품 기간(리드타임) 단축 등 반도체 공급난 해소도 기대된다.
 
-1. **Market Overview:**
-   - The market is experiencing volatility due to concerns about monetary tightening and economic recession.
-   - The Nasdaq has seen significant declines, affecting Asian markets, but there was some recovery due to positive movements in U.S. futures.
-   - The KOSPI and KOSDAQ indices closed with slight declines, supported by individual investors' buying.
 
-2. **Stock Performance:**
-   - SK Hynix showed strong performance due to foreign and institutional buying.
-   - Semiconductor stocks like DBI Tech and Simtech saw gains due to bargain buying.
-   - Foreign investors focused on Kia and SK Hynix, while institutions favored Samsung STI and Samsung Electronics.
 
-3. **Market Strategy:**
-   - The market is characterized by excessive pessimism, contrasting with past excessive optimism during liquidity-driven rallies.
-   - Investors are advised to remain calm and avoid extreme positions, as the market seeks stability.
+한미반도체는 독자적으로 웨이퍼를 절단할 수 있는 '마이크로 쏘' 장비를 개발한다. 개발 완료 목표는 올 하반기다. 이미 기술 개발 상당 부분을 마친 것으로 알려졌다. 기존 패키징 공정이 끝난 반도체를 절단하는 패키지용 마이크로 쏘 장비에 주로 만들었다.
 
-4. **Economic Indicators:**
-   - The upcoming FOMC meeting and inflation data are crucial for market direction.
-   - Concerns about hyperinflation and potential stagflation are discussed, with a focus on the need for decisive monetary policy actions.
+웨이퍼 절단 장비는 미세 회로 구현이 끝난 웨이퍼를 자르는 장비로 패키지 절단보다 기술 난도가 높다. 패키지보다 얇고 가벼운 웨이퍼를 잘라야 하기 때문이다. 국내 후공정 장비 회사가 웨이퍼 절단 장비 시장에 쉽게 진입하지 못한 배경이다.
 
-5. **Semiconductor Industry:**
-   - The new government in South Korea is focusing on semiconductors as a key strategic industry.
-   - Despite market volatility, semiconductor companies are investing in new facilities, indicating confidence in long-term growth.
-   - The U.S.-China trade tensions provide opportunities for Korean semiconductor companies.
 
-6. **Investment Recommendations:**
-   - Analysts suggest focusing on companies with strong fundamentals and growth potential, particularly in the semiconductor equipment sector.
-   - SK Hynix and Samsung Electronics are highlighted as key stocks, with differing opinions on which is more favorable.
 
-7. **Specific Stock Analysis:**
-   - **Nexteen:** A leading company in semiconductor inspection equipment, benefiting from U.S.-China tensions and high margins.
-   - **Hanmi Semiconductor:** Despite short-term challenges, it has strong long-term growth potential due to its innovative equipment.
-   - **Isu Petasys:** A PCB manufacturer with strong demand in the telecommunications sector, benefiting from global supply chain shifts.
+웨이퍼 절단 장비 시장은 일본 수입에 의존한다. 일본 디스코와 아크레텍(동경정밀)이 글로벌 시장 80% 이상을 독점하고 있다. 최근 반도체 설비 투자가 증가하면서 일본 웨이퍼 절단 장비 주문이 급증했다. 이는 웨이퍼 절단 장비 납품 기간 지연으로 이어졌다. 일본 디스코 경우 패키지 절단 장비 대비 수익성이 높은 웨이퍼 절단 장비 수요에 집중 대응하는데도 리드타임이 1년에서 1년 6개월까지 길어진 것으로 알려졌다.
 
-8. **Conclusion:**
-   - The market remains uncertain, but opportunities exist in sectors with strong growth potential and strategic importance, such as semiconductors.
-   - Investors are encouraged to focus on long-term fundamentals and strategic positioning in the face of macroeconomic challenges.
+
+
+한미반도체는 지난해 6월 독자 기술로 마이크로 쏘 장비를 국산화했다. 기존 디스코의 마이크로 쏘 장비를 도입해 한미반도체의 비전플레이먼트와 함께 구성하는 방식에서 탈피했다. 비전플레이먼트는 절단된 반도체 패키지를 세척·검사·분류하는 장비다. 한미반도체는 고성능 반도체 기판과 차량용 반도체 패키지 절단 장비까지 개발에 성공하며 웨이퍼 절단 장비를 위한 자체 기술력을 축적했다.
+
+한미반도체는 최근 생산능력을 25% 이상 끌어올리는 설비 투자도 단행했다. 일본 장비사 대비 리드타임을 대폭 줄이기 위해서다. 현재 한미반도체 마이크로 쏘 장비는 일본산 대비 절반 이하 리드타임을 확보한 것으로 알려졌다.
+
+
+
+한미반도체는 신규 장비 개발로 신시장 개척에 시동을 건다. 웨이퍼 절단 장비 시장은 패키지 대비 10배 큰 시장이다. 1조원이 훌쩍 넘는 것으로 추산된다. 기존 비전플레이먼트와 묶어 판매하는 방식에서 벗어나 웨이퍼 절단 장비 단독 판매도 추진한다. 회사는 웨이퍼 절단뿐 아니라 LED와 유리기판 절단 수요까지 대응할 방침이다.
+
+
+
+한미반도체 관계자는 “웨이퍼 절단 장비 시장은 경쟁이 치열해 국내 기업의 진입 자체가 어려웠다”면서 “가격과 납품 기간 등 다각적인 경쟁력을 앞세우면 충분히 시장 기회를 창출할 수 있을 것”이라고 밝혔다.
+
+
+
+권동준기자 djkwon@etnews.com

@@ -1,34 +1,19 @@
-The transcript appears to be a mix of various unrelated statements, possibly due to transcription errors or a mix of different languages and topics. However, I will attempt to extract and summarize the key economic ideas and arguments related to SK Innovation and its economic activities:
+(제공=한국신용평가)
 
-### Key Economic Ideas and Arguments:
+SK그룹이 공정거래법상 지주회사 행위요건과 내부거래 규제에 대응하기 위해 SK건설 지분부터 매각할 것이란 분석이 나왔다.
 
-- **SK Innovation's Role in the Economy:**
-  - SK Innovation is a significant player in the battery industry, particularly in the production of electric vehicle (EV) batteries.
-  - The company has made substantial investments in the United States, contributing to economic growth and job creation.
+27일 한국신용평가 분석에 따르면 현행 공정거래법상 지주회사는 비계열 국내회사 지분을 5% 초과해 보유할 수 없다. 이에 SK그룹은 올해 말까지(SK디스커버리 지주회사 전환 이후 2년 이내) △SK건설(SK㈜ 지분율 44.5%, SK디스커버리 지분율 28.3%) 지분과 △SK신텍 소유 SK가스 지분(지분율 10.0%)에 대한 정리가 필요하다고 신평사는 분석했다.
 
-- **Investment and Economic Impact:**
-  - SK Innovation has invested in various projects in the U.S., including a notable investment in Georgia, which is expected to create thousands of jobs.
-  - The company is committed to supporting local communities, as evidenced by its financial contributions to educational programs in Georgia.
+SK가 SK건설 지분을 매각하는 경우에는 SK에 유동성이 유입되는 가운데, SK디스커버리는 SK건설 지분에 대한 추가 매입 의무(비상장 자회사 지분 40% 이상 보유)에 따른 자금부담이 발생할 수 있다. 반면 SK디스커버리가 SK건설 지분을 처분할 경우, SK디스커버리에 유동성이 확충될 수 있다.
 
-- **Technological Advancements:**
-  - SK Innovation is focused on advancing battery technology, which is crucial for the future of electric vehicles and sustainable energy solutions.
-  - The company is involved in research and development to enhance battery performance and efficiency.
+SK그룹은 ‘최태원 회장 및 특수관계자→SK→주요 계열사’의 소유구조를 형성하고 있다.
 
-- **Global and Local Collaboration:**
-  - SK Innovation collaborates with local governments and communities to ensure successful project implementation and mutual benefits.
-  - The company values its partnerships with local entities and aims to contribute to both economic and social value creation.
+2007년 SK 분할을 통해 핵심 계열사인 SK이노베이션, SK텔레콤 등이 SK 아래 위치하는 지주회사 체제로 전환했다. 2015년 8월 SK와 SK C&C의 합병으로 지배구조가 안정화됐다.
 
-- **Future Prospects:**
-  - The expansion of SK Innovation's operations in the U.S. is part of a broader strategy to strengthen its position in the global market.
-  - The company is poised to play a significant role in the transition to renewable energy and electric mobility.
+지배구조 개편 결과 각 주력 계열사 아래에 관련 사업을 영위하는 계열사들이 손자회사, 증손자회사의 형태로 위치하고 있다. 최창원 부회장은 SK의 지배구조 밖에 위치한 SK디스커버리를 통해 SK케미칼, SK가스 등을 지배하고 있다.
 
-### Cited Examples:
+2017년 12월 SK디스커버리는 인적분할을 통해 별도의 지주회사 체계를 구축했다. 이후에도 SK 브랜드를 공유하는 가운데 그룹사 간 긴밀한 관계를 이어갈 전망이다.
 
-- **Georgia Investment:**
-  - SK Innovation's investment in Georgia is highlighted as a major economic development, with the construction of a large battery manufacturing facility.
-  - The project is expected to have a significant impact on the local economy, providing jobs and supporting local businesses.
+최근 최 회장은 최 부회장을 제외한 친족들에게 약 1조 원 규모의 SK 지분을 증여했다. 최 부회장은 SK디앤디 지분 매각을 통해 약 1700억 원을 마련하고 있어 계열분리 절차가 진행될 가능성도 있다.
 
-- **Community Support:**
-  - The company's financial support for educational initiatives in Georgia demonstrates its commitment to community development and workforce education.
-
-Overall, the transcript suggests that SK Innovation is a key player in the battery industry, with a strong focus on innovation, investment, and community collaboration to drive economic growth and technological advancement.
+전지훈 한신평 수석연구원은 “SK건설은 SK그룹의 유사시 지원가능성이 인정되고 있으나, SK건설 지분 정리 방안에 따라 지배주주가 변경되는 경우 계열의 지원가능성에 대한 재검토가 이뤄질 것”이라고 설명했다.

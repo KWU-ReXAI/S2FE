@@ -1,17 +1,39 @@
-The transcript appears to be a technical analysis of LG Innotek's stock performance, focusing on chart patterns and price levels. Here is a concise summary of the key points:
+조용호 엠테이크 대표는 “열 영상 카메라 국산화로 고가 외산 제품을 대체하겠다”고 밝혔다.
 
-- **Stock Analysis Focus**: The video discusses LG Innotek's stock, analyzing its price movements and potential future trends using technical chart patterns.
 
-- **N-Pattern Target**: The analysis highlights an "N-shaped" target pattern, suggesting potential price movements based on this formation. The importance of maintaining certain price levels to achieve this target is emphasized.
 
-- **Key Price Levels**:
-  - **Support Levels**: The analyst mentions critical support levels at 11,000 KRW, 10,700 KRW, 10,200 KRW, 9,970 KRW, 9,770 KRW, and 9,290 KRW. Breaching these levels could indicate further downward movement.
-  - **Resistance Levels**: Resistance levels are identified at 11,650 KRW, 11,950 KRW, 12,500 KRW, 13,050 KRW, and 13,650 KRW. Breaking through these levels could suggest an upward trend.
+엠테이크는 지난 8일 '셀킵(Selkeep)'이라는 브랜드로 보급형 열 영상 카메라를 출시했다. 2016년 엠테이크는 조 대표가 2016년 창업했다. 그는 그 전까지 국내 굴지 대기업에서 20여년간 TV 연구개발(R&D), 모니터 및 PC 신제품 기획을 담당했다. 창업에 도전하게 된 계기는 열 영상 감지 기술을 접한 후다. 국내 기술로 단가를 낮춘다면 시장성이 충분하다고 판단했다.
 
-- **Current Price Action**: The stock recently broke below a previous target of 11,200 KRW but is showing signs of a rebound. The analyst suggests that if the stock can surpass and stabilize above 11,650 KRW, it may indicate a potential upward trend.
 
-- **Potential Downside**: If the stock fails to hold above critical support levels, it may continue to decline, potentially revisiting previous lows.
 
-- **Investment Strategy**: The analysis suggests a cautious approach, recommending monitoring key support and resistance levels to determine potential buying opportunities.
+현재까지 열 영상 카메라 시장은 높은 가격대를 형성하는 해외 업체 제품 일색이다. 그간 열 감지 기술은 군사용이나 보안용 등과 같은 특수분야에서 사용됐다. 단가가 높아 민간시장에서 이를 접목하기는 쉽지 않았다. 단가를 낮추는 것이 핵심이었다. 이를 위해 조 대표는 코스닥 상장사인 트루윈과 협업했다. 트루윈이 열 감지 센서 부품을 납품하고 엠테이크가 완제품으로 제작, 판매한다.
 
-Overall, the video provides a detailed technical analysis of LG Innotek's stock, focusing on chart patterns and key price levels to guide investment decisions.
+조 대표는 “비접촉열감지 기술을 국산화한 트루윈과 협업해 열 영상 카메라 신제품을 내주 출시한다”면서 “외산 제품보다 단가를 크게 낮추면서 영상 품질 수준은 이에 버금간다”고 말했다.
+
+
+
+엠테이크는 열 영상 기술에 사물인터넷(IoT) 기술을 접목했다. 본지와 만난 자리에서 직접 IoT 기술을 시연하기도 했다. 카메라가 촬영하는 장면을 스마트폰을 통해 외부에서도 실시간 확인한다. 영상에 이상 변화가 있으면 이를 사용자에게 경고하기도 한다.
+
+
+
+이러한 편의기능을 바탕으로 스마트홈 등 민간시장에서 성과를 내겠다는 게 조 대표 구상이다.
+
+
+
+그는 “정식 출시 전부터 일부 샘플 물량을 국내외 바이어에 제공, 현장에서 시범 적용됐다”면서 “실시간으로 체온을 측정할 수 있어 이상 온도와 움직임을 신속하게 인지한다. 10개 유치원에서 셀킵을 설치해 아이들의 건강상태를 모니터링하는 용도로 활용되고 있다”고 밝혔다.
+
+
+
+엠테이크는 국내외 보안업체, 통신사와 납품을 논의 중이다. 중국, 일본, 싱가포르, 콜롬비아, 독일에도 수출을 타진하고 있다. 7월부터 아마존을 통해 미국 시장에 진출한다.
+
+
+
+엠테이크는 셀킵에 앞서 휴대용 자외선 발광다이오드(UV LED) 살균기를 출시하면서 안정적인 매출원을 확보했다. 이 제품에는 LG이노텍의 UV LED를 탑재해 품질을 높였다. 향후 카메라 제품군을 확장해 열 영상 카메라 전문 기업으로 도약한다는 계획이다.
+
+
+
+조 대표는 “후속작으로 고해상도 카메라를 보급형으로 제작해 선보일 예정”이라면서 “열 영상 카메라 전문 브랜드로 회사를 키우는 것이 목표”라고 말했다.
+
+
+
+이영호기자 youngtiger@etnews.com

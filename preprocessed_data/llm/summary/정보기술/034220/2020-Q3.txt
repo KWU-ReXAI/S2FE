@@ -1,20 +1,25 @@
-The transcript appears to be a discussion about investment strategies and stock market analysis, focusing on specific companies. Here is a concise summary of the key economic ideas, arguments, data, and examples presented:
+파주 E6 라인에 내년까지 25K 규모 장비 확충
 
-1. **LG Display Investment Analysis:**
-   - The company recently reported a profitable third quarter, which led to a rise in its stock price.
-   - The speaker suggests that while the stock has risen, it may not have reached its full potential, especially for long-term holders.
-   - Investors are advised to hold the stock, with a stop-loss set at 14,000 KRW, and consider the potential for further gains if the stock breaks the 16,000 KRW resistance level.
+'애플에서 LTPO 방식 OLED 패널 승인' 풀이
 
-2. **Youngpoong Investment Considerations:**
-   - The stock was purchased at 9,900 KRW with a 5% portfolio allocation.
-   - The speaker questions the rationale behind the purchase, noting that entering at a high price can be challenging.
-   - Recent reports and news have influenced the stock's movement, but the speaker advises against additional purchases.
-   - Investors are encouraged to hold the stock with a stop-loss at 7,500 KRW and consider switching to other stocks if necessary.
+애플 아이폰12(2020년 모델)
 
-3. **Samsung Heavy Industries Investment Strategy:**
-   - The stock was bought at 5,500 KRW with a 10% portfolio allocation.
-   - The company experienced fluctuations due to news about LNG ship orders.
-   - The speaker suggests holding the stock, as it may reach 6,700-6,800 KRW, which is a potential resistance level.
-   - Investors are advised to sell half of their holdings at this target and monitor for a potential breakout.
+LG디스플레이가 애플 아이폰용 유기발광다이오드(OLED) 패널 생산을 늘린다.
 
-Overall, the video provides investment advice based on recent performance, market news, and technical analysis, emphasizing the importance of setting stop-loss levels and being cautious with additional purchases.
+9일 업계에 따르면 LG디스플레이는 '애플 라인'으로 알려진 경기도 파주 E6-1 및 E6-2 생산라인 생산량을 늘리기로 했다. 내년까지 원판 투입 기준 월 2만5000(25K)장 규모로 저온다결정산화물(LTPO) 박막트랜지스터(TFT) 공정 장비를 확충할 예정이다.
+
+LG디스플레이는 현재 5K 규모 LTPO 장비를 우선 반입해 설치 중이고, 내년 5월까지 10K 규모 LTPO 장비를 추가 입고할 예정이다. 여기에 또 한번 10K 규모 LTPO 장비까지 추가 발주를 마치면 계획된 전체 25K 규모 LTPO 장비 투자가 마무리된다. LG디스플레이 협력사는 내년 5월 반입 예정인 장비 수주를 기다리는 것으로 알려졌다.
+
+LTPO는 애플이 내년 아이폰 신제품 상위 모델부터 적용을 계획 중인 TFT 방식이다. 기존 아이폰에 사용했던 저온다결정실리콘(LTPS) TFT에 옥사이드(산화물 반도체) 공정을 결합하는 기술로 OLED 패널 구동 전력을 낮출 수 있다. 기존 LTPS 공정에 옥사이드 공정을 추가하는 것인데, 공정이 그만큼 까다로워진다.
+
+LG디스플레이가 LTPO 장비를 추가 반입하는 배경에는 애플의 승인이 있었던 것으로 보인다. 애플로부터 패널 품질 승인을 받지 않고 LG디스플레이가 생산라인을 LTPS에서 LTPO로 전환하긴 어렵다.
+
+대신 LG디스플레이는 기존 E6 라인의 생산능력인 30K보다는 작은 25K 규모 LTPO 장비를 반입한다. 이는 LTPS 방식 생산라인을 모두 LTPO로 전환할 필요가 없다고 판단했거나, 기존 생산라인에서 일부 활용하지 못한 라인이 있었던 것으로 추정된다.
+
+내년 5월 이후 반입 예정인 20K 규모 LTPO 장비는 내후년 아이폰 신제품의 LTPO 방식 OLED 패널 납품을 노릴 것으로 보인다. 관련 장비 반입 후 생산라인 안정화, 고객사 승인까지 보통 6개월이 필요하다. 이에 앞서 장비 제작은 발주부터 6개월가량 걸린다.
+
+LG디스플레이는 이번에 옥사이드 공정을 추가하는 기존 E6-1 및 E6-2 생산라인 투자가 마무리되면 E6-3 라인도 추가 투자할 것으로 보인다. E6-3 생산라인 역시 애플 전용으로 15K 규모로 구축 예정이다.
+
+현재 애플은 내년 아이폰 신제품 4종 중 상위 모델 2종에 LTPO를 적용할 계획인 것으로 알려졌다. 삼성디스플레이에도 충남 아산 탕정에 있는 A3 생산라인 일부를 LTPO로 전환할 것으로 보인다. 이곳의 생산능력은 원판 투입 기준 월 105K다. 삼성디스플레이는 올해 하반기 출시된 삼성전자 갤럭시노트20울트라에 LTPO 패널을 적용한 바 있다. 중국 BOE는 LTPO 방식 OLED 패널에선 한국 패널 업체와 아직 격차가 있다.
+
+저작권자 © 전자부품 전문 미디어 디일렉 무단전재 및 재배포 금지

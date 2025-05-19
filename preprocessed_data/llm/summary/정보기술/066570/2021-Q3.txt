@@ -1,33 +1,19 @@
-**Summary of Key Economic Ideas and Arguments:**
+LG전자, 차량용 AR 소프트웨어 사업 본격화
 
-1. **Investment in Large-Cap Stocks:**
-   - The video discusses the potential of investing in large-cap stocks like LG Electronics, Samsung Electronics, SK Hynix, and Samsung Electro-Mechanics.
-   - Despite the general negative sentiment towards large-cap stocks, the speaker believes that the current period (November-December) is a good time to invest, rather than waiting until March next year.
-   - LG Electronics is highlighted for its strong performance in the home appliance sector, especially in the U.S. market, and its ongoing investments in automotive electronics.
+LG전자가 그동안 쌓아온 혁신적인 기술과 노하우를 앞세워 차량용 AR(Augmented Reality, 증강현실) 소프트웨어 사업을 육성한다.
 
-2. **LG Electronics Analysis:**
-   - LG Electronics has shown resilience despite the market downturn, with strong earnings and a leading position in home appliances and OLED TVs.
-   - The company is investing in automotive electronics, with significant orders in the automotive parts sector.
-   - The speaker suggests that LG Electronics is at a low point, making it a good opportunity for investment, with expectations of a significant price increase.
+LG전자는 완성차 업체에 ‘AR 소프트웨어 솔루션’을 공급하는 사업을 본격 추진하기로 했다.
 
-3. **Celltrion Investment Perspective:**
-   - Celltrion is discussed as a potential investment, with a focus on its biosimilar products and the recent decline in stock price due to competition from oral COVID-19 treatments.
-   - The speaker believes that the current price is undervalued and suggests that the stock is in an oversold position, making it a good entry point for investors.
+LG전자는 최근까지 헤드업 디스플레이(HUD, Head Up Display), 계기판(Cluster), 중앙정보디스플레이(CID, Center Information Display) 등과 같은 인포테인먼트 부품에 AR 소프트웨어를 결합시킨 패키지로 공급해왔다.
 
-4. **LVMC Holdings Overview:**
-   - LVMC Holdings is introduced as a promising investment in the automotive sector, particularly in Southeast Asia.
-   - The company assembles and sells Hyundai and Kia vehicles in Laos and Myanmar, with significant market shares.
-   - The speaker highlights the end of lockdowns in Southeast Asia and the resumption of full production as positive factors for the company.
+LG전자는 사업구조를 보다 다각화해 완성차 업체들의 다양한 니즈에 선제적으로 대응하고 사업경쟁력을 높인다는 전략이다. 완성차 업체들이 하드웨어와 소프트웨어를 결합한 패키지 형태를 아웃소싱하는 기존 방식에서 점차 벗어나 소프트웨어만 아웃소싱하는 사례를 확대할 것으로 예측되기 때문이다.
 
-5. **Nexturn Bio Investment Opportunity:**
-   - Nexturn Bio is discussed as a potential investment due to its development of a diabetes treatment and recent positive experimental results.
-   - The company has filed for international patents, and the speaker sees potential for a technical rebound in its stock price.
+LG전자 AR 소프트웨어 솔루션은 ADAS(Advanced Driver Assistance Systems, 첨단운전자지원시스템) 카메라, GPS, 네비게이션과 같은 다양한 센서와 실시간으로 연결된다. 여기서 얻은 데이터를 기반으로 주행속도, 보행자나 주변 차량과의 상대적 거리, 목적지까지의 경로 등 운전자에게 도움이 되는 시각적 정보를 3D 및 2D 그래픽 이미지로 보여준다.
 
-**Investment Strategies and Price Targets:**
-- **LG Electronics:** Buy at around 12.3 million KRW, with a target price of 13.5-14 million KRW.
-- **Celltrion:** Buy at around 20 million KRW, with a target price of 23-24 million KRW.
-- **LVMC Holdings:** Buy at current levels, with a target price of 5,000 KRW.
-- **Nexturn Bio:** Buy at 7,950-8,040 KRW, with a target price of 8,500-9,000 KRW.
+이 솔루션은 헤드업 디스플레이가 적용된 차량 전면 유리에 다양한 정보를 투사하거나 계기판, 중앙정보디스플레이 등 인포테인먼트 부품에 보여준다. 운전자는 주변상황을 보다 효과적으로 인식하며 운전할 수 있다.
 
-**Conclusion:**
-The video emphasizes the potential of investing in large-cap stocks and specific companies like LG Electronics, Celltrion, LVMC Holdings, and Nexturn Bio, based on their current market positions, future growth prospects, and technical analysis. The speaker provides specific price targets and strategies for each stock, suggesting that these investments could yield significant returns.
+LG전자는 AR 소프트웨어 솔루션에 ▲소프트웨어개발키트(SDK, Software Development Kit), ▲사용자인터페이스 컴포저(User Interface Composer, 각종 그래픽 개발을 도와주는 UI 제작 도구), ▲시뮬레이션 툴 등도 포함시켰다. 완성차 업체는 쉽고 편리하게 소프트웨어를 사용하고 업데이트할 수 있다.
+
+LG전자는 AR 소프트웨어를 비롯해 텔레메틱스(Telematics), 휴먼 머신 인터페이스(HMI, Human Machine Interface), 디지털 콕핏(Digital Cockpit), 헤드업 디스플레이, 계기판, 중앙정보디스플레이, AVN(Audio, Video, Navigation) 등 차량용 인포테인먼트 분야에서 글로벌 경쟁력을 강화해 오고 있다. 최근에는 전장사업의 보안체계를 더욱 강화하기 위해 자동차 사이버보안 분야 선도기업인 사이벨럼(Cybellum)을 인수하는 계약을 체결했다.
+
+LG전자 VS사업본부장 김진용 부사장은 “차량의 전동화 및 스마트화로 인해 자동차 부품 시장에서 소프트웨어의 중요성이 더욱 커지고 있어서 AR 소프트웨어의 성장 잠재력 또한 높을 것”이라며 “축적해온 기술력과 노하우를 기반으로 준비한 AR 소프트웨어 솔루션을 활용해 완성차 업체들의 다양한 니즈에 선제적으로 대응할 것”이라고 말했다.

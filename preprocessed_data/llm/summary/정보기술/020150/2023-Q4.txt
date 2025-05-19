@@ -1,32 +1,39 @@
-**Summary of Key Economic Ideas and Arguments:**
+국내 주요 동박 제조사, 북미 진출 현황/그래픽=이지혜 롯데에너지머티리얼즈가 '북미 동박 공장'의 추진 로드맵을 확정했다. 내년 상반기에는 신규 공장 착공에 들어간단 방침이다.
 
-1. **Importance of Copper Foil Companies:**
-   - Copper foil is a critical material for electric vehicle (EV) batteries and semiconductors.
-   - The global market is dominated by China, with South Korea being a significant player.
-   - Lotte Energy Materials is highlighted as a key South Korean company in this sector.
 
-2. **Economic Impact of Battery and Semiconductor Industries:**
-   - The video discusses the importance of semiconductors, batteries, and biotechnology in the global economy.
-   - Companies like Nvidia and Tesla are used as examples of high market valuations due to their roles in these industries.
-   - The demand for EVs and related materials like copper foil helps stabilize oil prices by reducing dependency on fossil fuels.
 
-3. **Market Valuation and Investment Potential:**
-   - The market valuation of copper foil companies is relatively low compared to their revenue potential.
-   - Lotte Energy Materials is seen as undervalued, with potential for growth as demand for copper foil increases.
-   - The company has a strong financial position with low debt, enabling further investment and expansion.
+11일 배터리 업계에 따르면 롯데에너지머티리얼즈는 올 상반기 내에 북미 동박 공장 후보지를 결정한다. 동박은 음극재를 감싸는 얇은 구리 막으로 이차전지의 핵심 소재다. 이 회사는 그동안 북미 투자와 관련해 40여 지역을 두고 고심을 거듭해왔고, 최근 3~4곳으로 후보지를 압축했다.
 
-4. **Geopolitical and Strategic Considerations:**
-   - The U.S. is interested in having South Korea produce battery materials domestically to reduce reliance on China.
-   - This strategic move is part of a broader effort to strengthen U.S. manufacturing capabilities in high-tech industries.
 
-5. **Future Growth and Expansion Plans:**
-   - Lotte Energy Materials plans to expand its operations from South Korea to Malaysia, Spain, and the U.S.
-   - The company is expected to benefit from increased demand for copper foil, with projections of significant growth by 2028-2029.
 
-6. **Investment Strategy and Market Comparisons:**
-   - The video suggests that investors should consider the market capitalization to revenue ratio when evaluating companies.
-   - Comparisons are made with companies like Tesla and Posco Future M, indicating potential for copper foil companies to increase their market valuation.
 
-7. **Conclusion and Investment Outlook:**
-   - The video concludes with a positive outlook for copper foil companies, emphasizing their role in the growing EV and semiconductor markets.
-   - Investors are encouraged to consider the strategic importance and growth potential of these companies in their investment decisions.
+
+투자 및 착공 목표는 '다음해 상반기'로 잡았다. 1~2년 걸리는 공사 일정까지 고려하면 2027년을 전후로 북미에서 동박을 직접 공급하겠다는 목표를 잡은 것으로 풀이된다. 이 회사는 동박 생산 능력을 현재 연 6만톤에서 2028년 24만톤으로 확대한다는 계획을 갖고 있다. 한국, 말레이시아, 스페인, 북미에 달하는 글로벌 공급망을 확보해 시장에서 지배적 위치에 오른다는 복안이다.
+
+
+
+이훈기 롯데그룹 화학군 총괄대표는 지난 6일 '인터배터리 2024' 현장에서 기자와 만나 동박의 북미 투자 여부에 대해 "올해는 힘들고, 아마 내년 상반기쯤 결정할 수 있을 것"이라며 "(투자 규모와 시기를) 검토하고 있다"고 밝혔다. 롯데에너지머티리얼즈 고위 관계자는 "부지 결정 자체는 곧 이뤄질 예정으로, 올 상반기를 넘기지 않을 것"이라며 "연내에 공장 설계를 완료하고, 주 정부와 인센티브 등을 협의·확정한 후, 내년 공장 착공에 들어갈 수 있을 것"이라고 설명했다.
+
+
+
+전기차 시장 성장률의 위축과 중국의 과잉 공급이 지속되며 동박 업황이 부진한 상황 속에서도 신규투자 의지를 다지는 모양새다. 미국이 IRA(인플레이션감축법) 등을 통해 전기차 밸류체인에서 중국을 최대한 배제하려는 움직임을 가져가고 있는 만큼, K-동박에 대한 선호가 높아지고 있다는 판단에서다. 북미 지역의 전기차 침투율 역시 10% 수준으로 유럽(20% 이상)의 절반도 안 되는 수준이다.
+
+이훈기 롯데그룹 화학군 총괄대표와 김연섭 롯데에너지머티리얼즈 대표가 6일 인터배러티 2024를 찾아 관람하고 있다/사진=최경민 기자 그만큼 성장 가능성이 큰 시장이지만, 아직 무주공산에 다름없다. 북미 배터리 기업들의 경우 동박 물량 대부분을 수입에 의지하고 있다. 배터리 업계 관계자는"북미 지역의 동박 현지 생산량은 연산 1000톤에도 못 미치는 수준"이라며 "동박 공급 부족이 빠르게 가시화될 것"이라고 설명했다.
+
+
+
+
+
+롯데에너지머티리얼즈 외에도 SK넥실리스, 솔루스첨단소재 등 K-동박 기업이 모두 북미 생산라인 확보에 나선 이유다. SK넥실리스는 북미 지역 공장 부지를 검토하고 있으며, 멕시코 등으로부터 러브콜도 받고 있다. 지난해부터 캐나다 퀘벡에 동박 공장을 짓기 시작한 솔루스첨단소재는 2025년부터 양산을 시작하고, 2026년까지 연산 2만5000톤 규모의 생산라인을 구축한다.
+
+
+
+미국 대선이라는 변수가 있지만, 동박 시장 상황에는 큰 영향을 미치지 않을 게 유력하다. 도널드 트럼프 전 대통령이 'IRA 반대' 등을 앞세우고 있지만, '중국 배제'와 관련해서는 진심이기 때문이다. 그는 중국산 수입품에 60%의 관세율을 적용하겠다는 주장도 하고 있다. 롯데에너지머티리얼즈 관계자는 "최근 전방산업의 약세 등을 고려해 투자 진행 시점을 보수적으로 보고 있으나, 장기 전략에 관련된 프로젝트들은 차질없이 진행할 것"이라고 밝혔다. 롯데에너지머티리얼즈가 '북미 동박 공장'의 추진 로드맵을 확정했다. 내년 상반기에는 신규 공장 착공에 들어간단 방침이다.11일 배터리 업계에 따르면 롯데에너지머티리얼즈는 올 상반기 내에 북미 동박 공장 후보지를 결정한다. 동박은 음극재를 감싸는 얇은 구리 막으로 이차전지의 핵심 소재다. 이 회사는 그동안 북미 투자와 관련해 40여 지역을 두고 고심을 거듭해왔고, 최근 3~4곳으로 후보지를 압축했다.투자 및 착공 목표는 '다음해 상반기'로 잡았다. 1~2년 걸리는 공사 일정까지 고려하면 2027년을 전후로 북미에서 동박을 직접 공급하겠다는 목표를 잡은 것으로 풀이된다. 이 회사는 동박 생산 능력을 현재 연 6만톤에서 2028년 24만톤으로 확대한다는 계획을 갖고 있다. 한국, 말레이시아, 스페인, 북미에 달하는 글로벌 공급망을 확보해 시장에서 지배적 위치에 오른다는 복안이다.이훈기 롯데그룹 화학군 총괄대표는 지난 6일 '인터배터리 2024' 현장에서 기자와 만나 동박의 북미 투자 여부에 대해 "올해는 힘들고, 아마 내년 상반기쯤 결정할 수 있을 것"이라며 "(투자 규모와 시기를) 검토하고 있다"고 밝혔다. 롯데에너지머티리얼즈 고위 관계자는 "부지 결정 자체는 곧 이뤄질 예정으로, 올 상반기를 넘기지 않을 것"이라며 "연내에 공장 설계를 완료하고, 주 정부와 인센티브 등을 협의·확정한 후, 내년 공장 착공에 들어갈 수 있을 것"이라고 설명했다.전기차 시장 성장률의 위축과 중국의 과잉 공급이 지속되며 동박 업황이 부진한 상황 속에서도 신규투자 의지를 다지는 모양새다. 미국이 IRA(인플레이션감축법) 등을 통해 전기차 밸류체인에서 중국을 최대한 배제하려는 움직임을 가져가고 있는 만큼, K-동박에 대한 선호가 높아지고 있다는 판단에서다. 북미 지역의 전기차 침투율 역시 10% 수준으로 유럽(20% 이상)의 절반도 안 되는 수준이다.그만큼 성장 가능성이 큰 시장이지만, 아직 무주공산에 다름없다. 북미 배터리 기업들의 경우 동박 물량 대부분을 수입에 의지하고 있다. 배터리 업계 관계자는"북미 지역의 동박 현지 생산량은 연산 1000톤에도 못 미치는 수준"이라며 "동박 공급 부족이 빠르게 가시화될 것"이라고 설명했다.롯데에너지머티리얼즈 외에도 SK넥실리스, 솔루스첨단소재 등 K-동박 기업이 모두 북미 생산라인 확보에 나선 이유다. SK넥실리스는 북미 지역 공장 부지를 검토하고 있으며, 멕시코 등으로부터 러브콜도 받고 있다. 지난해부터 캐나다 퀘벡에 동박 공장을 짓기 시작한 솔루스첨단소재는 2025년부터 양산을 시작하고, 2026년까지 연산 2만5000톤 규모의 생산라인을 구축한다.미국 대선이라는 변수가 있지만, 동박 시장 상황에는 큰 영향을 미치지 않을 게 유력하다. 도널드 트럼프 전 대통령이 'IRA 반대' 등을 앞세우고 있지만, '중국 배제'와 관련해서는 진심이기 때문이다. 그는 중국산 수입품에 60%의 관세율을 적용하겠다는 주장도 하고 있다. 롯데에너지머티리얼즈 관계자는 "최근 전방산업의 약세 등을 고려해 투자 진행 시점을 보수적으로 보고 있으나, 장기 전략에 관련된 프로젝트들은 차질없이 진행할 것"이라고 밝혔다.
+
+
+
+
+
+<저작권자 © ‘돈이 보이는 리얼타임 뉴스’ 머니투데이. 무단전재 및 재배포, AI학습 이용 금지> 공감 0%
+
+비공감 0%

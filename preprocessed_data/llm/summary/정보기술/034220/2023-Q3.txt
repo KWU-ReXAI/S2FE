@@ -1,24 +1,63 @@
-The transcript provides an analysis of the current stock market trends, focusing on the activities of foreign investors, institutions, and individual investors in the South Korean market. Here is a concise summary of the key economic ideas, arguments, data, and examples presented:
+[사진 = LG디스플레이 유튜브 영상 캡처]
 
-### Market Overview
-- **Corporate Earnings Season**: The transcript discusses the impact of the earnings season on the stock market, noting increased volatility and uncertainty in market direction.
-- **Foreign Investors**: Foreign investors are actively purchasing shares in major companies, including Samsung Electronics, SK Hynix, and Kakao, indicating confidence in these sectors.
-- **Institutional Investors**: Institutions are also buying shares in companies like Samsung C&T and Kia, suggesting strategic positioning in these stocks.
+[뉴스투데이=전소영 기자] 한동안 정체기를 보낸 디스플레이 업계가 신종 코로나바이러스 감염증(코로나19) 팬데믹(대유행) 이후 재택근무, 온라인 교육 등이 일상화되고 차량용 디스플레이 존재감이 확대되면서 가파른 성장 국면을 맞았다.
 
-### Key Sectors and Stocks
-- **Secondary Battery Companies**: Companies like EcoPro and LG Energy Solution are highlighted for their significant influence on market volatility, with foreign investors showing strong interest.
-- **Kakao**: Both foreign and institutional investors are buying Kakao shares, driven by record sales figures, although there are concerns about future performance and political issues.
-- **Semiconductors and Tech**: Companies like Samsung Electronics and SK Hynix are favored by foreign investors, reflecting confidence in the tech sector.
-- **Newly Listed Stocks**: Individual investors are focusing on newly listed stocks, including those in semiconductors and AI, indicating a search for growth opportunities in a volatile market.
+성장세 만큼 기술력 또한 나날이 변화와 발전을 거듭하고 있다. 그 중심에는 국내 디스플레이 업계 쌍벽을 이루는 LG디스플레이(대표 정호영)가 있다.
 
-### Market Dynamics and Predictions
-- **Options Expiry Impact**: The transcript discusses the impact of options expiry on market trends, suggesting a potential rebound after initial declines.
-- **Strategic Trading**: Institutions are engaging in strategic trading, with a focus on stocks that have previously declined, indicating a potential for recovery.
-- **Sector-Specific Insights**: The discussion includes insights into specific sectors like healthcare, with mentions of companies like Celltrion Healthcare, and the potential for growth in OLED technology, particularly for LG Display.
+8일 관련 업계에 따르면 지난 8월 열린 ‘제23회 한국디스플레이산업전시회(K-Display 2023)’는 디스플레이 업계의 초격차 기술력을 목도할 수 있는 자리였다. 이날 LG디스플레이 부스에서 많은 관람객의 이목을 끈 제품은 ‘투명 OLED(유기발광다이오드)’ 다.
 
-### Expert Opinions
-- **Kakao's Future**: Experts express cautious optimism about Kakao's future, noting the importance of upcoming AI developments and content growth.
-- **LG Display Challenges**: The challenges faced by LG Display, including competition from China and financial constraints, are discussed, with a focus on the potential for OLED technology to drive future growth.
+투명 OLED는 전 세계에서 LG디스플레이만이 유일하게 양산하고 있는 제품으로 우리 생활 곳곳에 스며들어 일상 속 혁신을 그리고 있다.
 
-### Conclusion
-- The transcript concludes with a focus on the importance of monitoring market trends and strategic positioning by different types of investors, highlighting the need for careful analysis and consideration of both current performance and future potential in stock selection.
+건축, 인테리어, 모빌리티(이동수단) 등 다양한 분야로 무대를 넓혀 2030년 12조원 대 시장이 예상되는 LG디스플레이의 미래 성장동력인 셈이다.
+
+한국 민화로 구현된 사계절 ‘사계(四季)’를 표현한 투명 OLED 비디오월 [사진 = LG디스플레이]
+
+전 세계 유일한 투명 OLED 양산 기업 G디스플레이는 2012년 국책사업 '미래산업 선도기술 개발사업’ 중 하나인 투명 플렉시블 디스플레이 개발에 단독 주관사로 선정돼 투명 OLED 개발에 본격 나섰다.
+
+LG디스플레이는 연구개발 5년 만인 2017년 당초 목표치를 넘어 ‘77인치 80R UHD(초고선명) 투명 플렉시블 OLED 디스플레이’를 개발에 성공했고 2019년 투명도 40%의 55인치 투명 OLED 양산을 본격화했다.
+
+LG디스플레이의 투명 OLED 개발에 대한 의지는 특허 출원에서도 두드러진다. LG디스플레이가 2008년부터 2017년까지 10년간 투명 OLED 관련 취득한 특허가 147건으로 같은 기간 국내에서 출원한 특허 280건의 52.5%에 달한다.
+
+현재 LG디스플레이가 공급하는 투명 OLED는 30인치 HD(고화질), 55인치 Full HD다. LG디스플레이는 올해안에 77인치 UHD 양산을 계획 중이다. 특히 디스플레이 투과율이 지난해까지 40%를 지원했지만 올해 45%까지 향상시켰으며 오는 2025년 투과율 60%를 목표로 지속적으로 개선작업을 펼치고 있다.
+
+투명 OLED는 색 재현력이 우수해 원작자 의도를 왜곡하지 않고 정확하게 구현해 최적의 ‘디지털 캔버스’라 불리는 LG디스플레이의 OLED 강점을 계승했다.
+
+특히 영상과 디스플레이 뒷배경을 동시에 볼 수 있어 ‘개방감’을 만끽할 수 있는 제품이다. 디스플레이가 대형화되면서 공간의 단절과 이질감이라는 과제가 발생했는데 이 같은 문제를 해소할 수 있는 제품이 바로 투명 OLED다.
+
+이에 따라 기존 디스플레이 한계를 넘어 입체적으로 작품을 구현할 수 있는 혁신적인 캔버스로 문화예술 산업에서 큰 변화를 일으키고 있다.
+
+실제 국립중앙박물관의 신라·가야 의례와 그리스·로마 신화 및 문화를 주제로 한 전시에서 당시 전시품과 그 안에 담긴 역사 스토리를 텍스트 중심의 설명이 아닌 미래 기술을 통해 생생하게 전달했다.
+
+문화재청·한국문화재재단과 협업해 인천국제공항 ‘문화유산 방문 캠페인 홍보관 인천공항 여행자센터’에서 한국 민화로 구현된 문화유산의 사계절을 감상할 수 있는 대형 투명 OLED 비디오월을 선봬 여행자들에게 한국 전통 민화의 섬세한 문양과 다채로운 색감을 생생하게 전달했다.
+
+LG디스플레이는 투명 OLED 문화예술에서 더 나아가 산업, 일상 공간으로까지 응용처 범위를 넓히는 데 박차를 가하고 있다.
+
+이에 따라 LG디스플레이는 최근 글로벌 커피 전문 회사 스타벅스와 손을 잡았다. LG디스플레이는 스타벅스 신규 매장 ‘더여수돌산DT점’에 55인치 투명 OLED 12대를 연결한 초대형 ‘투명 OLED 테이블’을 적용했다.
+
+이에 따라 음료잔을 테이블 위에 올려놓으면 센서가 반응해 잔 주변으로 물결이 일렁이는 효과를 연출해 마치 바닷가에서 커피를 마시는 듯한 경험을 할 수 있다. 이 매장은 개장 열흘만에 누적 방문객이 2만명을 넘어서고 평일에도 하루 평균 2000여명이 찾는 등 지역 명소로 자리매김하고 있다.
+
+이보다 앞서 지난해에는 SPC와 협업해 경기 성남 판교에 문을 연 미래형 매장 ‘랩(Lab) 오브 파리바게뜨’에 단일 규모로는 역대 최다인 55인치 투명 OLED 38대를 매장 내·외부 곳곳에 디지털 사이니지(전광판)로 설치했다.
+
+스타벅스 신규 매장인 ‘더여수돌산DT점’의 55인치 투명 OLED 12대를 연결한 초대형 ‘투명 OLED 테이블’ [사진 = LG디스플레이]
+
+이처럼 LG디스플레이가 투명 OLED에 힘을 주는 이유는 그만큼 성장 잠재력이 높은 사업이기 때문이다.
+
+글로벌 컨설팅업체 보스턴컨설팅그룹에 따르면 전 세계 투명 OLED 시장 규모는 매년 2배씩 성장해 △지난해 1000억원에서 △2025년 3조원 △2030년 12조원으로 가파르게 성장할 것으로 보인다.
+
+이처럼 성장잠재력이 높은 사업을 LG디스플레이의 신성장동력으로 키우려면 신(新)시장 개척이 매우 중요한 과제다. 2019년 세계 최초 투명 OLED 양산 당시 생태계 미흡으로 판로 개척에 어려움을 겪은 LG디스플레이는 시장 개척에 적극적인 모습이다.
+
+여준호 LG디스플레이 솔루션 CX그룹장(상무)은 “투명 OLED만의 무한한 확장성을 토대로 다양한 이종 산업과 협업해 새로운 시장을 계속 창출해 나가겠다”고 밝혔다.
+
+정호영 LG디스플레이 대표도 올해 신년사에서 장기적 관점에서 LG디스플레이만이 할 수 있는 시장 창출형 사업 추진 계획을 밝히며 “투명 OLED 등 향후 성장 잠재력이 높은 사업은 새롭고 다양한 시도를 통해 잠재 고객을 발굴하고 지속적으로 육성해 나가고자 한다”고 언급했다.
+
+현재 디스플레이 업계는 투명 OLED 신시장 개척을 적극 지원하는 분위기다.
+
+한국디스플레이산업협회는 지난 1일 투명 디스플레이 신시장 개척과 국내 중소·중견기업의 수출 경쟁력 강화를 위해 ‘투명 디스플레이 산업 협의체’를 발족했다. 그리고 시장창출 분과와 산업협력 분과 구성을 통한 △공공-민간 아이디어 발굴 △시제품 개발 △성능평가 △표준 △인증 △시범설치 △수요처 연계 △교류 협력 등 활동 추진을 약속했다.
+
+그러나 향후 해결해야 할 과제도 남아 있다. 가격 경쟁력이 대표적인 예다.
+
+업계에 따르면 투명 OLED는 고난도 기술을 요구해 일반 OLED 대비 생산 비용이 약 3~4배 높은 것으로 알려졌다. 이에 따라 투명 OLED 보급화를 위해 가격 경쟁력 확보가 필수다.
+
+LG디스플레이 관계자는 뉴스투데이에 “투명 OLED는 시장창출형 사업으로 향후 확장성이 기대되다”라며 “투명 OLED를 활용할 수 있는 분야가 많아 응용처 확대 방안을 모색하고 있다. 전시와 박람회를 비롯해 건축, 리테일, 지하철, 최근 공개한 스타벅스와 협업을 펼치는 것도 대표적인 예”라고 설명했다.
+
+그는 또 “가격 경쟁력도 아직 사업 초기 단계이기 때문에 응용처가 점차 늘어나면 (수요가 늘어나) 점차 해소될 수 있을 것”이라며 “현재 응용 분야를 다양하게 확대하는 방향에 전략을 집중하고 있다”고 말했다.

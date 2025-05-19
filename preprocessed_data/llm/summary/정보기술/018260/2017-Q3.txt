@@ -1,20 +1,35 @@
-**Summary of Key Economic Ideas and Arguments:**
+삼성SDS가 스타트업체 키위의 제품 디자인 도용논란에 휘말렸다. 사진은 키위 도어락.<키위>
 
-- **Stock Analysis of Samsung SDS:**
-  - **Support and Resistance Levels:**
-    - The support level is identified at 200,000 KRW. It is crucial that this level is not breached.
-    - Resistance is noted at 225,000 KRW. If the stock does not surpass this level, it may remain stagnant.
-  
-- **Investment Strategy:**
-  - Consider additional purchases between 198,000 KRW and 200,000 KRW if the stock price holds at the closing level.
-  - A recommendation is made to add approximately 5% more to the investment if the stock maintains its support level.
-  - If the stock price falls below the support level, it is advised to cut losses immediately.
+[시사위크=장민제 기자] 삼성SDS 스마트 도어록이 한 스타트업의 제품과 유사해 논란이 일고 있다. 양사의 공식적인 입장발표는 없는 가운데, 커뮤니티에선 삼성SDS가 중소기업의 디자인을 도용한 것 아니냐는 지적이 나온다. 다만 원형의 도어록이 이미 해외에 출시됐기에, 디자인 침해로 볼 수 없다는 반박도 만만치 않다.
 
-- **Price Targets and Market Conditions:**
-  - The stock needs to break through the 225,000 KRW to 230,000 KRW range to set a final price target.
-  - Historical price reference is made to 420,000 KRW, suggesting potential for significant gains if market conditions improve.
-  - Current market conditions and supply factors do not favor a rapid increase to historical highs.
+◇ 분별 안되는 닮은꼴 도어락
 
-- **Conclusion and Recommendations:**
-  - Set an initial price target between 220,000 KRW and 230,000 KRW.
-  - Reassess and adjust the target based on whether the stock stabilizes at the initial target range.
+최근 온라인커뮤니티에선 삼성SDS와 키위(KEYWE)의 제품이미지 비교사진이 뜨거운 감자로 떠올랐다.
+
+삼성SDS가 이달 선보인 스마트 도어록의 디자인 및 시안 등이 스타트업 키위의 제품과 유사하다는 점 때문이다. 중소기업 가드텍의 사내벤처에서 시작한 키위는 지난해 이 같은 디자인의 제품을 출시했다.
+
+실제 양사 제품은 원형의 디자인으로 비슷한 느낌을 준다. 세부적으로 살펴보면 이들 제품의 가운데 부분은 터치스크린 방식의 검은색 원형으로 돼 있다. 이를 둘러싼 테두리는 두 제품 모두 은색이며, 중심부와 테두리 사이에 공간을 뒀다는 점도 동일했다. 또 제품 하단부엔 9볼트 단자가 나와 있다.
+
+삼성SDS의 스마트락.<삼성SDS>
+
+반응은 엇갈린다. 일부 네티즌들은 해외 업체들이 이미 출시한 원형 도어락 제품이미지를 제시하면서, 삼성SDS가 제품을 도용했다고 보긴 어렵다고 지적했다.
+
+반면 원형 디자인 자체의 문제가 아니라 세부적으로 봤을 때 유사성이 많다는 점에서 반박의견이 나온다.
+
+삼성SDS 측은 이와 관련, "진위여부를 파악 중"이라고 말했다.
+
+◇ 키위, 미적지근 대응 왜?
+
+논란, 또는 분쟁을 깔끔하게 해결하는 방안 중 하나는 사법부의 판단에 맡기는 것이다. 그러나 키위 관계자는 <시사위크>와의 통화에서 “갑작스럽게 소식을 접해 당황스럽다”며 “어떻게 대처해야 할지 좀 더 생각할 시간이 필요하다”고 말했다.
+
+이는 대기업을 상대로 소송 등을 진행하기엔 부담이 큰 탓도 있겠지만, 키위가 도어락 제품의 디자인을 등록하지 않은 상태라는 점이 영향을 미친 것으로 보인다.
+
+정부는 올해 7월부터 ‘부정경쟁방지법 개정안’의 시행을 통해 중소기업의 ‘미등록 디자인’에 대한 권리를 강화했다. 즉, 미등록 디자인이 도용될 경우 당초 민사소송을 통한 손해배상 청구만 가능했지만, 현재는 형사소송 또는 특허청에 조사를 요청을 할 수 있다.
+
+해외 업체들의 원형 도어락.<커뮤니티>
+
+그러나 특허청에 따르면 ‘미등록 디자인’의 침해의혹이 제기될 경우, 침해당한 디자인의 등록가능여부를 먼저 확인하게 된다. ‘미등록 디자인’이라도 보호할 만큼 독창성을 가지고 있느냐를 판단해야 한다는 취지에서다.
+
+물론 디자인 등록은 기본 바탕이 동일해도 차별화된 요소만 있다면 그 부분을 중심으로 등록이 가능하다. 하지만 심사기준은 산업, 제품별로 달라질 수 있다. 키위 제품의 디자인 등록가능 여부를 현 단계에서 확정 짓기엔 어렵다. 또 독창성을 인정받는다 해도 미등록 디자인의 보호범위는 좁다.
+
+특허청 관계자는 “등록하지 않은 디자인을 과도하게 보호하는 것도 (이치에) 맞지 않다”며 “실질적으로 복사하다시피 동일한 수준의 경우 보호대상이 된다”고 말했다.

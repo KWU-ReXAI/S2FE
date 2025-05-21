@@ -444,7 +444,7 @@ def get_video_datas(channel_name, min_view_cnt):
 		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{year_quarter}/{year_quarter}.csv', index=False)
     
 if __name__ == "__main__":
-	df = pd.read_csv("data_kr/video/동영상 수집 통합본 최신.csv")
+	df = pd.read_csv("data_kr/video/동영상 수집 통합본_ver2.csv")
 	
 	# ### 오디오 다운로드 ###
 	# for row in df.itertuples():

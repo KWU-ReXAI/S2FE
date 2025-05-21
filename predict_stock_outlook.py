@@ -287,12 +287,18 @@ def clean_srt(srt_text: str) -> str:
 # ------------------------
 # GPT-4o 요약
 # ------------------------
-def summarize_text(text: str) -> str:
+def summarize_text(text: str, stock: str) -> str:
 	prompt = f"""
-The following is a transcript from a YouTube video about economics. Please summarize the content by extracting key economic ideas, arguments, data, and cited examples.  
-Your summary should be **concise and well-organized**, capturing the **main points** and **logical structure** of the video.  
+The following is a transcript from a YouTube video about economics and finance.
+
+Please summarize the content by extracting key economic ideas, arguments, data, and cited examples.  
+If the transcript includes **any mention of Korean company named {stock}**, make sure to **include those references in the summary**, along with any related analysis or context.
+
+Your summary should be **concise and well-organized**, capturing the **main points** and **logical structure** of the video.
 A **section-based summary** or **bullet-point outline** is preferred if appropriate.
+
 Transcript: {text}
+
 """
 	response = gpt_model([HumanMessage(content=prompt)])
 	return response.content.strip()
@@ -314,12 +320,17 @@ Your task is to assess how this content could potentially affect the stock price
 - The company is a **Korean stock**.
 - You must **NOT use any prior knowledge** about the company, its stock, industry, or any real-world information outside of the summary.
 - **Only use the summary provided below** to make your judgment.
-- Determine whether the summary logically implies a positive, negative, or no impact on the company.
-- You MUST choose one and only one of the three options: "up", "down", or "irrelevant" (in English, lowercase).
+- Determine whether the summary logically implies a positive or negative.
+- You MUST choose one and only one of the two options: "up" or "down" (in English, lowercase).
 - The reason must be written in Korean.
 
+If the summary does not contain any information relevant to stock price movement,  
+you MUST still choose "down",
+and explain that the information is insufficient but a default judgment was made.
+
+
 Respond in the following format (in Korean):
-결과: [up/down/irrelevant]
+결과: [up/down]
 이유: [요약본을 근거로 한 간단한 한국어 설명]
 
 
@@ -432,11 +443,12 @@ def get_video_datas(channel_name, min_view_cnt):
 		os.makedirs(f'{dir}/{year_quarter}', exist_ok=True)
 		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{year_quarter}/{year_quarter}.csv', index=False)
     
-if __name__ == "__main__":    
-    # ### 오디오 다운로드 ###
-	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
+if __name__ == "__main__":
+	df = pd.read_csv("data_kr/video/동영상 수집 통합본 최신.csv")
+	
+	# ### 오디오 다운로드 ###
 	# for row in df.itertuples():
-	# 	if pd.isna(row.url) or row.url == '':
+	# 	if pd.isna(row.url) or row.url == '' or row.category != "video":
 	# 		continue
 
 	# 	code = str(row.code).zfill(6)
@@ -444,6 +456,9 @@ if __name__ == "__main__":
 	# 	text_dir = f'data_kr/video/text/{row.sector}/{code}/'
 	# 	os.makedirs(audio_dir, exist_ok=True)
 
+	# 	if audio_dir + f'{row.year}-{row.quarter}' != 'data_kr/video/audio/산업재/003490/2016-Q2':
+	# 		continue
+		
 	# 	if extract_video_audio("link", row.url, audio_dir + f'{row.year}-{row.quarter}'):
 	# 		with open('data_kr/video/log.txt', "a", encoding="utf-8") as log_file:
 	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
@@ -454,15 +469,17 @@ if __name__ == "__main__":
 	# 			log_file.write(f"{timestamp} audio download error: {audio_dir + f'{row.year}-{row.quarter}'}\n")
 	
 	# ### 텍스트로 변환 ###
-	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
 	# for row in df.itertuples():
-	# 	if pd.isna(row.url) or row.url == '':
+	# 	if pd.isna(row.url) or row.url == '' or row.category != "video":
 	# 		continue
 
 	# 	code = str(row.code).zfill(6)
 	# 	audio_dir = f'data_kr/video/audio/{row.sector}/{code}/'
 	# 	text_dir = f'data_kr/video/text/{row.sector}/{code}/'
 	# 	os.makedirs(text_dir, exist_ok=True)
+		
+	# 	if audio_dir + f'{row.year}-{row.quarter}' != 'data_kr/video/audio/산업재/003490/2016-Q2':
+	# 		continue
 		
 	# 	try:
 	# 		text = audio2text(audio_dir + f'{row.year}-{row.quarter}')
@@ -482,7 +499,6 @@ if __name__ == "__main__":
 	# encoding = tiktoken.encoding_for_model("gpt-4")
 	# total_tokens = 0
 
-	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
 	# for row in df.itertuples():
 	# 	if pd.isna(row.url) or row.url == '':
 	# 		continue
@@ -509,7 +525,7 @@ if __name__ == "__main__":
 	# 	log_file.write(f"total tokens: {total_tokens}\n")
 
 	# ### LLM으로 영상 자막 요약 ###
-	# df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
+	# import shutil
 	# for row in tqdm(df.itertuples(), total=len(df), desc="LLM summarizing"):
 	# 	if pd.isna(row.url) or row.url == '':
 	# 		continue
@@ -519,10 +535,14 @@ if __name__ == "__main__":
 	# 	summary_dir = f'preprocessed_data/llm/summary/{row.sector}/{code}/'
 	# 	os.makedirs(summary_dir, exist_ok=True)
 
+	# 	if row.category == "article":
+	# 		shutil.copy(f'{text_dir}{row.year}-{row.quarter}.txt', summary_dir)
+	# 		continue
+			
 	# 	try:
 	# 		with open(text_dir + f'{row.year}-{row.quarter}.txt', "r", encoding="utf-8") as file:
 	# 			text = file.read()
-	# 		summary = summarize_text(text)
+	# 		summary = summarize_text(text, f'{row.name}({row.code})')
 	# 		with open(summary_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
 	# 			f.write(summary)
 	# 		with open('preprocessed_data/llm/summary/log.txt', "a", encoding="utf-8") as log_file:
@@ -534,7 +554,6 @@ if __name__ == "__main__":
 	# 			log_file.write(f"{timestamp} summary error: {summary_dir + f'{row.year}-{row.quarter}'}\n")
 
 	### LLM으로 자막요약을 통해 등락 예측 ###
-	df = pd.read_csv('data_kr/video/동영상 수집 통합본.csv')
 	for code in df["code"].unique():
 		df_ = df[df["code"] == code].reset_index(drop=True)
 		
@@ -564,13 +583,14 @@ if __name__ == "__main__":
 				
 				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
 					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-					log_file.write(f"{timestamp} predict completed: {predict_dir + f'{row.year}-{row.quarter}'}\n")
+					log_file.write(f"{timestamp} predict completed: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
 			except Exception as e:
 				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
 					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-					log_file.write(f"{timestamp} predict error: {predict_dir + f'{row.year}-{row.quarter}'}\n")
+					log_file.write(f"{timestamp} predict error: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
 
-		df_predict = df_[["year", "quarter", "disclosure_date", "code", "name", "sector"]]
+		df_predict = df_.copy()
 		df_predict["prediction"] = predict_list
 		df_predict["reason"] = reason_list
+		df_predict = df_predict[["year", "quarter", "disclosure_date", "code", "name", "sector", "prediction", "reason"]]
 		df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8-sig")

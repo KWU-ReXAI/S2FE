@@ -1,24 +1,3 @@
-### Summary of Key Economic Ideas and Developments in the KFX Project
+[아시아경제 박지환 기자] 한국항공우주는 12일 방위사업청으로부터 610억원 규모의 항공기 수리부속 공급계약을 체결했다고 공시했다. 이는 최근 매출액의 2.0%에 해당한다.
 
-- **Introduction to KFX Project:**
-  - The KFX project is focused on developing a next-generation Korean fighter jet.
-  - A significant milestone has been achieved with the unveiling of the A4 radar after four years of development.
-
-- **Technological Achievement:**
-  - The A4 radar is a critical component, often referred to as the "eyes" of the fighter jet.
-  - Developed entirely with domestic technology, overcoming initial skepticism about the feasibility of such an achievement without foreign assistance.
-
-- **Capabilities of A4 Radar:**
-  - Essential for air combat, allowing for early identification of enemy aircraft and targeting ground objectives.
-  - Offers a significant advancement over traditional mechanical radars, with the ability to track dozens of targets simultaneously at speeds 1,000 times faster.
-
-- **Impact on KFX Project:**
-  - The successful development of the A4 radar, one of the four core technologies of the Korean fighter jet, provides momentum to the overall KFX project.
-  - The project is on track with the first prototype expected to be released next year.
-
-- **Challenges and Future Steps:**
-  - Despite hardware completion, software stability remains a concern, as indicated by performance evaluations.
-  - The A4 radar will undergo further testing on the KFX prototype, with final development expected by 2026.
-
-- **Conclusion:**
-  - The KFX project represents a significant step forward in Korea's defense capabilities, with the A4 radar development marking a pivotal achievement in the journey towards a fully operational next-generation fighter jet.
+박지환 기자 pjhyj@asiae.co.kr<ⓒ경제를 보는 눈, 세계를 보는 창 아시아경제(www.asiae.co.kr) 무단전재 배포금지>

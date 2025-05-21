@@ -1,29 +1,31 @@
-**Summary of Key Economic Ideas and Arguments:**
+현대자동차 고급 브랜드 '제네시스'가 플래그십 세단 'G90'을 시작으로 차세대 인포테인먼트 시스템을 LG전자로부터 단독으로 공급받는다. 커넥티드 서비스 강화 과정에서 기존 하만보다 하드웨어(HW), 소프트웨어(SW) 스펙이 뛰어난 LG전자로 공급사를 바꾼 것이다. 일각에서는 삼성전자의 전장부품 사업 견제 일환이라는 해석도 나온다.
 
-1. **Impact of US-China Trade Conflict:**
-   - The ongoing US-China trade war is negatively affecting the South Korean home appliance industry.
-   - Companies like LG Electronics and Samsung Electronics are facing challenges due to the need to relocate production facilities from China.
+13일 업계에 따르면 제네시스는 이달 27일 출시하는 G90부터 적용되는 차세대 인포테인먼트 시스템을 LG전자로부터 단독 공급받는다. 기존 EQ900에 장착해 온 하만의 경우 제네시스 측에서 원하는 스펙을 맞출 수 없어 공급 사업자 지위를 유지할 수 없게 된 것으로 전해졌다.
 
-2. **Tariffs and Production Shifts:**
-   - The US has imposed an additional 10% tariff on Chinese-made home appliances such as refrigerators, air conditioners, and TVs.
-   - There is a potential for this tariff to increase to 25%, as indicated by President Trump.
-   - In response, LG and Samsung are considering shifting some production to domestic or Southeast Asian factories.
 
-3. **Economic Implications:**
-   - The initial advantage of lower labor costs in China is negated by the tariffs, prompting companies to explore cheaper production locations like Thailand and Vietnam.
-   - This shift could accelerate the trend of moving production bases from China to Southeast Asia.
 
-4. **Challenges of Relocation:**
-   - Relocating production facilities may lead to unexpected cost increases, potentially reducing export competitiveness.
-   - South Korean conglomerates that manufacture finished home appliances in China for export to the US, Europe, and globally are particularly affected.
+제네시스가 차세대 인포테인먼트 시스템 공급사로 LG전자를 택한 이유는 커넥티드 서비스를 강화하기 위해서다. 현재 서비스하고 있는 '제네시스 커넥티드' 경우 전용 애플리케이션(앱)을 통해 원격 시동, 문 개폐, 비상등 작동, 공조장치 설정 등 기능만 제한 제공한다. 그러나 제네시스 차세대 인포테인먼트 시스템은 풀터치 12.3인치 디스플레이, 내비게이션 자동 무선 업데이트(OTA), 지능형 차량관리 서비스 등 더욱 강화된 커넥티드 서비스를 적용하면서 시스템 '스펙 업'이 필요했다.
 
-5. **Broader Trade Impact:**
-   - The trade war has already impacted exports, as seen with washing machines facing US import restrictions under safeguard measures.
-   - The trade conflict is deepening the challenges faced by South Korean home appliance exports.
+G90는 국산차 최초로 OTA를 활용해 내비게이션 지도 및 SW를 무선으로 다운로드해서 업데이트를 할 수 있다. 기존 내비게이션 업데이트는 오프라인으로만 제공됐다. 내비게이션 자동 무선 업데이트는 주행 중에 내비게이션을 사용하면서도 필요한 부분에 대해 백그라운드 업데이트를 진행한다. 덕분에 통신비용도 적게 들고 고속 통신장비가 필요하지도 않다.
 
-**Logical Structure:**
-- Introduction of the issue: US-China trade war's impact on South Korean home appliance industry.
-- Explanation of tariffs and their immediate effects on production decisions.
-- Discussion of economic implications and strategic responses by companies.
-- Analysis of the broader impact on export competitiveness and existing trade measures.
-- Conclusion highlighting the deepening challenges for South Korean exports due to the trade conflict.
+
+
+LG전자는 인포테인먼트 시스템, 텔레매틱스 분야에서 세계 최고 기술력을 확보해 온 것으로 전해졌다. 현재 자동차 인포테인먼트 분야에서 벤츠, 제너럴모터스(GM) 등 글로벌 자동차 10개 기업을 고객사로 확보했다. 메르세데스-벤츠에 유기발광다이오드(OLED) 디스플레이를 활용한 인포테인먼트 시스템을 공급한다. 볼보·재규어랜드로버 차세대 시스템에도 인포테인먼트 제품을 공급할 예정이다.
+
+특히 LG전자는 지난해 자동차용 통신 모듈 텔레매틱스컨트롤유닛(TCU) 시장 점유율 26.3%로 콘티넨탈(16.2%), 하만(16.0%), 보쉬(7.1%) 등을 제치고 1위를 차지했다. TCU는 데이터 송수신을 통해 커넥티드 서비스를 가능하게 하는 장치다. LG전자는 퀄컴과 협력 관계를 맺고 5세대(5G) 이동통신 네트워크 기반의 커넥티드카 기술인 통신장비·차량간사물통신(C-V2X) 기술 솔루션을 개발하고 있다.
+
+
+
+업계 일부에서는 제네시스가 차세대 인포테인먼트 시스템 공급자에서 하만을 제외한 것을 두고 삼성전자 견제 때문이라는 관측도 있다. 삼성과 현대차는 삼성의 완성차 사업 진출, 서울 강남구 삼성동 한국전력공사 부지 선정 과정 등에서 껄끄러움이 남아 있다. 우리나라 재계 1, 2위라는 자존심도 있다.
+
+
+
+삼성전자는 2015년 자동차 전장부품 사업 진출을 선언했고, 이듬해 하만을 인수하면서 본격적인 시동을 걸었다. 하만은 OTA 원천기술을 보유한 이스라엘 기업 '레드벤드'를 인수해 커넥티드 서비스 솔루션을 보유하고 있어 업계의 이런 관측에 힘이 실리는 분위기다.
+
+
+
+제네시스 관계자는 “기존 공급사 하만은 차세대 인포테인먼트 시스템 공급사 선정 과정에서 일부 요건을 충족시키지 못했다”면서 “LG전자는 OTA뿐만 아니라 다양한 커넥티드 서비스를 구현할 수 있는 기술력을 갖추고 있어서 차세대 인포테인먼트 시스템 공급자로 택했다”고 설명했다. 이 관계자는 “삼성전자와는 그룹 계열사인 기아차가 이미 협력하는 등 필요한 부분에선 힘을 모으는 관계”라고 덧붙였다.
+
+
+
+류종은 자동차/항공 전문기자 rje312@etnews.com

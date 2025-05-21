@@ -1,27 +1,21 @@
-**Summary of Key Economic Ideas and Arguments:**
+팹리스 전문 텐스토렌트와 협업
 
-- **Strategic Collaboration for AI Development:**
-  - LG Electronics is focusing on enhancing its AI capabilities by partnering with global companies.
-  - A significant collaboration has been established with Tenstorrent, a company known for its expertise in AI semiconductors.
+스마트홈·모빌리티·커머셜 접목
 
-- **Leadership and Expertise:**
-  - The partnership involves key figures such as Jo Joo-hwan, CEO of LG Electronics, and Jim Keller, CEO of Tenstorrent.
-  - Jim Keller is recognized for his experience in leading processor development at major companies like Intel, AMD, and Tesla.
+LG전자가 세계적 반도체 설계 전문가인 짐 켈러 최고경영자(CEO)와 손잡았다. 켈러 CEO가 이끄는 인공지능(AI) 반도체 팹리스 기업인 텐스토렌트와 공동으로 AI 반도체를 개발하기로 했다. LG전자는 이를 통해 온디바이스 AI 기술 경쟁력을 확보해 AI 가전과 스마트홈, 모빌리티와 커머셜 등 미래 사업에서 혁신을 주도한다는 계획이다.
 
-- **Technological Advancements:**
-  - The collaboration aims to leverage Tenstorrent's AI capabilities and RISC-V technology, which are considered industry-leading.
-  - Focus is on developing low-power, AI-customized open IP designs.
 
-- **Future Plans and Innovations:**
-  - LG plans to enhance its capabilities in next-generation system semiconductors, including technologies like chiplet, which integrates multiple semiconductors into a single package.
-  - This approach allows for optimal processing, cost reduction, and improved yield rates.
 
-- **Applications and Synergies:**
-  - The partnership aims to create synergies in AI appliances, smart homes, and mobility sectors by utilizing the semiconductor IPs of both companies.
-  - An internship program is also being established to nurture talent and support workforce development.
+12일 LG전자에 따르면 조주완 LG전자 CEO 등 핵심 경영진은 지난 5일 서울 여의도 LG트윈타워에서 켈러 CEO 등 텐스토렌트 경영진과 만나 시스템 반도체 역량 강화를 위한 전략적 협업을 논의했다. 켈러 CEO는 반도체 기업 AMD에서 젠(Zen) 아키텍처를 개발하고, 애플과 테슬라에서 애플리케이션프로세서(AP)와 자율주행 전용 시스템 설계를 맡았다. 고성능 및 에너지 효율성을 동시에 추구하는 전략으로 반도체산업의 설계 패러다임을 변화시킨 인물로 평가받는다.
 
-- **Customer-Centric Solutions:**
-  - LG Electronics aims to implement "empathetic intelligence" by understanding customers through generative AI and providing differentiated experiences.
 
-- **Global Positioning:**
-  - Jim Keller emphasized LG Electronics' status as a global technology leader and the potential to offer customized solutions through strategic collaboration.
+
+양사는 급변하는 AI 기술 발전 속도에 맞춰 미래 사업을 선제적으로 준비하기 위해 칩렛 기술(여러 반도체를 하나의 패키지로 만드는 기술) 등 차세대 시스템 반도체 분야 역량을 강화하기로 했다. 또 각자 보유 중인 반도체 지식재산권(IP)과 여러 기술을 활용해 AI 가전부터 스마트홈, 모빌리티, 영상 관련 서버용 프로세서 등 다양한 사업 영역에서 협업하기로 했다.
+
+
+
+캐나다 토론토에 본사를 둔 텐스토렌트는 AI 반도체인 텐식스 신경망처리장치(NPU)를 개발한 기업이다. 텐식스 NPU를 통해 고성능 컴퓨팅(HPC) 반도체를 설계할 수 있는 기술 역량을 갖췄다는 게 업계의 평가다. 구광모 LG 회장이 지난 6월 북미 출장 당시 켈러 CEO와 회동하기도 했다. 조 CEO는 “텐스토렌트와의 협력을 통해 공감지능을 구현해 나갈 것”이라고 말했다.
+
+
+
+김채연 기자 why29@hankyung.com

@@ -1,33 +1,15 @@
-### Summary of Key Economic Ideas and Arguments:
+[서울경제]
 
-1. **LG Display's Current Market Position:**
-   - LG Display (LGD) is actively engaging in stock buybacks, with significant short-selling repayment occurring.
-   - Institutional investors are consistently purchasing LGD stocks, while foreign investments are also increasing.
+유기발광다이오드(OLED) 디스플레이가 프리미엄 TV 시장을 빠르게 잠식하면서 전세계 20여개 이상의 브랜드가 경쟁적으로 OLED TV를 내놓고 있다. 일본 JVC가 최근 유럽시장에 출시한 데 이어 내년에는 삼성전자가 본격적으로 가세하며 OLED TV가 대세를 이루는 원년이 될 것으로 전망된다.
 
-2. **Technological Advancements and Industry Trends:**
-   - LGD has completed factory expansions and is now operating at full capacity.
-   - In the context of the Fourth Industrial Revolution, displays are crucial, akin to the eyes, while semiconductors are the brain.
-   - The transition from LCD to OLED is significant, with OLED offering various advantages and applications.
+9일 디스플레이업계에 따르면 최근 일본 JVC가 유럽시장에 첫 OLED TV 판매를 개시하면서 OLED TV를 출시한 제조사가 세계 20곳에 달하는 것으로 나타났다. LG전자가 LG디스플레이 패널을 이용해 OLED TV를 처음 출시한 것은 지난 2013년으로 당시 LG전자가 유일한 제조사였지만 일본의 소니와 파나소닉, 유럽 뱅앤올룹슨, 필립스, 그룬딕 등 TV 업체들이 잇따라 가세하며 점차 ‘프리미엄 TV=OLED TV’ 공식이 일반화하는 모양새다. 특히 삼성디스플레이가 OLED 패널인 ‘퀀텀닷(QD) 디스플레이’를 이달부터 양산하며 내년에는 세계 TV 시장 1위인 삼성전자가 ‘QD-OLED TV’로 참전하는 만큼 시장은 더욱 달아오를 전망이다. 디스플레이업계의 한 관계자는 “제조사는 20곳이지만 브랜드 수는 이보다 더 많다”며 “프리미엄 TV 경쟁에 뛰어들려면 OLED 탑재가 필수라는 인식이 퍼지고 있다”고 전했다.
 
-3. **Competitive Landscape:**
-   - The display industry is less about cost competition and more about technological and functional advancements.
-   - LGD is seen as a leader in large panel production, a critical competitive advantage.
-   - The ability to produce uniform large displays is a key technological strength of LGD.
+OLED는 약 3,300만개 픽셀(화면의 가장 작은 단위)의 빛을 일일이 제어하는 ‘픽셀 디밍’ 기술을 이용함으로써 완벽한 검정색을 표현하고 명암비가 좋다고 평가된다. 또 액정표시장치(LCD)보다 응답속도가 1,000배 빠르고 시력 저하를 유발하는 플리커(미세한 깜빡임) 현상이 없다. 이같은 장점을 기반으로 최상위 TV 제품군에 OLED를 채택하는 제조사가 급증하면서 관련 시장도 빠르게 커지는 것으로 분석된다. 시장조사업체 옴디아에 따르면 올해 OLED TV 출하량은 650만대로 지난해보다 무려 80% 급증할 것으로 전망됐다. 옴디아는 올해 상반기까지만 해도 OLED TV 출하량을 580만대로 예상했으나 수요가 기대 이상으로 늘어나자 지난 6월 말 출하량 전망을 610만대로 한 차례 높였고, 9월 말에는 650만대로 재차 상향 조정했다.
 
-4. **Investment Considerations:**
-   - LGD is considered a valuable addition to investment portfolios due to its technological capabilities.
-   - The decision between investing in OLED technology or materials is separate, with materials requiring a broader customer base to mitigate risks.
-   - The growth of industries like electric vehicles and batteries is driven by a wide range of manufacturers, unlike OLED, which currently lacks such diversity.
+전 세계에 OLED TV 패널을 사실상 독점 공급 중인 LG디스플레이는 OLED 시장 대세에 따른 특수를 톡톡히 누리고 있다. LG디스플레이의 OLED TV용 패널 생산량은 올해 연 800만대에서 내년 1,000만대, 2022년 1,100만대(추정치)로 점차 늘리며 시장 수요에 대응할 방침이다. 하이투자증권은 LG디스플레이가 OLED TV 부문에서만 지난해 3조8,420억원의 매출을 올린 데 이어 올해 5조8,720억원, 내년 7조4,030억원으로 실적이 급증할 것으로 내다봤다.
 
-5. **Market Dynamics and Investment Strategy:**
-   - LGD's stock is a typical target for short-selling and is considered a heavy stock.
-   - Investors should assess their investment style and risk tolerance before investing in LGD.
-   - The company's operating profit margin is expected to improve by the end of next year, potentially increasing stock value by 1.5 times.
+국내 디스플레이업계는 최근 중국산 저가 공세에 밀려 액정표시장치(LCD) 패널 가격이 급락하면서 실적에도 악영향을 미쳤지만 OLED가 돌파구가 될 것으로 기대하고 있다. LG디스플레이의 경우 전체 매출에서 OLED패널이 차지하는 비중이 올해 40% 가량에서 내년 50%로 뛰어오르며 회사의 주력 제품이 OLED가 될 것이라는 관측이 나온다. 실적도 의미있는 개선이 나타날 전망이다. 서동희 LG디스플레이 CFO(최고재무책임자) 전무는 3분기 실적 콘퍼런스콜에서 “내년도 OLED는 1,000만대까지 판매할 수 있는 기반을 갖췄다”며 “내년 한 자릿수 중반대의 수익률 달성도 가능해 보인다”고 덧붙였다.
 
-6. **Technical Analysis and Future Outlook:**
-   - The stock is currently in a favorable position, with potential for exponential growth.
-   - Investors are advised to use portfolio reinvestment strategies to maximize returns.
-   - Despite current challenges, LGD's long-term prospects are positive, with expected improvements in profitability.
+김동원 KB증권 연구원은 “삼성전자가 프리미엄 TV 점유율 확대와 수익성 개선을 위해 내년 상반기 QD OLED TV를 출시할 것으로 보인다”며 “대형 OLED 생태계 확장의 전환점이 될 것”이라고 평가했다.
 
-### Conclusion:
-The video provides an in-depth analysis of LG Display's current market position, technological advancements, and competitive landscape. It highlights the importance of OLED technology in the Fourth Industrial Revolution and offers investment insights, emphasizing the need for investors to align their strategies with their risk tolerance and investment style.
+임진혁 기자 liberal@sedaily.com[서울경제 관련뉴스]

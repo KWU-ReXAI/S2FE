@@ -1,29 +1,19 @@
-**Summary of Key Economic Ideas and Analysis from the Video Transcript:**
+흩어진 물류기능 3조 규모…하나로 묶어 효율·전문성 제고
 
-1. **Solid (5G Communication Equipment):**
-   - **Investment Strategy:** Solid is a 5G communication equipment stock that moves with the broader 5G sector. It is characterized by slow and heavy movements, suggesting a preference for swing or long-term investment strategies.
-   - **Market Conditions:** The stock requires strong 5G sector momentum or specific 5G-related news to move significantly.
-   - **Financial Performance:** Recent sales have increased slightly, but operating and net profits have decreased, causing investor concern.
-   - **Key Considerations:** Monitor U.S. telecom companies' interactions with Samsung and other 5G-related stocks for potential movement triggers. Current support level is around 5,530 KRW.
+◆…포스코 물류업무 프로세스. 자료=포스코
 
-2. **POSCO International (Shale Gas and Resource Development):**
-   - **Sector Analysis:** The sector is not particularly strong, and the stock is heavy due to significant individual investor purchases.
-   - **Investment Strategy:** Consider a long-term approach due to the stock's slow upward movement. Suggested to switch to IT or semiconductor stocks for potentially better returns.
-   - **Financial Performance:** Sales and operating profits increased in 2018, but business and net profits decreased. Recent performance shows stable but not exceptional growth.
-   - **Key Considerations:** Future growth may depend on global or North Korean resource development news. Suggested to aim for a target price of 17,500 KRW for long-term gains.
+포스코가 연내 물류통합 운영법인 포스코GSP(Global Smart Platform)를 출범시킬 예정이라고 12일 밝혔다.
 
-3. **Dongwha Pharm (Pharmaceuticals):**
-   - **Product Analysis:** Known for products like Whalmyungsu and Fusidic Acid, which are stable but not rapidly growing in sales.
-   - **Investment Strategy:** The stock is stable but lacks significant growth catalysts. Consider selling during minor price increases to minimize losses.
-   - **Key Considerations:** Monitor for any new product developments or clinical trials that could impact sales. Current support level is around 10,000 KRW.
+포스코는 철강원료 구매, 국내외 제품 판매와 관련된 각종 운송계약이 내부 여러 부서에 분산돼 있고 포스코인터내셔널, SNNC, 포스코강판 등 계열사별로 물류 기능이 흩어져 있어 이번 통합을 결정했다. 물류 기능을 하나의 회사로 통합해 중복·낭비를 제거함으로써 효율성을 높이고 전문성을 강화한다는 복안이다.
 
-4. **Wonik QnC (Semiconductor Materials and Components):**
-   - **Sector Analysis:** Involved in semiconductor materials and 3D NAND, with a focus on domestic sales.
-   - **Financial Performance:** Sales and profits have decreased due to reduced factory operations, likely impacted by COVID-19.
-   - **Investment Strategy:** Consider gradual investment with a long-term view, as the company is expected to recover post-pandemic. Suggested entry price is around 11,500 KRW.
-   - **Key Considerations:** The company is fundamentally strong, and the semiconductor sector is expected to recover, providing future growth opportunities.
+회사측은 "계열사 포함 지난해 물동량은 약 1억 6000만톤, 물류비는 3조원 규모"라면서 "물류업무가 회사·기능별로 분산돼 판매·조달의 지원 기능으로만 운영되는 등 효율성과 전문성 제고가 시급한 것으로 분석됐다"고 설명했다.
 
-**Overall Recommendations:**
-- **Solid and POSCO International:** Require careful monitoring of sector trends and news for potential movement.
-- **Dongwha Pharm:** Stable but lacks growth catalysts; consider selling during minor price increases.
-- **Wonik QnC:** Promising for long-term investment due to expected recovery in the semiconductor sector.
+물류 통합법인은 원료·제품의 수송계획 수립, 운송 계약 등의 물류서비스를 통합 운영하고 인공지능과 로봇기술 기반의 물류 플랫폼으로 성장할 계획이다. 중소협력사에 이전하고 있는 포스코 스마트팩토리 기술을 물류파트너사에게도 접목해 함께 스마트화도 추진한다.
+
+국제환경규제에 대응하는 친환경 물류 인프라 구축도 계획안에 포함됐다. 국내 해운·조선사와 협업해 선박 탈황설비 장착, LNG추진선 도입 지원, 디젤 엔진 등으로 작동하는 항만 설비의 전기동력으로의 전환 지원, 친환경 운송차량 운영 지원 등에 나선다. 화물차주 대상 운송 직거래 계약도 도입된다. 이를 위해 화물차주가 직접 입찰에 참여하고 화물운송, 운송료 정산까지 할 수 있는 모바일 플랫폼이 구축될 예정이다.
+
+앞서 포스코는 포항·광양제철소에서 생산되는 제품의 육상 운송에 참여할 의향이 있는 개인 화물차주 모집을 시작했다. 시범 사업으로 시행되는 화물차주 직거래 계약·운송은 다음달부터 시범운영과 개선사항 반영 과정을 거친 뒤 법인 설립 시 적용한다는 방침이다.
+
+포스코는 "일각에서는 물류통합 법인이 설립되면 해운·운송업까지 진출해 사업영역을 침범하고 물류 생태계를 황폐화시킬 것이란 우려를 표명하고 있다"면서 "해운법에 따라 대량화주가 해상운송사업에 진출하는 것은 엄격히 제한되고 있고 해운업과 운송업에 진출할 계획이 없다"고 강조했다.
+
+이어 "법인 설립 이후 물류 효율성 제고와 전문성 강화를 통해 그룹 내 시너지 효과를 내면 성과 공유, 장기 전용선 계약, 기존 물류 파트너사 계약·거래구조 변동 없이 유지 등 상생협력을 이어나갈 계획"이라고 말했다.

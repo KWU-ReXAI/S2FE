@@ -1,35 +1,23 @@
-**Summary of Key Economic Ideas and Arguments:**
+제로 트러스트 보안 솔루션
 
-1. **Market Overview:**
-   - The market has experienced a downturn, with the NASDAQ dropping by 4-5% and the KOSPI showing resilience with a smaller decline of 1.23%.
-   - The speaker anticipates further market declines due to skewed supply and demand dynamics, with individual investors predominantly buying.
+프라이빗 커넥트, 패킷고
 
-2. **Investor Behavior:**
-   - Many individual investors are buying stocks under the misconception that the current market situation is an opportunity rather than a crisis.
-   - The speaker warns against the "moth to a flame" investment strategy, where investors buy at high prices without proper analysis, leading to significant losses.
+프라이빗테크놀로지, 포스코인터내셔널 로고.
 
-3. **Foreign Investment and Economic Indicators:**
-   - Foreign investors are reducing their holdings, and the speaker predicts further capital outflows if Korean interest rates do not align with global trends.
-   - The speaker highlights concerns about the Korean economy's growth rate and its impact on foreign investment.
+[정보통신신문=박광하기자]
 
-4. **Investment Strategy and Advice:**
-   - The speaker advises against panic selling and suggests holding onto stocks unless the investor has the skill to profit from other stocks post-sale.
-   - Emphasizes the importance of understanding the fundamentals of the companies in which one invests, rather than following trends or peer recommendations blindly.
+프라이빗테크놀로지가 자사의 제로 트러스트 보안 솔루션인 '프라이빗 커넥트(PRIBIT Connect)'와 '패킷고(PacketGo)'에 대한 해외 중개판매 계약을 포스코인터내셔널과 체결했다고 12일 밝혔다.
 
-5. **Sector-Specific Insights:**
-   - The speaker discusses specific stocks and sectors, such as the impact of the Ukraine-Russia conflict on feedstock companies and the potential for biotech stocks to rise due to ongoing developments in the healthcare sector.
+이번 계약 체결로 프라이빗테크놀로지의 프라이빗 커넥트와 패킷고가 전 세계 80여개 도시에 있는 포스코인터내셔널 해외법인과 지사의 글로벌 네트워크를 통해 유통될 예정이다.
 
-6. **General Investment Philosophy:**
-   - Encourages investors to develop their skills and knowledge to become capable of making informed decisions rather than relying on external advice.
-   - Stresses the importance of patience and strategic buying, especially during market downturns, to capitalize on future gains.
+김영랑 프라이빗테크놀로지 대표는 "글로벌 시장을 목표로 제로 트러스트 기술을 개발했지만, 해외 판매에 대한 어려움이 있었다"며 "앞으로는 글로벌 네트워크와 진출 노하우를 보유하고 있는 포스코인터내셔널과의 협업으로 이 같은 문제를 해결할 수 있게 됐다"고 계약 체결 소감을 밝혔다.
 
-7. **Practical Tips for Investors:**
-   - Investors should be cautious of buying stocks at their peak and should instead look for undervalued opportunities.
-   - The speaker suggests that investors should be prepared for volatility and have a plan for both upward and downward market movements.
+프라이빗테크놀로지는 세계 최초로 '데이터 플로우 계층 제로 트러스트 보안 기술'을 개발한 기업으로 알려져 있다.
 
-**Examples and Data:**
-- The speaker uses the example of the KOSPI and NASDAQ to illustrate market trends.
-- Specific stocks like "이지 바이오" and "포스코인터내셔널" are discussed to highlight common investment pitfalls and opportunities.
-- The impact of global events, such as the Ukraine-Russia conflict, on specific sectors is used to explain market dynamics.
+포스코인터내셔널을 포함한 국내 구축 사례를 다수 보유하고 있으며, 핵심기술에 대한 미국, EU, 일본 등 글로벌 특허를 확보하는 등 제로 트러스트 보안 사업에서 두각을 나타내고 있다.
 
-Overall, the video emphasizes the importance of informed and strategic investing, understanding market dynamics, and being prepared for both opportunities and risks in the economic landscape.
+프라이빗테크놀로지에 따르면, 최근 재택·원격근무 등 스마트워크 환경 확대로 기존 네트워크 보안에 대한 문제점이 노출되고 있다.
+
+이에 주요 선진국들은 차세대 보안 개념·체계인 '제로 트러스트'를 국가 단위의 정책으로 채택하고 있는 등 사이버보안 강화를 추진 중이다.
+
+저작권자 © 정보통신신문 무단전재 및 재배포 금지

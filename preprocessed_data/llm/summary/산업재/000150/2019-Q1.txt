@@ -1,38 +1,5 @@
-### Summary of Key Economic Ideas and Arguments:
+[ 김보형 기자 ] 두산그룹의 사업형 지주회사인 (주)두산이 제품의 물류 센터 입고부터 이동과 저장, 반출까지 전 과정을 제어하고 관리하는 ‘물류 자동화 솔루션’ 사업에 진출한다.
 
-- **Issue of Waste Management in Construction**:
-  - The video discusses the improper handling of construction waste at a highway construction site in Korea.
-  - The construction company, 주상건설주식회사, is accused of mixing construction waste with other types of waste, violating environmental regulations.
+(주)두산은 물류 자동화 사업을 운영할 두산로지스틱스솔루션을 설립했다고 14일 밝혔다. 두산로지스틱스솔루션은 물류 전 과정을 제어하고 관리하는 하드웨어 기술과 이를 뒷받침할 소프트웨어 기술을 통합해 ‘턴키’ 방식으로 솔루션을 제공한다. 전자상거래 업체와 중대형 물류 창고 운영 업체가 주요 고객이다.
 
-- **Regulatory Framework**:
-  - According to the Ministry of Environment, waste from construction sites should be categorized and processed based on its type, nature, and recyclability.
-  - The improper mixing of waste leads to increased costs for waste management, which should be borne by the construction company.
-
-- **Economic Implications**:
-  - The mismanagement of waste and the associated costs are seen as a misuse of public funds, as the project is a national infrastructure initiative funded by taxpayers.
-  - The project, 파도 양평고속도로, is part of a larger effort to enhance the highway network around Seoul, with significant investment involved.
-
-- **Public and Governmental Response**:
-  - There is public criticism regarding the oversight by the Korea Expressway Corporation, which is responsible for supervising the project.
-  - Calls for a thorough investigation to determine if the actions were intentional and to prevent future occurrences.
-
-- **Project Details**:
-  - The highway project aims to connect various regions and improve the transportation network.
-  - It involves significant infrastructure, including tunnels and bridges, with a total project cost of 6,350 billion won.
-
-### Logical Structure:
-
-1. **Introduction to the Issue**:
-   - Description of the waste management problem at the construction site.
-
-2. **Regulatory Context**:
-   - Explanation of the environmental regulations and the company's violations.
-
-3. **Economic and Public Impact**:
-   - Discussion on the financial implications and public criticism.
-
-4. **Call for Action**:
-   - Public demand for investigation and accountability.
-
-5. **Project Overview**:
-   - Details of the highway project and its significance to the regional infrastructure.
+김보형 기자 kph21c@hankyung.com

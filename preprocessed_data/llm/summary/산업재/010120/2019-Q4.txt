@@ -1,42 +1,15 @@
-The transcript appears to be a detailed technical discussion about Human-Machine Interfaces (HMIs), specifically focusing on the EXP and IXP2 series. Here is a concise summary of the key points and structure:
+한가해 보이나요? 일하는 중입니다
 
-### Overview of HMI Applications
-- HMIs can be installed in various settings such as machine control, food and beverage plants, boiler control, SCADA systems, power monitoring, and water treatment plants.
-- They are used for controlling and monitoring devices, machines, power panels, and production lines.
+고정관념 깬 스마트오피스
 
-### Product Series and Features
-- **EXP Series**: 
-  - Entry-level, economical HMIs.
-  - Screen sizes range from 4.2 inches to 15 inches.
-  - Features include 65,000 colors, LED backlit display, and basic connectivity options.
-  
-- **IXP2 Series**:
-  - Advanced, intelligent HMIs with enhanced features.
-  - Screen sizes from 8.4 inches to 15 inches.
-  - Offers dual-core 1GHz processor, higher memory capacity, dual Ethernet channels, HDMI output, and SD card support.
-  - Supports gestures, dual screen functions, and has a capacitive touchscreen.
 
-### Connectivity and Compatibility
-- Supports various protocols and can connect to multiple PLCs and devices, including LSIS, Rockwell, Mitsubishi, Omron, and Schneider.
-- Offers remote access via XP remote viewer and VNC app for monitoring and control.
-- Web server functionality allows device monitoring and control without additional software.
 
-### Technical Specifications
-- Both series are IP66 and NEMA 4X rated, suitable for harsh environments.
-- IXP2 offers higher resolution, more colors, and better processing power compared to the EXP series.
-- Supports multiple interfaces like Ethernet, USB, and audio output.
+33년 쓴 '산전'이란 이름 버리고
 
-### Use Cases and Examples
-- Examples of projects include control and monitoring of dryer fans, cooling systems, and heaters at a farm, and real-time data logging for power supplies.
-- Applications in various industries such as automotive manufacturing and HVAC systems.
+일하는 방식도 과감히 변신
 
-### Support and Resources
-- LS provides free software (XP Builder) for programming HMIs.
-- Technical support is available for program conversion and troubleshooting.
-- Manuals, catalogs, and software are accessible on the LS website.
+구자균 "매일 가고싶은 회사로"
 
-### Additional Features
-- The IXP2 series supports advanced features like multi-touch settings, gesture support, and dual monitor mode.
-- Offers explosion-proof and marine certificates for specific applications.
+구자균 LS일렉트릭 회장(왼쪽 두 번째)이 지난 27일 서울 LS용산타워 10층에 조성한 스마트오피스에서 직원들과 함께 점심 식사를 하고 있다. LS일렉트릭 제공
 
-This summary captures the main points and logical structure of the video, focusing on the technical aspects and applications of the EXP and IXP2 HMI series.
+지난 27일 서울 한강대로 LS용산타워 10층. LS일렉트릭 글로벌사업본부 직원 160명이 근무지를 경기 안양 본사에서 이곳 스마트오피스로 옮긴 첫날 구자균 회장은 직원들과 ‘햄버거 미팅’을 했다.구 회장은 “여러분에게 매일 와도 지겹지 않은 공간을 마련해주고 싶었다”고 말했다. 구 회장은 “LS가 지금까지 33년간 유지했던 보수적인 ‘차단기’ 문화를 ‘애자일(agile·민첩한)’ 문화로 바꾸기 위해서는 회사 이름뿐만 아니라 일하는 방식까지 모두 바꿔야겠다고 판단했다”고 설명했다.구 회장은 청바지에 워커를 신은 채 창밖 풍경을 감상하며 1인석에 앉아 근무하고 있는 직원을 가리켰다. “스타벅스에 가면 젊은 사람들이 집중해서 일하는 모습이 인상 깊었습니다. 저라도 팀장이 옆에서 지켜보는 사무실에선 집중이 안 되겠다는 생각이 들더군요.” 창가 바 자리 또는 사무실 중앙에 마련된 캔틴(옛 탕비실)에서 커피를 마시며 회의하는 직원들도 눈에 띄었다.3305㎡ 공간에 마련된 스마트오피스의 60%는 자유석으로 꾸몄다. 이상현 유럽영업팀 어소시에이트 매니저는 “인원수보다 좌석이 더 많아 시간대별로 하루에 몇 번씩 좌석을 옮겨다닐 수 있다”고 설명했다. 직원들 사이에 “LS는 ‘스타벅스처럼(like Starbucks)’의 약자”라는 말까지 나왔다.LS용산타워 10층은 구 회장이 꿈꾸는 LS일렉트릭의 미래를 상징적으로 보여주는 곳이다. 1974년 럭키포장을 모태로 성장한 LS일렉트릭은 1987년 3월 금성산전, 1995년 LG산전, 2005년 LS산전으로 이름을 바꿨다. 여러 차례 이름이 바뀌었지만 산업용 전력기기를 생산하는 회사라는 의미에서 ‘산전(産電)’이라는 명칭은 33년간 바꾸지 않았다. 국내 시장 매출 비중이 60%에 달하는 데다 산업용 전력·자동화 기기 1위 기업인 만큼 ‘산전’이 지닌 브랜드 파워도 컸다.하지만 올해부터 변화가 시작됐다. 지난 24일 주주총회에서 구 회장은 LS일렉트릭으로 사명 변경을 선언했다. 산업용 전력기기를 넘어 4차 산업혁명 시대에 맞춰 디지털 전환, 인공지능(AI), 사물인터넷(IoT) 등을 가미한 스마트 에너지 기업으로 변신하겠다는 취지였다.올초 조직 개편을 통해 글로벌 사업본부를 신설했다. 구 회장은 “내수시장에 머물러서는 우물 안 개구리가 될 수밖에 없다”며 “현재 매출의 40% 수준인 글로벌 사업 비중을 80%까지 높이는 게 목표”라고 말했다. 북미지역에서는 지난해 인수한 LS에너지솔루션스(옛 파커하니핀 ESS사업부)를 중심으로 산업용 에너지저장장치(ESS) 사업을 확대하고 유럽에서는 자동화 사업, 동남아시아에서는 전력기기와 자동화 사업 확대에 주력한다. LS용산타워에 글로벌사업본부를 위한 스마트오피스를 구축한 것도 빠르고 민첩한 대응이 필요한 조직 특성을 반영해 근무 환경을 조성해야 한다는 판단에서다.구 회장은 이날 직원들에게 “과거 33년 역사 속에서 ‘산전’ 브랜드를 가지고 수동적으로 살았다면, ‘일렉트릭’ 시대에는 능동적으로 새 역사를 써나가자”고 당부했다. 이어 “혁명을 넘어선 진화를 통해 진정한 의미의 글로벌 기업으로 거듭나자”고 강조했다.고재연 기자 yeon@hankyung.com

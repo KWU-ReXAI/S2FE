@@ -512,10 +512,13 @@ def merge_all_sectors_to_date_regression(base_merged_folder="../preprocessed_dat
     groups = combined_df.groupby(['year', 'quarter'])
     for (year, quarter), group in groups:
         group = process_columns(group)
+        group = group.sort_values(by="code")
         output_file = os.path.join(output_folder, f"{year}_{quarter}.csv")
         group.to_csv(output_file, index=False, encoding='utf-8-sig')
         print(f"✓ 연도 {year}, 분기 {quarter} 데이터가 {output_file}에 저장되었습니다.")
 if __name__ == "__main__":
+    merge_LLM_date_regression("정보기술")
+    merge_LLM_date_regression("산업재")
     merge_all_sectors_to_date_regression()
 """
 # 198: symbol

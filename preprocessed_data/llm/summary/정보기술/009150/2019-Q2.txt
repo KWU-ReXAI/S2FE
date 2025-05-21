@@ -1,19 +1,5 @@
-### Summary of Key Economic Ideas and Arguments:
 
-- **Stock Analysis: Samsung Electro-Mechanics**
-  - **Current Situation**: The stock price has recently fallen from a range of 90,000 to 100,000 KRW, breaking below 90,000 KRW and reaching the low 80,000s. The decline seems to have stabilized around 84,000 KRW.
-  - **Investment Advice**: 
-    - **No Need for Immediate Action**: The current market downturn does not necessitate selling the stock. The holding is not at a loss that requires a stop-loss action.
-    - **Potential for Additional Investment**: Given the formation of a support level, there is potential for additional buying.
-  - **Price Targets**: 
-    - **Short-term Target**: The target price is set between 95,000 and 96,000 KRW, considering the concentration of trading volume around 95,000 KRW.
-    - **Long-term Outlook**: The stock is unlikely to exceed 100,000 KRW this year due to challenges in recovering MLC prices. A more significant price increase is expected in the next year, potentially reaching 115,000 to 120,000 KRW by the first half of the year.
 
-- **Market Context and Strategy**:
-  - **Current Market Conditions**: The market is experiencing a downturn, and the stock is in a consolidation phase.
-  - **Investment Strategy**: 
-    - **Box Trading Approach**: Until a market reversal occurs, a box trading strategy is recommended, focusing on buying at support levels and selling at resistance levels.
-    - **Long-term Perspective**: Investors should be prepared for a gradual recovery, with significant price movements expected in the next year.
 
-### Conclusion:
-The analysis suggests that while the current market conditions are challenging, Samsung Electro-Mechanics has reached a support level, making it a potential candidate for additional investment. The short-term strategy involves targeting a price range of 95,000 to 96,000 KRW, with a more optimistic outlook for the next year. Investors are advised to adopt a box trading strategy in the interim.
+
+코스피에서 외국인을 중심으로 '셀(Sell) 코리아' 행렬이 이어지는 가운데 외국인은 삼성그룹 계열사에 집중 러브콜을 보내고 있다. 외국인의 팔자 행렬은 일본의 화이트리스트 배제 조치로 한일 경제갈등 양상이 전면전으로 치달은 지난 2일 이후 본격화했는데, 삼성전기 삼성SDI 호텔신라 등 삼성그룹 관련주는 강한 매도세 속에서도 외국인들의 집중 선택을 받았다. 이들은 하반기 실적 반등 가능성이 높거나 장기 업황 개선에 무게가 실리는 종목으로 꼽힌다.6일 한국거래소에 따르면 이달 2일부터 6일까지 삼성전기 삼성SDI 호텔신라 등 삼성그룹 계열사는 나란히 외국인 순매수 상위 종목에 이름을 올렸다. 외국인은 삼성전기를 189억원어치 순매수했는데, 이는 코스피 순매수 종목 2위에 해당한다. 삼성SDI(184억원·3위)와 호텔신라(126억원·6위) 역시 외국인이 이 기간 100억원 이상 순매수했다.순매수 규모가 이례적이라고 평가할 정도로 크지는 않지만 외국인이 코스피에서 하루 평균 4000억원이 넘는 주식을 팔아치우는 과정에서 이뤄진 선택이라 투자자들의 이목을 끈다.외국인 순매수 순위 3위에 이름을 올린 삼성SDI는 하반기 실적 개선 전망에 무게가 실린다. 삼성SDI는 올해 상반기 영업이익 2761억원을 기록했다. 지난해 같은 기간보다 영업이익이 22.8% 증가한 수준이다. 지난해 실적이 역대 최대 규모였던 것을 감안하면 상대적으로 준수한 성적을 거뒀다는 분석이 나온다. 특히 지난해 전국에서 잇따라 발생한 에너지저장장치(ESS) 화재로 올해 상반기 국내 중대형 전지 판매에 차질을 빚었지만 소형전지 등 다른 사업부의 견조한 실적이 버팀목이 됐다.하반기 삼성SDI는 상반기 동안 거의 중단됐던 국내 ESS 사업에 대한 매출 재개가 기대된다. 특히 ESS는 계절성이 작용해 4분기 매출이 극대화되는 구조다. 증권업계에서는 하반기 삼성SDI 영업이익이 5435억원으로 전년 동기 대비 10.9% 증가할 것으로 내다보고 있다. 김영우 SK증권 연구원은 "4분기 중대형 전지 부문 실적이 급상승하게 될 것으로 기대한다"며 "원형전지를 포함한 소형전지 부문 실적 역시 견조하게 이어질 것"이라고 평가했다.호텔신라도 하반기 지난해 대비 실적 개선이 유력한 것으로 평가된다. 증권사 3곳 이상이 추정한 호텔신라의 3분기와 4분기 예상 영업이익 합계액은 1386억원으로 전년 동기 대비 45.1% 증가할 것으로 예상된다. 내국인 해외여행 수요 둔화와 중국 경기 부진에 따른 입국 유커 수 증가 제한 등 어려움은 있지만 명품 화장품 중심으로 꾸준한 수요가 예상돼 하반기에도 높은 영업이익 성장률이 기대된다는 평가다.박상준 키움증권 연구원은 "중국 전자상거래법 시행에 따른 우려에도 불구하고, 중국 보따리상(다이궁) 수요는 여전하고 산업 내 경쟁 강도에도 큰 변화가 없는 것으로 판단된다"며 "올해 11월 최종 사업자가 선정되는 시내 면세점 입찰 전략 역시 하반기를 주목해볼 만하다"고 분석했다.외국인 순매수 상위 종목에 이름을 올린 삼성전기는 하반기 뚜렷한 실적 변화보다 업황 개선에 관심이 모인다. 삼성전기 2분기 영업이익은 1452억원으로 전년 동기 대비 30% 급감했다. 특히 삼성전기 주력 제품인 적층세라믹콘덴서(MLCC) 부문 영업이익이 지난해 3분기 3929억원에서 올해 1분기 1906억원, 2분기 1259억원으로 감소하고 있는 영향을 받았다. 중국 보조금 축소로 전기차 판매가 둔화되면서 MLCC 재고 소진이 예상보다 더뎠다는 점이 실적에 반영된 것으로 평가된다.노경탁 유진투자증권 연구원은 "3분기 MLCC는 전장의 견조한 수요와 함께 정보기술(IT)용 MLCC 재고 소진이 지속되면서 완만한 업황 개선세가 예상된다"며 "수요 회복 시점 지연 등 IT 수요 불확실성이 존재하지만 5G(5세대 이동통신)나 폴더블 스마트폰 등 기술적 변화에 따른 하이엔드 부품에 대한 수요는 중장기적으로 증가할 것"이라고 말했다.[유준호 기자][ⓒ 매일경제 & mk.co.kr, 무단전재 및 재배포 금지]

@@ -1,35 +1,9 @@
-### Summary of Key Economic Ideas and Data from the Video on 현대글로비스:
+현대글로비스는 올해 ‘선택과 집중’ 전략에 따라 미래 먹거리를 확보하기 위한 투자를 적극적으로 확대하고, 내실 있는 경영 활동을 이어가 지속적인 성장 발판을 마련한다는 계획이다.
 
-#### Company Overview:
-- 현대글로비스 is a transportation-related service company located in Gangnam-gu, Seoul.
-- As of March 8, 2024, the stock price is 188,500 KRW, a 13% decrease from the previous day and a 0.26% decrease from February 7, 2024.
-- The 52-week high was 207,000 KRW on March 7, 2024, and the 52-week low was 149,500 KRW on March 16, 2023.
+먼저 주력인 자동차 해상 운송 사업에서 공격적인 투자로 초대형 자동차운반선(PCTC·Pure Car&Truck Carrier) 운영 규모를 확대한다. 최근엔 한국해양공사와 업무협약을 맺고 초대형 PCTC 네 척을 2027년부터 운용하기로 했다. 소형차 기준 최대 1만800대를 선적할 수 있는 규모로, 현재 운항 중이거나 발주된 자동차운반선 중 가장 크다.
 
-#### Stock Performance:
-- Over the past year, the stock price has increased by approximately 22.32%.
-- In the past month, individual investors sold a net 120,000 shares, institutions bought a net 90,000 shares, and foreign investors sold a net 20,000 shares.
-- Foreign ownership increased from 46.11% to 48.5% over the past year, peaking at 48.6% on February 27, 2024.
+지난해 10월엔 2조4922억원을 투자해 LNG 이중연료 추진엔진 PCTC 12척을 확보하기로 했다. 현대글로비스 관계자는 “투자를 지속해 2027년까지 PCTC 총 110척을 확보할 계획”이라며 “초대형 PCTC를 다수 확보함으로써 자동차선 부족 사태에 선제적으로 대응할 수 있을 것”이라고 말했다.
 
-#### Financial Performance:
-- Recent quarterly revenue is approximately 25 trillion KRW, a 77.06% increase from 14 trillion KRW in 2015.
-- Operating profit is approximately 1 trillion KRW, a 136.24% increase from 698 billion KRW in 2015, with an operating margin of 6.35%.
-- Net profit is approximately 1 trillion KRW, a 213.15% increase from 377 billion KRW in 2015, with a net margin of 4.54%.
+‘전기차 사용 후 배터리 재활용’ 사업에도 속도를 더한다. 폐리튬 이온배터리를 저온 진공시스템으로 처리하는 기술과 설비 특허를 보유한 이알에 지분 투자를 단행했다. 또 전기차 사용 후 배터리 회수부터 재활용까지 사업 전반에 걸친 역량을 확보하기 위한 투자와 파트너사 발굴을 지속적으로 추진한다.
 
-#### Valuation Metrics:
-- Price-to-earnings (P/E) ratio is approximately 5.99, a 68.81% decrease from 19.21 in 2015.
-- Price-to-book (P/B) ratio is approximately 0.93, a 60.16% decrease from 2.34 in 2015.
-- Return on Assets (ROA) is 8%, and Return on Equity (ROE) is 15.54%.
-
-#### Market Position:
-- Market capitalization is 7.0687 trillion KRW, ranking 57th among listed companies and 52nd in the KOSPI index.
-- Revenue ranks 25th among listed companies and 1st in the transportation-related service industry.
-- Operating profit ranks 28th among listed companies and 1st in the industry.
-- Net profit ranks 26th among listed companies and 1st in the industry.
-
-#### Stock Trends and Predictions:
-- Three major trend shifts in the past three years: 
-  - Downtrend from May 3, 2022, to July 10, 2022.
-  - Downtrend from July 10, 2022, to April 14, 2023.
-  - Uptrend from April 14, 2023, to present.
-- Statistically, July is predicted to have the highest growth rate, while January is expected to have the lowest.
-- Both short-term and long-term stock price predictions suggest an increase from the current price.
+앞서 2021년 현대글로비스는 세계 각국에서 발생하는 사용 후 배터리 수거를 위해 전용 회수 용기를 개발해 특허까지 취득했다. 회수 용기는 여러 층에 배터리를 담아 한꺼번에 운송할 수 있게 제작해 효율성과 안전성을 높였다. 현대글로비스 관계자는 “2024년은 전략적인 투자에 집중해 기업의 경쟁력을 끌어올리는 데 주력할 예정”이라며 “기존 사업은 물론 신사업 기반을 견고히 다지는 한 해가 될 수 있게 노력하겠다”고 말했다.

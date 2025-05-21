@@ -1,39 +1,7 @@
-### Summary of Key Economic Ideas and Arguments
+영업이익 2조2708억 원...글로벌 선사 수준 경쟁력 확보 나서
 
-1. **Concept of "선반영" (Pre-reflection):**
-   - The term "선반영" refers to the phenomenon where stock prices do not rise despite positive news or earnings surprises because the market has already anticipated and reflected these expectations in the stock price.
-   - Example: HMM's stock price surged 12 times over a year before the first-quarter results were announced, reflecting market expectations of record-high performance and container freight index.
+HMM 배재훈號, 3분기 사상 최대 ‘어닝서프라이즈’에 휘파람 이미지 확대보기 배재훈 HMM 대표. 사진=HMM
 
-2. **Market Expectations and Investment:**
-   - Understanding market expectations is crucial for successful investing. If investors can accurately read and anticipate changes in market expectations, they can achieve superior returns.
-   - Michael Mauboussin, a prominent investment strategist, emphasizes the importance of reading current market expectations and predicting when and where these expectations will change.
+HMM 배재훈號, 3분기 사상 최대 ‘어닝서프라이즈’에 휘파람 이미지 확대보기 HMM의 3분기 실적 이미지. 사진=HMM
 
-3. **Michael Mauboussin's Investment Philosophy:**
-   - Mauboussin outlines a three-step approach to expectation investing:
-     1. Identify the market's expectations reflected in stock prices.
-     2. Determine when and where these expectations might change.
-     3. Decide on buying or selling based on anticipated changes in expectations.
-
-4. **Case Study: Gateway:**
-   - Mauboussin uses Gateway as an example to illustrate his investment philosophy.
-   - He suggests using the concept of PIE (Price Implied Expectations) to understand market expectations by working backward from the current stock price to estimate future cash flows and growth rates.
-   - Key factors affecting stock prices, such as sales growth rates and operating margins, should be identified and analyzed.
-
-5. **Discounted Cash Flow (DCF) and PIE:**
-   - DCF is used to calculate a company's current value by discounting future cash flows at a certain rate.
-   - PIE reverses this process by setting the current stock price as the target and estimating the growth rates and profit margins needed to justify this price.
-
-6. **Market Assumptions and Investment Decisions:**
-   - Investors should focus on the assumptions the market is making about a company's future performance, such as sales growth and operating margins.
-   - For example, Gateway's stock price was analyzed based on different sales growth scenarios, leading to varying price targets.
-
-7. **Avoiding Sunk Cost Fallacy:**
-   - Mauboussin warns against the sunk cost fallacy, where investors justify past decisions rather than focusing on current value.
-   - He advises buying stocks only when they are trading significantly below their expected value, regardless of past decisions.
-
-8. **Practical Application:**
-   - Mauboussin's approach provides a structured framework for investment decision-making, allowing investors to use quantitative data to guide their choices.
-   - He encourages investors to use available data sources to practice reading market expectations and making informed investment decisions.
-
-### Conclusion
-Michael Mauboussin's expectation investing philosophy offers a systematic approach to understanding and leveraging market expectations for successful investing. By focusing on market assumptions and avoiding common investment pitfalls, investors can make more informed and potentially profitable decisions.
+국적 선사 HMM(옛 현대상선)이 3분기 영업이익 2조2708억 원을 달성해 창립 이래 분기 최대 실적을 거머쥐었다.HMM은 3분기 매출 4조164억 원, 영업이익 2조2708억 원을 달성했다고 10일 밝혔다. 이번 실적은 지난해 3분기 실적인 매출 1조7185억 원, 영업이익 2771억 원 대비 각각 133%, 719% 상승한 것이다.HMM은 또 올해 1~3분기 누적 실적은 매출 9조3511억 원, 영업이익 4조6790억 원으로 업계 부러움을 사고 있다.3분기 매출과 영업이익에서 '어닝 서프라이즈(깜짝 실적호조)'를 일궈낸 HMM은 3분기 부채비율도 100%를 기록해 지난해 말 부채비율 455%와 비교해 크게 개선됐다.부채비율은 총 부채를 자기자본으로 나눈 수치다. 즉, 부채비율이 낮을수록 기업 재무 건전성은 높다고 볼 수 있다.HMM 관계자는 “해운 운임 상승과 초대형 컨테이너선 20척 투입 효과 등으로 매출과 영업이익이 모두 늘었다”며 “미주 노선과 유럽, 기타 지역 등 전세계 운임이 크게 상승한 데 따른 것”이라고 설명했다.그는 또 “향후 비용을 더 줄이고 화물을 더 유치해 글로벌 선사 수준의 경쟁력을 갖춰 나가도록 노력하겠다”고 말했다.한편 4분기는 컨테이너선을 활용한 해운업의 계절적 비수기다.특히 신종 코로나바이러스 감염증(코로나19) 대유행에 따른 전 세계 물류대란으로 미국 주요 항만이 적체된 데다 중국 전력난에 따른 생산 차질, 인플레이션 우려 등으로 해운 운임이 일시적으로 오르는 모습이다.이에 따라 HMM은 초대형 선박 20척을 활용해 유럽 항로에서 화물을 안정적으로 확보하고 고객사 요구를 반영한 맞춤형 해운 서비스 제공, 정보기술(IT) 시스템 개선 등 경영혁신을 통해 영업능력을 강화할 방침이다.남지완 글로벌이코노믹 기자 ainik@g-enews.com

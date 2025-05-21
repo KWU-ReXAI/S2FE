@@ -1,42 +1,39 @@
-The transcript appears to be a technical analysis of Hyundai Glovis's stock performance, focusing on price movements, resistance levels, and potential buying strategies. Here is a concise summary of the key economic ideas and arguments presented:
+현대글로비스가 중국 최대 민영 물류 그룹 '창지우'와 손잡고 중국-유럽 간 물류 사업 확대에 나선다. 폴란드에 위치한 현대글로비스 유럽법인 자회사 ‘아담폴(Adampol)’의 지분 일부를 창지우에 매각하고 파트너십을 강화하겠다는 전략이다.
 
-### Key Economic Ideas and Arguments:
-- **Technical Analysis of Hyundai Glovis:**
-  - The video discusses the stock price movements of Hyundai Glovis, focusing on resistance and support levels.
-  - The 120-day moving average (120이평선) is highlighted as a significant support level, where the stock price tends to bounce back.
-  - The importance of setting buy orders slightly above the 120-day moving average to ensure execution is emphasized.
+현대글로비스가 보유한 유럽 철도 환적 인프라에 창지우의 방대한 중국 발 유럽 운송 물량이 더해지면서 강한 시너지를 낼 것으로 보인다. 코로나19 여파로 글로벌 해운 운임이 가파르게 상승하면서 철도가 유럽 행 물류운송의 대안으로 떠오른 만큼 두 기업의 합력이 큰 경쟁력을 갖출 것으로 전망된다.
 
-- **Resistance Levels:**
-  - A major resistance level is identified at 213,000 KRW, which the stock has struggled to break through.
-  - The stock's inability to break through this resistance level suggests limited upward momentum.
+글로벌 SCM 전문기업 현대글로비스는 창지우그룹과 아담폴 지분 투자 협약을 체결했다고 3일 밝혔다. 협약에 따라 현대글로비스는 아담폴 지분 100% 중 30%를 창지우에 매각하고 투자 파트너로서 공동 사업을 추진한다.
 
-- **Investment Strategy:**
-  - Investors are advised to be cautious and consider selling if the stock approaches 200,000 KRW, especially if they are feeling anxious about potential losses.
-  - The video suggests waiting for a better buying opportunity if the stock price dips again.
+1997년 설립된 창지우는 베이징에 본사를 두고 완성차 물류, 신차 판매, 특장차 생산, 자동차 금융 등의 사업을 하고 있다. 2019년 그룹의 전체 매출은 약 7조원으로 그해에만 중국에서 생산된 60여 개 자동차 메이커의 완성차 약 320만대를 육상과 철도로 운송했다.
 
-- **Market Sentiment and External Factors:**
-  - The influence of Tesla and the electric vehicle market on automotive stocks, including Hyundai Glovis, is noted.
-  - The concept of "noise marketing" is mentioned, where both positive and negative news can drive interest in a stock.
 
-- **Current Market Position:**
-  - Hyundai Glovis is currently facing significant resistance and has not yet broken through key levels, making it a less favorable buy at the moment.
-  - The stock is described as having potential due to its connection with the broader automotive industry, but current technical indicators suggest caution.
 
-### Logical Structure:
-1. **Introduction to Hyundai Glovis Stock Analysis:**
-   - Overview of current stock price movements and technical indicators.
-   
-2. **Detailed Technical Analysis:**
-   - Discussion of resistance and support levels, particularly the 120-day moving average.
-   - Explanation of buying strategies based on these technical indicators.
+현대글로비스 유럽법인이 2014년 인수한 아담폴은 폴란드 동부 국경 인근 말라쉐비체(Malaszewicze)에 철도 화물 환적 시스템을 갖춘 기차 터미널을 운영하고 있다. 막대한 중국횡단철도(TCR, Trans china railway) 운송 물량을 확보하고 있는 창지우와 협업해 큰 상승효과를 낼 수 있는 부분이다. 창지우는 완성차 1만대 포함 연간 약 4100FEU(1FEU=40피트짜리 컨테이너 1개)의 물량을 블록트레인(급행 화물열차)에 실어 중국과 유럽을 오간다.
 
-3. **Market Sentiment and External Influences:**
-   - Impact of Tesla and the electric vehicle market on Hyundai Glovis.
-   - The role of market psychology and investor sentiment.
+TCR은 칭다오/시안/충칭 등 중국 각지에서 카자흐스탄과 러시아 등 독립국가연합(CIS) 국가를 거쳐 유럽 각 지역으로 연계되는 철도노선이다. 중국과 유럽은 두 레일의 간격인 ‘궤간’이 1435㎜인 표준궤를, CIS의 국가들은 1520㎜인 광궤를 사용한다.
 
-4. **Investment Recommendations:**
-   - Caution advised for current investors, with specific price targets for selling.
-   - Suggestions for potential buying opportunities if the stock price dips.
+때문에 TCR은 중국과 카자흐스탄 국경에서 화물을 환적한 뒤 유럽에 입문하면서 한 번 더 환적을 해야 한다. 유럽국경을 넘는 창지우의 기차가 아담폴의 말라쉐비체 환적 시스템을 전용으로 이용하면 화주의 비용 절감과 일정 관리에 유리하다.
 
-5. **Conclusion:**
-   - Summary of the current market position and potential future movements of Hyundai Glovis stock.
+또한 창지우가 기존에 보유중인 대규모 TCR 물량을 통해 가격 경쟁력도 갖출 수 있어 중국과 유럽의 신규 화주 유치에도 큰 도움이 된다.
+
+▲양사 중국-유럽 TCR 철도 물류 서비스 오픈, 값 오른 해상운송의 대안될 듯
+
+현대글로비스는 두 기업의 장점을 결합한 공동사업으로 중국-유럽 철도 운송 전문 브랜드 ‘ECT(Euro China Train)’를 론칭한다. TCR을 이용해 차별화된 물류 서비스를 제공하는 것이 핵심이다.
+
+현대글로비스와 창지우그룹은 ECT를 통해 향후 시안∙충칭 등 중국 내륙 도시에서 폴란드를 거쳐 독일∙영국을 포함한 서유럽과 노르웨이∙스웨덴 등 북유럽까지 운송영역을 지속 확대해 나갈 예정이다. 이를 위해 말라쉐비체와 북부 항구 도시인 그단스크(Gdansk)를 직접 연결하는 철도 물류 루트도 개척하고 독보적인 서비스를 선보인다.
+
+그단스크에 철도와 해상을 잇는 항만 물류 인프라도 완비하고 있어 ECT를 이용할 경우 폴란드에서 발트해를 통해 스칸디나비아 반도와 영국까지 해상으로 화물을 바로 운송할 수 있다. 때문에 독일 함부르크(Hamburg)와 뒤스부르크(Duisburg)까지 철도로 이동한 후 북유럽으로 해상운송을 하는 기존의 TCR 노선보다 운송기간을 평균 4일 단축시킬 수 있다.
+
+코로나 19여파로 최근 급상승한 해운운임 탓에 철도가 유럽 물류운송의 대안으로 부상한 만큼 ETC는 강한 경쟁력을 갖출 것으로 보인다. 참고로 철도로 중국에서 유럽으로 40피트 컨테이너 하나를 운송하려면 3800~6000달러, 해상운송은 800~2500달러가 소요됐으나 코로나19의 여파로 상황이 변했다. 상하이해운거래소에 따르면 지난해 12월 유럽 노선의 해운 운임은 6개월 사이 170%나 올랐다.
+
+현대글로비스는 자사의 자동차 물류 노하우와 창지우의 중국 내 네트워크를 활용해 유럽과 중국의 완성차 업체를 대상으로 공격적인 영업도 할 계획이다. 양사는 최근 공동으로 독일의 프리미엄 메이커의 완성차를 독일 딩골핑에서 중국 청두까지 철도로 시범 운송한 바 있다. 향후 본물량도 공동 영업을 통해 수주할 계획이다.
+
+아울러 전자∙화학제품, 부품∙기계∙장비 등 유럽과 중국을 오가는 비계열사 컨테이너 화물을 대상으로 집중 영업할 구상도 갖고 있다. 중국과 유럽에 진출한 한국 기업들도 주요 잠재 화주다.
+
+현대글로비스 관계자는 “창지우의 지분 참여를 통해 두 회사의 역량을 극대화하고 협력 관계를 발전시켜 유라시아 물류 영토를 확장해 나갈 것”이라고 말했다.
+
+참고로 아담폴은 현대글로비스가 2014년 인수한 폴란드 물류기업으로 유럽 현지에서 BMW, 폴크스바겐, 닛산 등 글로벌 메이커 차량을 운송∙보관하는 사업을 한다. 유럽 중앙부의 물류 허브’인 폴란드에 1990년 설립됐으며, 폴란드 동북부 비아위스토크(Białystok)에 본사를 두고 있다. 영국, 벨기에, 러시아 등 유럽 각지에 지사를 두고 활발한 물류 사업을 펼치고 있다.
+
+현대글로비스가 인수하던 당시 아담폴의 연간 차량 운송 규모 약 40만 대 수준이었다. 이후 현대글로비스의 글로벌 물류 네트워크와 영업력을 바탕으로 성장세를 이어가, 지난해 연 운송 규모를 90만대 이상으로 늘렸다. 아담폴은 말리쉐비체, 그단스크 등 폴란드 주요 도시에 2만5000여대의 차량을 보관할 수 있는 물류기지를 운영하고 있다. 현대글로비스의 아담폴 인수는 국내 물류기업이 유럽의 주요 물류기업을 인수한 최초 사례다.
+
+저작권자 © 해사신문 무단전재 및 재배포 금지

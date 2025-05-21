@@ -1,31 +1,3 @@
-**Summary of Key Economic Ideas and Arguments:**
+장규호 증권부 차장 danielc@hankyung.com
 
-1. **Separation from Hyundai Group:**
-   - Hyundai Merchant Marine (HMM) has officially separated from the Hyundai Group after 40 years.
-   - The company is now a subsidiary of the Korea Development Bank (KDB).
-
-2. **Historical Context and Growth:**
-   - HMM was initially part of the Hyundai Group, a significant conglomerate in South Korea.
-   - The company expanded significantly in the late 20th century, becoming the world's 8th largest shipping company by the late 1990s.
-
-3. **Challenges and Crises:**
-   - HMM faced a major crisis following the death of a key figure, Chung Mong-hun, in 2003, which led to significant changes in leadership and management.
-   - The 2008 global financial crisis severely impacted HMM, leading to a prolonged economic downturn and liquidity issues.
-
-4. **Recovery Efforts:**
-   - HMM undertook several measures to stabilize, including debt restructuring and joining shipping alliances.
-   - Despite these efforts, the company had to separate from the Hyundai Group to ensure its survival and continued operations.
-
-5. **Impact on Hyundai Group:**
-   - The separation of HMM has significantly reduced the Hyundai Group's assets, which were once ranked first in the business world, now reduced to approximately 2.7 trillion won.
-
-6. **Future Prospects:**
-   - HMM is preparing for a new phase of operations under the ownership of KDB, with a focus on achieving management normalization and setting a new strategic direction.
-
-**Logical Structure:**
-- Introduction of HMM's separation from Hyundai Group.
-- Historical growth and significance of HMM within the Hyundai Group.
-- Challenges faced by HMM, including leadership changes and financial crises.
-- Recovery strategies implemented by HMM.
-- The impact of HMM's separation on the Hyundai Group's financial standing.
-- Future outlook for HMM under new ownership.
+법정관리를 가까스로 모면한 현대상선이 이번에는 공매도 논란에 휩싸였다. 지난 2일 2000억원 규모의 전환사채(CB) 발행 계획을 공시하기 직전 공매도가 대거 몰리며 이날 하루에만 주가가 27.9% 급락했다는 것이다. 일부 언론은 기관, 헤지펀드들을 의심하기 시작했다. ‘CB 발행’이란 미공개정보를 이용해 공매도에 나섰다는 의혹이 일고 있다고 전했다.증권 전문가들은 그러나 공매도 급증을 ‘미공개정보 이용’ 의혹으로 연결시키는 시각은 문제가 있다고 꼬집었다. 업계 관계자는 “기존 주식의 다섯 배가 넘는 1억5100여만주의 현대상선 신주가 지난 5일 상장 예정돼 있었다”며 “대규모 매도 물량이 쏟아지는 오버행 가능성이 공매도 증가를 불러왔다고 보는 게 정확하다”고 했다.이런 앞뒤 사정을 보면 ‘공매도=죄악’이라는 인식이 우리 증시 주변에 얼마나 널리 퍼져 있는지 알 수 있다. 특정 종목에 공매도가 늘어나면 ‘시세조종 세력이 배후에 있다’ ‘공매도 때문에 무고한 개미들만 죽어난다’는 얘기가 반사적으로 나온다. 몇 년 전 공매도에 시달리던 제약업체 셀트리온 주주들이 그랬다. 올 들어서는 공매도의 선행지표라 할 수 있는 주식 대차거래 잔액이 사상 최대치를 기록했다며 증시 침체 ‘원흉’으로 공매도를 몰아가기도 한다. 심지어 공매도 세력이 활용할 수 있는 주식대여를 해서 돈을 벌었다며 국민연금의 주식대여를 금지하는 법률 개정안을 야당 의원이 발의하기도 했다.이해가 안 가는 바는 아니다. 거래대금이 일정 수준을 넘지 못하고, 신규 상장사도 크게 늘지 않고, 성장이 의미 있게 일어나지 않는 증시이기 때문이다. 이럴 때 공매도는 개미들의 분풀이 대상이 된다. ‘그놈의 공매도 세력, 그놈의 공매도 물량만 아니었다면…’이라며 말이다.개미들도 공매도 투자를 하면 될 거 아니냐는 반론이 있을 수 있다. 그러나 개인이 공매도를 하려면 일정한 자격요건을 갖춰야 한다. 현실적으로 어렵다는 얘기다.그래서 찾은 대안이 인버스 상장지수펀드(ETF)다. 요즘 같으면 주가지수가 2050에만 가까워지면 지수 하락을 예상하고 인버스 ETF에 투자하는 개미들이 늘어난다. 이는 시장 전체를 공매도하는 거나 마찬가지다. 기초지수가 일정 범위 안에 있으면 약속한 수익을 주는 주식연계증권(ELS)이 인기를 얻고 롱쇼트(매수와 공매도를 동시에 구사하는 투자전략)를 많이 쓰는 헤지펀드에 자산가들의 돈이 몰리는 것도 넓은 의미에서 공매도 투자 인기를 반영한다.한 증권사 사장은 “증시는 물론이고 경제 전망도 비관론자들이 더 각광받는 한국 사회”라며 “저성장 시대의 한국 경제는 ‘공매도’라는 단어 하나로 설명이 가능해진다”고 했다. 그는 “이런 점에서 ‘제로섬 사회’보다 못한 ‘공매도 사회’가 돼 가고 있지 않나 걱정된다”고 덧붙였다. 공매도 등으로 돈을 벌 수는 있지만 그사이 ‘한국 경제호(號)’는 중심을 잡지 못하고 물에 잠기지 않을까 하는 우려로 들렸다.금융위기 당시 미국 월가의 탐욕을 고발한 영화 ‘빅 쇼트(big short: 대형 공매도라는 뜻)’에서는 이런 대사가 나온다. “우리는 지금 미국 경제가 무너지는 것에 베팅한 거야. 우리가 옳다면 사람들은 집과 직장, 은퇴 자금까지 잃게 돼. 그러니 춤은 추지 마.” 한국 경제가 ‘스몰 쇼트’에만 멈추기를 바라본다.장규호 증권부 차장 danielc@hankyung.com 한경닷컴 바로가기 ] [ 스내커 ] [ 한경+ 구독신청 ⓒ 한국경제 & hankyung.com , 무단전재 및 재배포 금지

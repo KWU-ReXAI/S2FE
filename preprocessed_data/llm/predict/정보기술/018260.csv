@@ -1,4 +1,4 @@
-﻿year,quarter,disclosure_date,code,name,sector,prediction,reason
+year,quarter,disclosure_date,code,name,sector,prediction,reason
 2016,Q1,2016-05-16,18260,삼성에스디에스,정보기술,down,요약본에는 삼성에스디에스(삼성SDS)의 주가에 직접적인 영향을 미칠 만한 정보가 포함되어 있지 않습니다. 따라서 정보가 불충분하지만 기본적으로 하락으로 판단했습니다.
 2016,Q2,2016-08-16,18260,삼성에스디에스,정보기술,down,"요약본에는 삼성에스디에스에 대한 구체적인 정보가 없으며, 주가에 영향을 미칠 만한 정보가 부족하여 기본적으로 하락으로 판단했습니다."
 2016,Q3,2016-11-14,18260,삼성에스디에스,정보기술,,

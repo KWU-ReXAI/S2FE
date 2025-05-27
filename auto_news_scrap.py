@@ -37,7 +37,7 @@ def fetch_google_news(keyword: str,
     service = build("customsearch", "v1", developerKey=os.getenv("GOOGLE_API_KEY"))
 
     try:
-        key = f"{keyword}그룹" if keyword == "LS" else keyword
+        key = f"{keyword}그룹" if keyword == "LS" or keyword == "두산" or keyword == "LG" or keyword == "SK" else keyword
         res = service.cse().list(q=f"{key} 뉴스 after:{start_date} before:{end_date}", cx=os.getenv("CX"), num=1, hl="ko", lr="lang_ko").execute()
     except HttpError as e:
         # ── 404 (Requested entity was not found) → CX 잘못 등: 바로 반환
@@ -57,15 +57,12 @@ if __name__ == "__main__":
     df['after'] = df['filtering'].str.extract(r'after:([0-9\-]+)')
     df['before'] = df['filtering'].str.extract(r'before:([0-9\-]+)')
 
-    mask = ((df['url'].isna()) & ((df['code'] == 6260)
-                                | (df['code'] == 10120)
-                                | (df['code'] == 11200)
-                                | (df['code'] == 25540)
-                                | (df['code'] == 47050)
-                                | (df['code'] == 51600)))
+    mask = ((df['url'].notna()) | (df['code'] == 8060)
+                                | (df['code'] == 9150)
+                                | (df['code'] == 11070))
     tqdm.pandas()
     # mask에 해당하는 행만 progress_apply로 처리
-    results = df.loc[mask].progress_apply(
+    results = df.loc[~mask].progress_apply(
         lambda row: pd.Series(
             fetch_google_news(
                 keyword=row['name'],
@@ -76,6 +73,6 @@ if __name__ == "__main__":
         axis=1
     )
     # 결과 대입
-    df.loc[mask, ['url', 'category', 'upload_dt']] = results.values
+    df.loc[~mask, ['url', 'category', 'upload_dt']] = results.values
     df.drop(['after', 'before'], axis=1, inplace=True)
-    df.to_csv('자료 수집 통합본_김태완.csv', index=False, encoding='utf-8-sig')
+    df.to_csv('자료 수집 통합본_자동 스크랩.csv', index=False, encoding='utf-8-sig')

@@ -208,6 +208,133 @@ class MyModel(nn.Module):
     def save_models(self,dir):
         joblib.dump(self,f"{dir}/model.joblib")
 
+    def get_rows_by_date_range(self, code: str, start_date_str: str, end_date_str: str) -> pd.DataFrame:
+        code = str(code).zfill(6)
+        file_path = f"./result/experiment/{code}.csv"
+        # CSV 읽기
+        df = pd.read_csv(file_path, encoding='utf-8-sig')
+
+        # filtering에서 after, before 날짜 추출
+        intervals = df['filtering'].str.extract(
+            r'after:(?P<after>\d{4}-\d{2}-\d{2})\s+before:(?P<before>\d{4}-\d{2}-\d{2})'
+        )
+        intervals['after'] = pd.to_datetime(intervals['after'])
+        intervals['before'] = pd.to_datetime(intervals['before'])
+
+        # 문자열을 datetime으로 변환
+        start_dt = pd.to_datetime(start_date_str)
+        end_dt = pd.to_datetime(end_date_str)-timedelta(days=7)
+
+        # 두 구간이 겹치는 조건:
+        # interval.after <= end_dt  AND  interval.before >= start_dt
+        mask = (intervals['after'] <= end_dt) & (intervals['before'] >= start_dt)
+
+        # 겹치는 행 반환
+        return df.loc[mask].reset_index(drop=True)
+
+    def LLM_task2(self, model_list, start_date, end_date):
+        model_list = model_list.index.to_list()
+        df_list = []
+
+        start_datetime = self.DM.get_disclosure_date(start_date)
+        end_datetime = self.DM.get_disclosure_date(end_date)
+
+        for code in model_list:
+            print(f"{code} of {start_date}~{end_date} : {start_datetime}~{end_datetime}")
+            df = self.get_rows_by_date_range(code, start_datetime, end_datetime)
+            if len(df) == 0: continue
+            df_list.append(df)  # 리스트에 담기
+
+        df_select = []
+        for i in range(len(df_list)):
+            df_now = df_list[i]
+            for j in range(0, len(df_now), 4):
+                chunk = df_now.iloc[j:j + 4].copy()  # 원본 건드리지 않기 위해 복사
+
+                # score 컬럼이 없다면 0으로 초기화
+                if "score" not in chunk.columns:
+                    chunk["score"] = 0
+
+                # 행 인덱스에서 1을 뺀 값을 더함
+                chunk.reset_index(drop=True, inplace=True)
+                chunk["score"] += (chunk.index)
+
+                if "code" in chunk.columns:
+                    score_sum = chunk["score"].sum()
+                    code_val = chunk["code"].iloc[0]
+                    df_select.append(pd.DataFrame({"code": [code_val], "score": [score_sum]}))
+                else:
+                    print(f"[경고] chunk에 'code' 열이 없습니다. index: {j}")
+
+        return model_list
+
+    def LLM_task(self, model_list, start_date, end_date):
+        # 1) model_list를 index 리스트로 변환
+        if model_list is None: return None
+
+        model_list = model_list.index.to_list()
+
+        # 2) 조회 기간의 disclosure date 얻기
+        start_datetime = self.DM.get_disclosure_date(start_date)
+        end_datetime = self.DM.get_disclosure_date(end_date)
+
+        # 3) 개별 코드별로 DataFrame 모아두기
+        df_list = []
+        for code in model_list:
+            print(f"{code} of {start_date}~{end_date} : {start_datetime}~{end_datetime}")
+            df = self.get_rows_by_date_range(code, start_datetime, end_datetime)
+            if df.empty:
+                continue
+            df_list.append(df)
+
+        # 4) month, code, score, start_date, end_date를 저장할 빈 DataFrame 생성
+        df_select = pd.DataFrame(columns=[
+            "month", "code", "score", "start_date", "end_date"
+        ])
+
+        for df_now in df_list:
+            for j in range(0, len(df_now), 4):
+                chunk = df_now.iloc[j:j + 4].copy()
+
+                # score 컬럼 없으면 0으로 초기화
+                if "score" not in chunk.columns:
+                    chunk["score"] = 0
+
+                chunk.reset_index(drop=True, inplace=True)
+                chunk["score"] += chunk.index #가중치 넣음! 우선 임의로
+
+                if "code" in chunk.columns and "filtering" in chunk.columns:
+                    # score 합계 및 code 추출
+                    score_sum = chunk["score"].sum()
+                    code_val = chunk["code"].iloc[0]
+
+                    # filtering에서 날짜 파싱
+                    first_filt = chunk["filtering"].iloc[0]  # ex) "after:2021-03-22 before:2021-03-31"
+                    last_filt = chunk["filtering"].iloc[-1]
+                    start_dt = first_filt.split("after:")[1].split()[0]
+                    end_dt = last_filt.split("before:")[1].split()[0]
+
+                    # 한 행으로 추가
+                    df_select.loc[len(df_select)] = [
+                        j, code_val, score_sum, start_dt, end_dt
+                    ]
+                else:
+                    print(f"[경고] chunk에 'code' 또는 'filtering' 열이 없습니다. index={j}")
+
+        # 6) threshold 설정 및 month별로 필터링하여 df_result 생성
+        threshold = 10
+        df_result = {}
+        for month, grp in df_select.groupby("month"):
+            filtered = (
+                grp.loc[grp["score"] >= threshold,
+                ["code", "score", "start_date", "end_date"]]
+                .reset_index(drop=True)
+            )
+            df_result[int(month/4)] = filtered
+
+        # 7) 결과 반환 (딕셔너리 형태)
+        return df_result
+
     def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, LLMagg = "False"):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
         # 과거 데이터를 사용하여 모델의 예측이 실제 시장에서 얼마나 잘 맞았는지를 검증하는 과정
@@ -257,11 +384,9 @@ class MyModel(nn.Module):
                 model = self.sector_models[sector]
                 topK = model.predict(torch.Tensor(test_data[sector]).to(self.device)[i, :, :-1],
                                      symbols[sector])
-
-                up_code = self.DM.get_only_up_code(strdate, sector)
                 cnt = len(topK)
                 topK = topK[:int(cnt * inter_n)]  # 상위 10% 종목 선택
-                if LLMagg == "inter":
+                """if LLMagg == "inter":
                     # 교집합: topK와 up_code 모두에 있는 종목만
                     selected = topK[topK.index.isin(up_code)].index.to_list()
                 elif LLMagg == "union":
@@ -269,7 +394,9 @@ class MyModel(nn.Module):
                     selected = list(set(topK.index.to_list()) | set(up_code))
                 else:
                     # 기본: topK만
-                    selected = topK.index.to_list()
+                    selected = topK.index.to_list()"""
+                up_code = self.LLM_task(topK, strdate, next_strdate)
+                selected = topK[topK.index.isin(up_code)].index.to_list()
 
                 real_last_topK_stock.extend(selected)
 

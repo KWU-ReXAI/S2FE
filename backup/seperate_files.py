@@ -516,10 +516,26 @@ def merge_all_sectors_to_date_regression(base_merged_folder="../preprocessed_dat
         output_file = os.path.join(output_folder, f"{year}_{quarter}.csv")
         group.to_csv(output_file, index=False, encoding='utf-8-sig')
         print(f"✓ 연도 {year}, 분기 {quarter} 데이터가 {output_file}에 저장되었습니다.")
+
+import os
+import chardet
+
+def detect_csv_encodings(folder_path):
+    for filename in os.listdir(folder_path):
+        if filename.endswith(".csv"):
+            file_path = os.path.join(folder_path, filename)
+            try:
+                with open(file_path, 'rb') as f:
+                    raw_data = f.read(10000)  # 처음 10KB만 샘플로 사용
+                    result = chardet.detect(raw_data)
+                    encoding = result['encoding']
+                    confidence = result['confidence']
+                    print(f"{filename}: encoding = {encoding}, confidence = {confidence:.2f}")
+            except Exception as e:
+                print(f"{filename}: 에러 발생 - {e}")
+
 if __name__ == "__main__":
-    merge_LLM_date_regression("정보기술")
-    merge_LLM_date_regression("산업재")
-    merge_all_sectors_to_date_regression()
+    detect_csv_encodings("../data_kr/video")
 """
 # 198: symbol
 #12 18 13 5 29 5 7 1 13 22 33 14 4 2 1

@@ -6,6 +6,8 @@ import torch.nn.functional as F
 import torch.nn as nn
 import pickle
 import joblib
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, GradientBoostingRegressor, BaggingRegressor
 from sklearn.metrics import mean_squared_error
@@ -214,12 +216,8 @@ class MyModel(nn.Module):
         # CSV 읽기
         df = pd.read_csv(file_path, encoding='utf-8-sig')
 
-        # filtering에서 after, before 날짜 추출
-        intervals = df['filtering'].str.extract(
-            r'after:(?P<after>\d{4}-\d{2}-\d{2})\s+before:(?P<before>\d{4}-\d{2}-\d{2})'
-        )
-        intervals['after'] = pd.to_datetime(intervals['after'])
-        intervals['before'] = pd.to_datetime(intervals['before'])
+        # upload_dt를 datetime으로 변환
+        df['upload_dt'] = pd.to_datetime(df['upload_dt'])
 
         # 문자열을 datetime으로 변환
         start_dt = pd.to_datetime(start_date_str)
@@ -227,7 +225,7 @@ class MyModel(nn.Module):
 
         # 두 구간이 겹치는 조건:
         # interval.after <= end_dt  AND  interval.before >= start_dt
-        mask = (intervals['after'] <= end_dt) & (intervals['before'] >= start_dt)
+        mask = (start_dt <= df['upload_dt']) & (df['upload_dt'] <= end_dt)
 
         # 겹치는 행 반환
         return df.loc[mask].reset_index(drop=True)
@@ -269,6 +267,8 @@ class MyModel(nn.Module):
         return model_list
 
     def LLM_task(self, model_list, start_date, end_date):
+        balance = 100000000 # 1억원
+        
         # 1) model_list를 index 리스트로 변환
         if model_list is None: return None
 
@@ -292,37 +292,30 @@ class MyModel(nn.Module):
             "month", "code", "score", "start_date", "end_date"
         ])
 
-        for df_now in df_list:
+        for df_now in df_list:            
             for j in range(0, len(df_now), 4):
                 chunk = df_now.iloc[j:j + 4].copy()
-
-                # score 컬럼 없으면 0으로 초기화
-                if "score" not in chunk.columns:
-                    chunk["score"] = 0
 
                 chunk.reset_index(drop=True, inplace=True)
                 chunk["score"] += chunk.index #가중치 넣음! 우선 임의로
 
-                if "code" in chunk.columns and "filtering" in chunk.columns:
-                    # score 합계 및 code 추출
-                    score_sum = chunk["score"].sum()
-                    code_val = chunk["code"].iloc[0]
+                # score 합계 및 code 추출
+                score_sum = chunk["score"].sum()
+                code_val = chunk["code"].iloc[0]
 
-                    # filtering에서 날짜 파싱
-                    first_filt = chunk["filtering"].iloc[0]  # ex) "after:2021-03-22 before:2021-03-31"
-                    last_filt = chunk["filtering"].iloc[-1]
-                    start_dt = first_filt.split("after:")[1].split()[0]
-                    end_dt = last_filt.split("before:")[1].split()[0]
+                # filtering에서 날짜 파싱
+                first_filt = chunk["filtering"].iloc[0]  # ex) "after:2021-03-22 before:2021-03-31"
+                last_filt = chunk["filtering"].iloc[-1]
+                start_dt = first_filt.split("after:")[1].split()[0]
+                end_dt = last_filt.split("before:")[1].split()[0]
 
-                    # 한 행으로 추가
-                    df_select.loc[len(df_select)] = [
-                        j, code_val, score_sum, start_dt, end_dt
-                    ]
-                else:
-                    print(f"[경고] chunk에 'code' 또는 'filtering' 열이 없습니다. index={j}")
+                # 한 행으로 추가
+                df_select.loc[len(df_select)] = [
+                    j / 4, code_val, score_sum, start_dt, end_dt
+                ]
 
         # 6) threshold 설정 및 month별로 필터링하여 df_result 생성
-        threshold = 10
+        threshold = 3
         df_result = {}
         for month, grp in df_select.groupby("month"):
             filtered = (
@@ -330,10 +323,67 @@ class MyModel(nn.Module):
                 ["code", "score", "start_date", "end_date"]]
                 .reset_index(drop=True)
             )
-            df_result[int(month/4)] = filtered
+            df_result[int(month)] = filtered
 
         # 7) 결과 반환 (딕셔너리 형태)
         return df_result
+    
+    def LLM_task3(self, model_list, start_date, end_date):
+        balance = 100000000 # 1억
+        
+        # 1) model_list를 index 리스트로 변환
+        if model_list is None: return None
+
+        model_list = model_list.index.to_list()
+
+        # 2) 조회 기간의 disclosure date 얻기
+        start_datetime = self.DM.get_disclosure_date(start_date)
+        end_datetime = self.DM.get_disclosure_date(end_date)           
+        
+        # 3) 개별 코드별로 DataFrame 모아두기
+        df_list = []
+        for code in model_list:
+            print(f"{code} of {start_date}~{end_date} : {start_datetime}~{end_datetime}")
+            df = self.get_rows_by_date_range(code, start_datetime, end_datetime)
+            if df.empty:
+                continue
+            df_list.append(df)
+
+
+        start_dt = datetime.strptime(start_datetime, '%Y-%m-%d')
+        end_dt = datetime.strptime(end_datetime, '%Y-%m-%d')
+        current = start_dt
+
+        while current <= end_dt:
+            df_select = pd.DataFrame(columns=[
+                "code", "score"
+            ])
+            for df_now in df_list:
+                df_now['upload_dt'] = pd.to_datetime(df_now['upload_dt'])
+
+                month_start = current
+                month_end = current + relativedelta(months=1)
+                chunk = df_now.loc[(month_start <= df_now['upload_dt']) & (df_now['upload_dt'] <= month_end)].copy()
+
+                chunk.reset_index(drop=True, inplace=True)
+                chunk["score"] += chunk.index #가중치 넣음! 우선 임의로
+
+                # score 합계 및 code 추출
+                score_sum = chunk["score"].sum()
+                code_val = df_now["code"].iloc[0]
+
+                # 한 행으로 추가
+                df_select.loc[len(df_select)] = [
+                    code_val, score_sum
+                ]
+            threshold = 3
+            df_select = df_select[df_select['score'] >= threshold]
+            
+            ###### 구매 코드 구현하기 ######
+            
+            current += relativedelta(months=1)
+
+        return 
 
     def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, LLMagg = "False"):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
@@ -395,7 +445,7 @@ class MyModel(nn.Module):
                 else:
                     # 기본: topK만
                     selected = topK.index.to_list()"""
-                up_code = self.LLM_task(topK, strdate, next_strdate)
+                up_code = self.LLM_task3(topK, strdate, next_strdate)
                 selected = topK[topK.index.isin(up_code)].index.to_list()
 
                 real_last_topK_stock.extend(selected)

@@ -223,8 +223,7 @@ class MyModel(nn.Module):
         start_dt = pd.to_datetime(start_date_str)
         end_dt = pd.to_datetime(end_date_str)-timedelta(days=7)
 
-        # 두 구간이 겹치는 조건:
-        # interval.after <= end_dt  AND  interval.before >= start_dt
+        # 업로드날짜가 기간 내에 존재할 경우
         mask = (start_dt <= df['upload_dt']) & (df['upload_dt'] <= end_dt)
 
         # 겹치는 행 반환
@@ -328,7 +327,27 @@ class MyModel(nn.Module):
         # 7) 결과 반환 (딕셔너리 형태)
         return df_result
     
+    def get_rows_by_date_range2(self, code: str, start_date_str: str, end_date_str: str) -> pd.DataFrame:
+        code = str(code).zfill(6)
+        file_path = f"./result/experiment/{code}.csv"
+        # CSV 읽기
+        df = pd.read_csv(file_path, encoding='utf-8-sig')
+
+        # upload_dt를 datetime으로 변환
+        df['upload_dt'] = pd.to_datetime(df['upload_dt'])
+
+        # 문자열을 datetime으로 변환
+        start_dt = pd.to_datetime(start_date_str) - relativedelta(months=1)
+        end_dt = pd.to_datetime(end_date_str) - relativedelta(months=1)
+
+        # 업로드날짜가 기간 내에 존재할 경우
+        mask = (start_dt <= df['upload_dt']) & (df['upload_dt'] < end_dt)
+
+        # 겹치는 행 반환
+        return df.loc[mask].reset_index(drop=True)
+    
     def LLM_task3(self, model_list, start_date, end_date):
+        initial_balance = 100000000 # 1억
         balance = 100000000 # 1억
         
         # 1) model_list를 index 리스트로 변환
@@ -336,34 +355,36 @@ class MyModel(nn.Module):
 
         model_list = model_list.index.to_list()
 
-        # 2) 조회 기간의 disclosure date 얻기
+        # 2) 해당 분기의 가장 늦는 공시일 얻기
         start_datetime = self.DM.get_disclosure_date(start_date)
-        end_datetime = self.DM.get_disclosure_date(end_date)           
+        end_datetime = self.DM.get_disclosure_date(end_date)
         
         # 3) 개별 코드별로 DataFrame 모아두기
         df_list = []
         for code in model_list:
             print(f"{code} of {start_date}~{end_date} : {start_datetime}~{end_datetime}")
-            df = self.get_rows_by_date_range(code, start_datetime, end_datetime)
+            df = self.get_rows_by_date_range2(code, start_datetime, end_datetime)
             if df.empty:
                 continue
             df_list.append(df)
 
 
-        start_dt = datetime.strptime(start_datetime, '%Y-%m-%d')
-        end_dt = datetime.strptime(end_datetime, '%Y-%m-%d')
-        current = start_dt
+        start_dt = datetime.strptime(start_datetime, '%Y-%m-%d') + timedelta(days=1)
+        end_dt = datetime.strptime(end_datetime, '%Y-%m-%d') - timedelta(days=1)
+        current = start_dt ## 거래일
 
         while current <= end_dt:
+            # df_select는 한 달 주기로 뽑히는 종목들
             df_select = pd.DataFrame(columns=[
                 "code", "score"
             ])
             for df_now in df_list:
                 df_now['upload_dt'] = pd.to_datetime(df_now['upload_dt'])
 
-                month_start = current
-                month_end = current + relativedelta(months=1)
-                chunk = df_now.loc[(month_start <= df_now['upload_dt']) & (df_now['upload_dt'] <= month_end)].copy()
+                ### 자료 수집 기간: upload_start ~ upload_end ###
+                upload_start = current - relativedelta(months=1)
+                upload_end = current
+                chunk = df_now.loc[(upload_start <= df_now['upload_dt']) & (df_now['upload_dt'] <= upload_end)].copy()
 
                 chunk.reset_index(drop=True, inplace=True)
                 chunk["score"] += chunk.index #가중치 넣음! 우선 임의로
@@ -376,14 +397,32 @@ class MyModel(nn.Module):
                 df_select.loc[len(df_select)] = [
                     code_val, score_sum
                 ]
+            ### threshold는 상의 후 결정하기
             threshold = 3
+            # df_select에는 이번달에 거래해야 할 종목만 남음
             df_select = df_select[df_select['score'] >= threshold]
+            num_stock = len(df_select)
+            balance_divided = balance // num_stock ## 각 종목 구매에 사용할 수 있는 금액
             
             ###### 구매 코드 구현하기 ######
-            
+            buy_dt = current
+            sell_dt = current + relativedelta(months=1)
+            sell_dt = sell_dt if sell_dt <= end_dt else end_dt
+            for row in df_select.itertuples():
+                code = str(row.code).zfill(6)
+                df_price = pd.read_csv(f"data_kr/price/{code}.csv")
+                df_price['날짜'] = pd.to_datetime(df_price['날짜'])
+                buy_price = df_price[df_price['날짜'] >= buy_dt].iloc[0]['종가']
+                sell_price = df_price[df_price['날짜'] >= sell_dt].iloc[0]['종가']
+                
+                ### 거래 (수수료 고려 X) ###
+                num_stock = balance_divided // buy_price
+                balance -= buy_price * num_stock
+                balance += sell_price * num_stock
+                
             current += relativedelta(months=1)
 
-        return 
+        return balance / initial_balance # 수익률
 
     def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, LLMagg = "False"):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가

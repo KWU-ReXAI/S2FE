@@ -344,6 +344,11 @@ def predict_market_from_summary(summary: str, stock: str) -> str:
   -  0: 중립 / 영향 없음  
   - -1: 다소 하락  
   - -2: 강한 하락  
+  
+출력 예시:
+- 논조 판단: 긍정적
+- 판단 근거: 기사 요약에서 해당 기업이 미국 대형 전기차 업체와 신규 배터리 공급 계약을 체결했고, 수출 확대와 실적 개선에 대한 기대감이 언급되어 긍정적인 논조로 판단됨
+- 등락 전망 점수: +1
 
 요약본:
 {summary}
@@ -454,7 +459,7 @@ def get_video_datas(channel_name, min_view_cnt):
 		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{year_quarter}/{year_quarter}.csv', index=False)
     
 if __name__ == "__main__":
-	df = pd.read_csv("data_kr/video/동영상 수집 통합본 최신.csv")
+	df = pd.read_csv("data_kr/video/자료 수집 최종본.csv")
 	
 	# ### 오디오 다운로드 ###
 	# for row in df.itertuples():
@@ -535,72 +540,72 @@ if __name__ == "__main__":
 	# 	log_file.write(f"total tokens: {total_tokens}\n")
 
 	### LLM으로 영상 자막 요약 ###
-	import shutil
 	for row in tqdm(df.itertuples(), total=len(df), desc="LLM summarizing"):
 		if pd.isna(row.url) or row.url == '':
 			continue
 
 		code = str(row.code).zfill(6)
+		name = row.name
 		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
 		summary_dir = f'preprocessed_data/llm/summary/{row.sector}/{code}/'
 		os.makedirs(summary_dir, exist_ok=True)
-
-		if row.category == "article":
-			shutil.copy(f'{text_dir}{row.year}-{row.quarter}.txt', summary_dir)
-			continue
 			
 		try:
-			with open(text_dir + f'{row.year}-{row.quarter}.txt', "r", encoding="utf-8") as file:
+			filename = f'{row.year}-{row.quarter}-{str(row.month).zfill(2)}-{row.week}.txt'
+			stock = f'{name}({code})'
+			with open(text_dir + filename, "r", encoding="utf-8") as file:
 				text = file.read()
-			summary = summarize_text(text, f'{row.name}({row.code})')
-			with open(summary_dir + f'{row.year}-{row.quarter}.txt', "w", encoding="utf-8") as f:
+			summary = summarize_text(text, stock)
+			with open(summary_dir + filename, "w", encoding="utf-8") as f:
 				f.write(summary)
 			with open('preprocessed_data/llm/summary/log.txt', "a", encoding="utf-8") as log_file:
 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-				log_file.write(f"{timestamp} summary completed: {summary_dir + f'{row.year}-{row.quarter}'}\n")
+				log_file.write(f"{timestamp} summary completed: {summary_dir + filename}\n")
 		except Exception as e:
 			with open('preprocessed_data/llm/summary/log.txt', "a", encoding="utf-8") as log_file:
 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-				log_file.write(f"{timestamp} summary error: {summary_dir + f'{row.year}-{row.quarter}'}\n")
+				log_file.write(f"{timestamp} summary error: {summary_dir + filename}\t error: {e}\n")
 
-	### LLM으로 자막요약을 통해 등락 예측 ###
-	for code in df["code"].unique():
-		df_ = df[df["code"] == code].reset_index(drop=True)
+	# ### LLM으로 자막요약을 통해 등락 예측 ###
+	# for code in df["code"].unique():
+	# 	df_ = df[df["code"] == code].reset_index(drop=True)
 		
-		predict_list = []
-		reason_list = []
+	# 	predict_list = []
+	# 	reason_list = []
 
-		for row in tqdm(df_.itertuples(), total=len(df_), desc=f"{code}LLM predicting"):
-			if pd.isna(row.url) or row.url == '':
-				predict_list.append(None)
-				reason_list.append(None)
-				continue
+	# 	for row in tqdm(df_.itertuples(), total=len(df_), desc=f"{code}LLM predicting"):
+	# 		if pd.isna(row.url) or row.url == '':
+	# 			predict_list.append(None)
+	# 			reason_list.append(None)
+	# 			continue
 			
-			code = str(row.code).zfill(6)	
-			name = row.name
-			summary_dir = f'preprocessed_data/llm/summary/{row.sector}/{code}/'
-			predict_dir = f'preprocessed_data/llm/predict/{row.sector}/'
-			os.makedirs(predict_dir, exist_ok=True)
+	# 		code = str(row.code).zfill(6)	
+	# 		name = row.name
+	# 		summary_dir = f'preprocessed_data/llm/summary/{row.sector}/{code}/'
+	# 		predict_dir = f'preprocessed_data/llm/predict/{row.sector}/'
+	# 		os.makedirs(predict_dir, exist_ok=True)
 
-			try:
-				with open(summary_dir + f'{row.year}-{row.quarter}.txt', "r", encoding="utf-8") as file:
-					summary = file.read()
-				data = predict_market_from_summary(summary, f'{name}({code})')
-				predict = data.split('\n')[0].split(':')[1].strip()
-				reason = data.split('\n')[1].split(':')[1].strip()
-				predict_list.append(predict)
-				reason_list.append(reason)
+	# 		try:
+	# 			filename = f'{row.year}-{row.quarter}-{str(row.month).zfill(2)}-{row.week}.txt'
+	# 			stock = f'{name}({code})'
+	# 			with open(summary_dir + f'{row.year}-{row.quarter}.txt', "r", encoding="utf-8") as file:
+	# 				summary = file.read()
+	# 			data = predict_market_from_summary(summary, f'{name}({code})')
+	# 			predict = data.split('\n')[0].split(':')[1].strip()
+	# 			reason = data.split('\n')[1].split(':')[1].strip()
+	# 			predict_list.append(predict)
+	# 			reason_list.append(reason)
 				
-				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
-					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-					log_file.write(f"{timestamp} predict completed: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
-			except Exception as e:
-				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
-					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-					log_file.write(f"{timestamp} predict error: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
+	# 			with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
+	# 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 				log_file.write(f"{timestamp} predict completed: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
+	# 		except Exception as e:
+	# 			with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
+	# 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 				log_file.write(f"{timestamp} predict error: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
 
-		df_predict = df_.copy()
-		df_predict["prediction"] = predict_list
-		df_predict["reason"] = reason_list
-		df_predict = df_predict[["year", "quarter", "disclosure_date", "code", "name", "sector", "prediction", "reason"]]
-		df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8-sig")
+	# 	df_predict = df_.copy()
+	# 	df_predict["prediction"] = predict_list
+	# 	df_predict["reason"] = reason_list
+	# 	df_predict = df_predict[["year", "quarter", "disclosure_date", "code", "name", "sector", "prediction", "reason"]]
+	# 	df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8-sig")

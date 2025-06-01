@@ -383,7 +383,7 @@ class MyModel(nn.Module):
 
                 ### 자료 수집 기간: upload_start ~ upload_end ###
                 upload_start = current - relativedelta(months=1)
-                upload_end = current
+                upload_end = current - timedelta(days=1)
                 chunk = df_now.loc[(upload_start <= df_now['upload_dt']) & (df_now['upload_dt'] <= upload_end)].copy()
 
                 chunk.reset_index(drop=True, inplace=True)
@@ -400,7 +400,7 @@ class MyModel(nn.Module):
             ### threshold는 상의 후 결정하기
             threshold = 3
             # df_select에는 이번달에 거래해야 할 종목만 남음
-            df_select = df_select[df_select['score'] >= threshold]
+            df_select = df_select[df_select['score'] >= threshold]            
             num_stock = len(df_select)
             balance_divided = balance // num_stock ## 각 종목 구매에 사용할 수 있는 금액
             
@@ -409,16 +409,17 @@ class MyModel(nn.Module):
             sell_dt = current + relativedelta(months=1)
             sell_dt = sell_dt if sell_dt <= end_dt else end_dt
             for row in df_select.itertuples():
+                
                 code = str(row.code).zfill(6)
                 df_price = pd.read_csv(f"data_kr/price/{code}.csv")
                 df_price['날짜'] = pd.to_datetime(df_price['날짜'])
                 buy_price = df_price[df_price['날짜'] >= buy_dt].iloc[0]['종가']
-                sell_price = df_price[df_price['날짜'] >= sell_dt].iloc[0]['종가']
+                sell_price = df_price[df_price['날짜'] <= sell_dt].iloc[-1]['종가']
                 
                 ### 거래 (수수료 고려 X) ###
                 num_stock = balance_divided // buy_price
                 balance -= buy_price * num_stock
-                balance += sell_price * num_stock
+                balance += (sell_price * num_stock) * (1 - 0.005)
                 
             current += relativedelta(months=1)
 

@@ -1,0 +1,65 @@
+LS ELECTRIC
+최근검색어
+인기검색어
+로그인
+회원가입
+고객문의
+KR
+ENGLISH
+CHINESE
+JAPANESE
+KOREAN
+search
+menu
+로그인
+회원가입
+KOR
+ENG
+CHN
+JPN
+KOR
+menu close
+홍보센터
+뉴스센터
+LS ELECTRIC의 뉴스를 빠르고 정확하게 알려드립니다.
+[{{entity.b_sub_type}}] {{entity.b_title | limitHtml}}
+등록일 : {{entity.b_regdate | date:'yyyy.MM.dd'}}
+[첨부파일 모두받기]
+{{file.f_display_name}} (크기: {{file.f_size | number:0.0}} KB)
+기사 원문 보러가기
+이전글
+{{prevnext.prev_b_title | limitHtml}}
+이전글이 없습니다.
+다음글
+{{prevnext.next_b_title | limitHtml}}
+다음글이 없습니다.
+목록
+비밀번호 변경안내
+고객님의 소중한 개인정보 보호를 위해
+비밀 번호 변경이 필요합니다.
+고객님의 소중한 개인정보를 보호하고자,
+6개월마다 비밀번호 변경하도록 안내하고 있습니다.
+비밀변호 변경하러 가기
+180일 뒤 연장하기
+[{"b_id":401262,"b_title":"2025년 사업보고서 外","b_type":"notice"},{"b_id":401258,"b_title":"2024년 사업보고서 外","b_type":"notice"},{"b_id":401247,"b_title":"제51기 정기주주총회 위임장","b_type":"notice"},{"b_id":401248,"b_title":"제51기 주주총회 소집공고","b_type":"notice"}]
+개인정보처리방침
+이용약관
+사이트맵
+사이버신문고
+지속가능경영
+LS ELECTRIC 관계사
+LS 그룹
+예스코
+LS 전선
+LS MnM
+가온전선
+E1
+LS ELECTRIC America
+LS 엠트론
+LS ELECTRIC 자회사
+LS 메탈
+LS 메카피온
+LS 사우타
+LS 에너지 솔루션스
+LS e-모빌리티솔루션
+Copyright ⓒ 2020 LS ELECTRIC Co., Ltd. All Rights Reserved.

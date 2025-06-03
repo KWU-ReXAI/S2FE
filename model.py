@@ -232,6 +232,7 @@ class MyModel(nn.Module):
     def LLM_task(self, model_list, start_date, end_date):
         initial_balance = 100000000 # 1억
         balance = 100000000 # 1억
+        balance_model = 100000000
         
         # 1) model_list를 index 리스트로 변환
         if model_list is None: return None
@@ -283,16 +284,20 @@ class MyModel(nn.Module):
             ### threshold는 상의 후 결정하기
             threshold = 3
             # df_select에는 이번달에 거래해야 할 종목만 남음
+            df_select_model = df_select.copy()
             df_select = df_select[df_select['score'] >= threshold]            
             num_stock = len(df_select)
-            balance_divided = balance // num_stock ## 각 종목 구매에 사용할 수 있는 금액
-            
+            num_stock_model = len(df_select_model)
+            balance_divided_model = balance_model //num_stock_model
+            balance_divided = balance // num_stock
             ###### 구매 코드 구현하기 ######
             buy_dt = current
             sell_dt = current + relativedelta(months=1)
             sell_dt = sell_dt if sell_dt <= end_dt else end_dt
+
+            charge = 0.005
+
             for row in df_select.itertuples():
-                
                 code = str(row.code).zfill(6)
                 df_price = pd.read_csv(f"data_kr/price/{code}.csv")
                 df_price['날짜'] = pd.to_datetime(df_price['날짜'])
@@ -302,11 +307,23 @@ class MyModel(nn.Module):
                 ### 거래 (수수료 고려 X) ###
                 num_stock = balance_divided // buy_price
                 balance -= buy_price * num_stock
-                balance += (sell_price * num_stock) * (1 - 0.005)
+                balance += (sell_price * num_stock) * (1 - charge)
+
+            for row in df_select_model.itertuples():
+                code_model = str(row.code).zfill(6)
+                df_price_model = pd.read_csv(f"data_kr/price/{code_model}.csv")
+                df_price_model['날짜'] = pd.to_datetime(df_price_model['날짜'])
+                buy_price_model = df_price_model[df_price_model['날짜'] >= buy_dt].iloc[0]['종가']
+                sell_price_model = df_price_model[df_price_model['날짜'] <= sell_dt].iloc[-1]['종가']
+
+                ### 거래 (수수료 고려 X) ###
+                num_stock_model = balance_divided_model // buy_price_model
+                balance_model -= buy_price_model * num_stock_model
+                balance_model += (sell_price_model * num_stock_model) * (1 - charge)
                 
             current += relativedelta(months=1)
 
-        return balance / initial_balance # 수익률
+        return balance / initial_balance, balance_model / initial_balance
 
     def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, LLMagg = "False"):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
@@ -368,10 +385,10 @@ class MyModel(nn.Module):
                 else:
                     # 기본: topK만
                     selected = topK.index.to_list()"""
-                up_code = self.LLM_task(topK, strdate, next_strdate)
-                selected = topK[topK.index.isin(up_code)].index.to_list()
+                LLM_return, Model_return = self.LLM_task(topK, strdate, next_strdate)
+                #selected = topK[topK.index.isin(up_code)].index.to_list()
 
-                real_last_topK_stock.extend(selected)
+                #real_last_topK_stock.extend(selected)
 
             clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)
             idx += 1

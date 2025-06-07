@@ -19,7 +19,7 @@ parser.add_argument('--train_dir',type=str,nargs='?',default="train_result_dir")
 parser.add_argument('--test_dir',type=str,nargs='?',default="test_result_dir") # 결과 디렉토리 명
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
-parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # 0.1
+parser.add_argument('--inter_n',type=float,nargs='?',default=0.2) # 0.2
 parser.add_argument('--LLM',action="store_true") # 클러스터링 여부
 #parser.add_argument('--LLMagg',type=str,nargs='?',default="False") # inter
 args = parser.parse_args()
@@ -54,25 +54,31 @@ dir = f"./result"
 
 use_all_list =["All","Sector","SectorAll"] # 모델 평가 방식
 all_results={}
+all_results_llm={}
 for K in range(1,args.testNum+1): # 한번만 실행
     print(f"\nTest for Train_Model_{K}")
     list_num_stocks = [] # 각 실험에서 선택된 주식 개수를 저장할 리스트
     for m in range(2,3): # 20번 실행
         result = {} # 백테스팅 결과를 저장할 딕셔너리
         result_ks = {}
+        result_llm = {}
         num_stocks = [] # 각 phase에서 선택된 주식 개수를 저장하는 리스트
         for phase in tqdm(phase_list): # 각 phase 별 진행상태를 시각적으로 출력
             model = joblib.load(f"{dir}/{args.train_dir}_{K}/train_result_model_{K}_{phase}/model.joblib")  # 저장된 모델 불러옴
-            cagr, sharpe, mdd, num_stock_tmp,cagr_ks,sharpe_ks,mdd_ks = model.backtest(verbose=True,agg=args.agg,use_all="Sector",inter_n=args.inter_n,withValidation= True, isTest=True, testNum=K, dir=args.test_dir, withLLM=args.LLM) # 백테스팅 실행
+            cagr, sharpe, mdd, num_stock_tmp, cagr_ks, sharpe_ks, mdd_ks, cagr_llm, sharpe_llm, mdd_llm\
+                = model.backtest(verbose=True,agg=args.agg,use_all="Sector",inter_n=args.inter_n,withValidation= True, isTest=True, testNum=K, dir=args.test_dir, withLLM=args.LLM) # 백테스팅 실행
                 
             # 상위 20% 주식만을 선택
             num_stocks.append(num_stock_tmp) # 선택된 주식 개수를 저장
             result[phase] = {"CAGR":cagr,"Sharpe Ratio":sharpe,"MDD":mdd} # 백테스팅 결과 저장
             result_ks[phase] = {"CAGR":cagr_ks,"Sharpe Ratio":sharpe_ks,"MDD":mdd_ks}
+            result_llm[phase] = {"CAGR": cagr_llm, "Sharpe Ratio": sharpe_llm, "MDD": mdd_llm}  # 백테스팅 결과 저장
 
         result_df = pd.DataFrame(result)
         result_df_ks = pd.DataFrame(result_ks)
+        result_df_llm = pd.DataFrame(result_llm)
         all_results[f"Test {K}"] = result_df
+        all_results_llm[f"Test {K}"] = result_df_llm
         list_num_stocks.append(num_stocks) # 각 실험에서 선택된 주식 개수 저장
 
 final_df = pd.concat(all_results, axis=1)
@@ -82,6 +88,13 @@ avg_df.to_csv(f"{dir}/test_result_dir/test_result_average.csv", encoding='utf-8-
 final_df_combined = pd.concat([final_df, avg_df], axis=1)
 final_df_combined.to_csv(f"{dir}/test_result_dir/test_result_file.csv", encoding='utf-8-sig')
 
+# LLM 모델에 대한 테스트별 평균
+final_df_llm = pd.concat(all_results_llm, axis=1)
+avg_df_llm = final_df_llm.groupby(level=1, axis=1).mean()
+avg_df_llm.columns = pd.MultiIndex.from_product([["Average"], avg_df_llm.columns])
+avg_df_llm.to_csv(f"{dir}/test_result_dir/llm_test_result_average.csv", encoding='utf-8-sig')
+final_df_llm_combined = pd.concat([final_df_llm, avg_df_llm], axis=1)
+final_df_llm_combined.to_csv(f"{dir}/test_result_dir/llm_test_result_file.csv", encoding='utf-8-sig')
 
 # 평가지표 리스트
 metrics = ["CAGR", "Sharpe Ratio", "MDD"]
@@ -125,8 +138,9 @@ fig, axs = plt.subplots(nrows=1, ncols=len(metrics), figsize=(6 * len(metrics), 
 for i, metric in enumerate(metrics):
     ax = axs[i] if len(metrics) > 1 else axs
 
-    ax.plot(phases, avg_df["Average"].loc[metric], 'r-', marker='o', label='Average')
+    ax.plot(phases, avg_df["Average"].loc[metric], 'r-', marker='o', label='Average without LLM')
     ax.plot(phases, result_df_ks.loc[metric], 'y--', marker='o', label='KOSPI200')
+    ax.plot(phases, avg_df_llm["Average"].loc[metric], 'b-', marker='o', label='Average with LLM')
     ax.set_title(metric)
     ax.set_xlabel("Phase",labelpad=-0.5)
     ax.set_ylabel(metric)
@@ -135,36 +149,43 @@ for i, metric in enumerate(metrics):
 
     avg_values = [f"{val:.4f}" for val in avg_df["Average"].loc[metric]]
     ks_values = [f"{val:.4f}" for val in result_df_ks.loc[metric]]
+    avg_values_llm = [f"{val:.4f}" for val in avg_df_llm["Average"].loc[metric]]
 
     # Phase별 실수 배열
     phase_vals = avg_df["Average"].loc[metric].values
     phase_vals_ks = result_df_ks.loc[metric].values
+    phase_vals_llm = avg_df_llm["Average"].loc[metric].values
 
     if metric == "CAGR":
         # 1) 산술평균
         arith_avg = phase_vals.mean()
         arith_ks = phase_vals_ks.mean()
+        arith_avg_llm = phase_vals_llm.mean()
         # 2) 기하평균 (기존 방식 유지)
         # 원시 returns 대신 (1 + returns) 에서 기하평균을 구하고 다시 1을 빼기
         geo_avg = np.prod(1 + phase_vals) ** (1.0 / len(phases)) - 1
         geo_ks = np.prod(1 + phase_vals_ks) ** (1.0 / len(phases)) - 1
+        geo_avg_llm = np.prod(1 + phase_vals_llm) ** (1.0 / len(phases)) - 1
 
         # 두 개 모두 리스트에 추가
         avg_values.extend([f"{arith_avg:.4f}", f"{geo_avg:.4f}"])
         ks_values.extend([f"{arith_ks:.4f}", f"{geo_ks:.4f}"])
+        avg_values_llm.extend([f"{arith_avg_llm:.4f}", f"{geo_avg_llm:.4f}"])
         col_labels = list(phases) + ["Average", "Total"]
     else:
         # Sharpe, MDD는 기존 산술평균만
         overall_avg = phase_vals.mean()
         overall_ks = phase_vals_ks.mean()
+        overall_avg_llm = phase_vals_llm.mean()
         avg_values.append(f"{overall_avg:.4f}")
         ks_values.append(f"{overall_ks:.4f}")
+        avg_values_llm.append(f"{overall_avg_llm:.4f}")
         col_labels = list(phases) + ["Average"]
 
     # 테이블 생성
     table = ax.table(
-        cellText=[avg_values, ks_values],
-        rowLabels=["Model", "KOSPI200"],
+        cellText=[avg_values, ks_values, avg_values_llm],
+        rowLabels=["Model without LLM", "KOSPI200", "Model with LLM"],
         colLabels=col_labels,
         cellLoc='center',
         bbox=[0, -0.40, 1, 0.30]

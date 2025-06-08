@@ -267,8 +267,12 @@ class MyModel(nn.Module):
 
         ### 월 단위로 거래된 주식 종목 리스트: [[삼성전자, LG], [LG, HMM], [SK하이닉스, HMM]]
         month_stock_list = []
-
+        ### 거래 일자 저장 리스트
+        month_trade_dates = []
         while current <= end_dt:
+
+            month_trade_dates.append(current.strftime("%Y-%m-%d"))
+
             # df_select는 한 달 주기로 뽑히는 종목들
             df_select = pd.DataFrame(columns=[
                 "code", "score"
@@ -344,7 +348,7 @@ class MyModel(nn.Module):
                 
             current += relativedelta(months=1)
 
-        return balance / initial_balance, balance_model / initial_balance, month_stock_list
+        return balance / initial_balance, balance_model / initial_balance, month_stock_list, month_trade_dates
 
     def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, LLMagg = "False"):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
@@ -355,7 +359,6 @@ class MyModel(nn.Module):
         test_data = {}  # 섹터별 테스트 데이터를 저장할 딕셔너리
         symbols = {}  # 각 섹터별 종목(Symbol) 정보를 저장할 딕셔너리
 
-        idx = 0
         clustered_stocks_list = []
 
         if use_all == "SectorAll" or use_all == "All":  # 전체 데이터를 불러옴
@@ -411,7 +414,7 @@ class MyModel(nn.Module):
                 real_last_topK_stock.extend(selected)
 
             ### real_last_topK_stock: 섹터별 상위 20% 종목들
-            LLM_return, Model_return, month_stock_lists = self.LLM_task(real_last_topK_stock, strdate, next_strdate)
+            LLM_return, Model_return, month_stock_lists, month_trade_dates = self.LLM_task(real_last_topK_stock, strdate, next_strdate)
 
             ###
             # 기존:
@@ -420,24 +423,23 @@ class MyModel(nn.Module):
             # 1,11200,3490,10120,29530,1120
             # 새 종목 저장 csv:
             # 0,1,2,3,4,5,6
-            # 0,0,3570,8060,4710,1120,3550
-            # 0,1,3570,8060,,,
-            # 0,2,8060,4710,1120,,
-            # 1,0,11200,3490,10120,29530,1120
-            # 1,1,11200,29530,1120,,
-            # 1,2,11200,1120,,,
-            # 인덱스 == (n, 0): 분기별 종목
-            # 인덱스 == (n, m): 페이즈 내 n번째 분기에 m번째 월 단위 거래 종목
+            # 2020_Q4,2021-03-05,3570,8060,4710,1120,3550
+            # 2020_Q4,2021-04-05,3570,8060,,,
+            # 2020_Q4,2021-05-05,8060,4710,1120,,
+            # 2021_Q1,2021-05-16,11200,3490,10120,29530,1120
+            # 2021_Q1,2021-06-16,11200,29530,1120,,
+            # 2021_Q1,2021-07-16,11200,1120,,,
+            # 인덱스 == (n, 가장 늦은 공시일): 분기별 종목
+            # 인덱스 == (n, m): 페이즈 내 n분기에 m 날짜에 거래한 종목
             # 모델은 분기별 종목을 매달 사고 팜
             ###
-            month_idx = 0
-            clustered_stocks_list.append([f"{idx}", f"{month_idx}"] + real_last_topK_stock)
+
+            idx = 0
+            clustered_stocks_list.append([f"{strdate}", f"{month_trade_dates[idx]}"] + real_last_topK_stock)
             if isTest:
-                month_idx += 1
                 for month_list in month_stock_lists:
-                    clustered_stocks_list.append([f"{idx}", f"{month_idx}"] + month_list)
-                    month_idx += 1
-            idx += 1
+                    clustered_stocks_list.append([f"{strdate}", f"{month_trade_dates[idx]}"] + month_list)
+                    idx += 1
             self.final_stock_k = len(real_last_topK_stock)  # 최종적으로 선택된 주식 개수를 저장
 
             if verbose: print(real_last_topK_stock,flush=True)  # 선택된 최종 종목을 출력

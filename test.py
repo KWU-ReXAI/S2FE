@@ -60,7 +60,7 @@ for K in range(1,args.testNum+1): # 한번만 실행
     list_num_stocks = [] # 각 실험에서 선택된 주식 개수를 저장할 리스트
     for m in range(2,3): # 20번 실행
         result = {} # 백테스팅 결과를 저장할 딕셔너리
-        result_ks = {}
+        # result_ks = {}
         result_llm = {}
         num_stocks = [] # 각 phase에서 선택된 주식 개수를 저장하는 리스트
         for phase in tqdm(phase_list): # 각 phase 별 진행상태를 시각적으로 출력
@@ -71,11 +71,11 @@ for K in range(1,args.testNum+1): # 한번만 실행
             # 상위 20% 주식만을 선택
             num_stocks.append(num_stock_tmp) # 선택된 주식 개수를 저장
             result[phase] = {"CAGR":cagr,"Sharpe Ratio":sharpe,"MDD":mdd} # 백테스팅 결과 저장
-            result_ks[phase] = {"CAGR":cagr_ks,"Sharpe Ratio":sharpe_ks,"MDD":mdd_ks}
+            # result_ks[phase] = {"CAGR":cagr_ks,"Sharpe Ratio":sharpe_ks,"MDD":mdd_ks}
             result_llm[phase] = {"CAGR": cagr_llm, "Sharpe Ratio": sharpe_llm, "MDD": mdd_llm}  # 백테스팅 결과 저장
 
         result_df = pd.DataFrame(result)
-        result_df_ks = pd.DataFrame(result_ks)
+        # result_df_ks = pd.DataFrame(result_ks)
         result_df_llm = pd.DataFrame(result_llm)
         all_results[f"Test {K}"] = result_df
         all_results_llm[f"Test {K}"] = result_df_llm
@@ -138,9 +138,10 @@ fig, axs = plt.subplots(nrows=1, ncols=len(metrics), figsize=(6 * len(metrics), 
 for i, metric in enumerate(metrics):
     ax = axs[i] if len(metrics) > 1 else axs
 
-    ax.plot(phases, avg_df["Average"].loc[metric], 'r-', marker='o', label='Average without LLM')
-    ax.plot(phases, result_df_ks.loc[metric], 'y--', marker='o', label='KOSPI200')
-    ax.plot(phases, avg_df_llm["Average"].loc[metric], 'b-', marker='o', label='Average with LLM')
+    ax.plot(phases, avg_df_llm["Average"].loc[metric], 'r-', marker='o', label='Average with LLM')
+    ax.plot(phases, avg_df["Average"].loc[metric], 'b-', marker='o', label='Average without LLM')
+    # ax.plot(phases, result_df_ks.loc[metric], 'y--', marker='o', label='KOSPI200')
+    # ax.plot(phases, avg_df_llm["Average"].loc[metric], 'b-', marker='o', label='Average with LLM')
     ax.set_title(metric)
     ax.set_xlabel("Phase",labelpad=-0.5)
     ax.set_ylabel(metric)
@@ -148,44 +149,46 @@ for i, metric in enumerate(metrics):
     ax.legend(loc='upper left')
 
     avg_values = [f"{val:.4f}" for val in avg_df["Average"].loc[metric]]
-    ks_values = [f"{val:.4f}" for val in result_df_ks.loc[metric]]
+    # ks_values = [f"{val:.4f}" for val in result_df_ks.loc[metric]]
     avg_values_llm = [f"{val:.4f}" for val in avg_df_llm["Average"].loc[metric]]
 
     # Phase별 실수 배열
     phase_vals = avg_df["Average"].loc[metric].values
-    phase_vals_ks = result_df_ks.loc[metric].values
+    # phase_vals_ks = result_df_ks.loc[metric].values
     phase_vals_llm = avg_df_llm["Average"].loc[metric].values
 
     if metric == "CAGR":
         # 1) 산술평균
         arith_avg = phase_vals.mean()
-        arith_ks = phase_vals_ks.mean()
+        # arith_ks = phase_vals_ks.mean()
         arith_avg_llm = phase_vals_llm.mean()
         # 2) 기하평균 (기존 방식 유지)
         # 원시 returns 대신 (1 + returns) 에서 기하평균을 구하고 다시 1을 빼기
         geo_avg = np.prod(1 + phase_vals) ** (1.0 / len(phases)) - 1
-        geo_ks = np.prod(1 + phase_vals_ks) ** (1.0 / len(phases)) - 1
+        # geo_ks = np.prod(1 + phase_vals_ks) ** (1.0 / len(phases)) - 1
         geo_avg_llm = np.prod(1 + phase_vals_llm) ** (1.0 / len(phases)) - 1
 
         # 두 개 모두 리스트에 추가
         avg_values.extend([f"{arith_avg:.4f}", f"{geo_avg:.4f}"])
-        ks_values.extend([f"{arith_ks:.4f}", f"{geo_ks:.4f}"])
+        # ks_values.extend([f"{arith_ks:.4f}", f"{geo_ks:.4f}"])
         avg_values_llm.extend([f"{arith_avg_llm:.4f}", f"{geo_avg_llm:.4f}"])
         col_labels = list(phases) + ["Average", "Total"]
     else:
         # Sharpe, MDD는 기존 산술평균만
         overall_avg = phase_vals.mean()
-        overall_ks = phase_vals_ks.mean()
+        # overall_ks = phase_vals_ks.mean()
         overall_avg_llm = phase_vals_llm.mean()
         avg_values.append(f"{overall_avg:.4f}")
-        ks_values.append(f"{overall_ks:.4f}")
+        # ks_values.append(f"{overall_ks:.4f}")
         avg_values_llm.append(f"{overall_avg_llm:.4f}")
         col_labels = list(phases) + ["Average"]
 
     # 테이블 생성
     table = ax.table(
-        cellText=[avg_values, ks_values, avg_values_llm],
-        rowLabels=["Model without LLM", "KOSPI200", "Model with LLM"],
+        cellText=[avg_values_llm, avg_values],
+        rowLabels=["Average with LLM", "Average without LLM"],
+        # cellText=[avg_values, ks_values, avg_values_llm],
+        # rowLabels=["Model without LLM", "KOSPI200", "Model with LLM"],
         colLabels=col_labels,
         cellLoc='center',
         bbox=[0, -0.40, 1, 0.30]

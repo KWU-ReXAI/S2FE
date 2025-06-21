@@ -14,11 +14,10 @@ API_KEY = os.getenv("YOUTUBE_API_KEY")
 youtube = build("youtube", "v3", developerKey=API_KEY)
 
 # 한 번에 몇 주치를 검색할 지
-SEARCH = 4
+SEARCH = 1
 
 # CSV 파일 경로 (이미 반드시 존재)
-csv_path = f"./data_kr/video/뉴스 영상 수집본.csv"
-
+csv_path = f"./data_kr/video/error_rows.csv"
 ## 뉴스 영상 제목, 설명으로 연관성있는 뉴스인지 판별하는 함수
 ### 검색 과정에서 쓰기에는 호출 횟수가 너무 많아질 수 있어(한 번의 검색 당 최대 50 + a번) 일단 사용 보류
 ### 나중에 다 검색 후 내용 판별할 때 사용 예정
@@ -113,13 +112,14 @@ if __name__ == "__main__":
                 type="video",
                 order="viewCount",
                 topicId="/m/098wr", # 사회 카테고리(뉴스 카테고리 별도 X)
+                videoCaption='closedCaption',
                 maxResults=50,
                 publishedAfter=publishedAfter,
                 publishedBefore=publishedBefore,
                 relevanceLanguage="ko",
                 regionCode="KR",
                 # 영상 길이 필터: short(<4분), medium(4~20분), long(>20분)
-                videoDuration="short"
+                videoDuration="medium"
             ).execute()
 
             for id, row in rows.iterrows():
@@ -137,8 +137,10 @@ if __name__ == "__main__":
                         url      = f"https://youtu.be/{vid_id}"
                         upload_dt = publishedAt
                         break
-                df.at[id, 'url'] = url
-                df.at[id, 'upload_dt'] = upload_dt
+                if pd.isna(df.iloc[id]['url']):
+                    df.at[id, 'url'] = url
+                if pd.isna(df.iloc[id]['upload_dt']):
+                    df.at[id, 'upload_dt'] = upload_dt
 
         except HttpError as e:
             if e.resp.status == 403 and 'quotaExceeded' in str(e):
@@ -147,5 +149,5 @@ if __name__ == "__main__":
             print(f"[ERROR] row {idx} — {company} {after}~{before}: {e}")
 
         # 결과 중간저장
-        df.to_csv(f"./data_kr/video/뉴스 영상 수집본.csv", encoding='utf-8-sig', index=False)
+        df.to_csv(f"./data_kr/video/error_rows.csv", encoding='utf-8-sig', index=False)
 

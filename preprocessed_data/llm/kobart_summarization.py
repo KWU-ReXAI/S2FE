@@ -124,7 +124,7 @@ if __name__ == "__main__":
         '000120', '000150', '001120', '003490', '003570', '006260',
         '010120', '011200', '025540', '047050', '047810', '051600', '086280'
     ]
-    base_input_dir_1 = "./script/산업재"  # 산업재 입력 텍스트 파일들이 있는 디렉터리 경로
+    base_input_dir_1 = "../../data_kr/video/script/산업재"  # 산업재 입력 텍스트 파일들이 있는 디렉터리 경로
     base_output_dir_1 = "./summary_video/산업재"  # 요약 결과를 저장할 디렉터리 경로
 
     # 산업재 카테고리의 각 기업별로 요약 수행
@@ -149,6 +149,8 @@ if __name__ == "__main__":
             input_path = os.path.join(input_dir, filename)  # 입력 파일 경로
             output_path = os.path.join(output_dir, filename)  # 출력 파일 경로
 
+            if os.path.exists(output_path):
+                continue
             # 요약 함수 호출
             summarize_file_simple(
                 input_path,
@@ -165,7 +167,7 @@ if __name__ == "__main__":
         '009150', '011070', '018260', '020150', '029530', '034220',
         '034730', '042700', '066570'
     ]
-    base_input_dir_2 = "./script/정보기술"  # 정보기술 입력 텍스트 디렉터리
+    base_input_dir_2 = "../../data_kr/video/script/정보기술"  # 정보기술 입력 텍스트 디렉터리
     base_output_dir_2 = "./summary_video/정보기술"  # 정보기술 요약 저장 디렉터리
 
     # 정보기술 카테고리 기업별 요약 반복 처리
@@ -190,6 +192,8 @@ if __name__ == "__main__":
             input_path = os.path.join(input_dir, filename)  # 입력 경로
             output_path = os.path.join(output_dir, filename)  # 출력 경로
 
+            if os.path.exists(output_path):
+                continue
             # 요약 함수 호출
             summarize_file_simple(
                 input_path,

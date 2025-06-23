@@ -508,58 +508,58 @@ if __name__ == "__main__":
 	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 	# 			log_file.write(f"{timestamp} whisper error: {text_dir + f'{row.year}-{row.quarter}'}\n")
 
-	### 텍스트 token 수 확인  ###
-	import tiktoken
-	# 예: GPT-4용 인코더 불러오기
-	encoding = tiktoken.encoding_for_model("gpt-4o")
-	total_tokens = 0
+	# ### 텍스트 token 수 확인  ###
+	# import tiktoken
+	# # 예: GPT-4용 인코더 불러오기
+	# encoding = tiktoken.encoding_for_model("gpt-4o")
+	# total_tokens = 0
 
-	for row in tqdm(df.itertuples(), total=len(df), desc="checking tokens"):
-		if pd.isna(row.url) or row.url == '':
-			continue
+	# for row in tqdm(df.itertuples(), total=len(df), desc="checking tokens"):
+	# 	if pd.isna(row.url) or row.url == '':
+	# 		continue
 
-		code = str(row.code).zfill(6)
-		text_dir = f'data_kr/video/text/{row.sector}/{code}/'
-		os.makedirs(text_dir, exist_ok=True)
+	# 	code = str(row.code).zfill(6)
+	# 	text_dir = f'data_kr/video/text/{row.sector}/{code}/'
+	# 	os.makedirs(text_dir, exist_ok=True)
 		
-		try:
-			filename = f'{row.year}-{row.quarter}-{str(row.month).zfill(2)}-{row.week}.txt'
-			with open(text_dir + filename, "r", encoding="utf-8") as file:
-				text = file.read()
-				system_prompt = """
-			너는 경제 전문 뉴스 분석 AI야. 사용자가 지정한 종목(회사명)과 직접적으로 관련된 정보만 선택해 핵심적으로 요약해.
-			사실 기반으로 요약하고, 감성이나 추론이 필요한 경우에는 중립적으로 표현해.
-			"""
+	# 	try:
+	# 		filename = f'{row.year}-{row.quarter}-{str(row.month).zfill(2)}-{row.week}.txt'
+	# 		with open(text_dir + filename, "r", encoding="utf-8") as file:
+	# 			text = file.read()
+	# 			system_prompt = """
+	# 		너는 경제 전문 뉴스 분석 AI야. 사용자가 지정한 종목(회사명)과 직접적으로 관련된 정보만 선택해 핵심적으로 요약해.
+	# 		사실 기반으로 요약하고, 감성이나 추론이 필요한 경우에는 중립적으로 표현해.
+	# 		"""
 
-				user_prompt = f"""
-			다음은 경제 뉴스 기사입니다.
+	# 			user_prompt = f"""
+	# 		다음은 경제 뉴스 기사입니다.
 
-			이 기사에서 **한국 상장 기업 "{code}"**과 관련된 내용만 골라 요약해 주세요.
+	# 		이 기사에서 **한국 상장 기업 "{code}"**과 관련된 내용만 골라 요약해 주세요.
 
-			요약 기준:
-			- "{code}"이 언급된 부분 중심
-			- 관련 사업, 실적, 주가, 시장 반응, 경쟁사와의 연관성
-			- 정부 정책, 산업 트렌드 등 외부 요인 중 관련 있는 부분
-			- 부정적/긍정적 논조도 간단히 언급 (있는 경우)
+	# 		요약 기준:
+	# 		- "{code}"이 언급된 부분 중심
+	# 		- 관련 사업, 실적, 주가, 시장 반응, 경쟁사와의 연관성
+	# 		- 정부 정책, 산업 트렌드 등 외부 요인 중 관련 있는 부분
+	# 		- 부정적/긍정적 논조도 간단히 언급 (있는 경우)
 
-			형식은 간결한 문장 또는 Bullet Point 형식으로 작성해 주세요.
+	# 		형식은 간결한 문장 또는 Bullet Point 형식으로 작성해 주세요.
 
-			기사 전문:
-			{text}
-			"""
-				total_prompt = system_prompt + user_prompt
-				tokens = encoding.encode(total_prompt)
-				total_tokens += len(tokens)
-			with open('data_kr/video/num_token.txt', "a", encoding="utf-8") as log_file:
-				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-				log_file.write(f"{text_dir}{filename} len: {len(text)}, token: {len(tokens)}\n")
-		except Exception as e:
-			with open('data_kr/video/num_token.txt', "a", encoding="utf-8") as log_file:
-				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-				log_file.write(f"{text_dir}{filename} error: " + e + "\n")
+	# 		기사 전문:
+	# 		{text}
+	# 		"""
+	# 			total_prompt = system_prompt + user_prompt
+	# 			tokens = encoding.encode(total_prompt)
+	# 			total_tokens += len(tokens)
+	# 		with open('data_kr/video/num_token.txt', "a", encoding="utf-8") as log_file:
+	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 			log_file.write(f"{text_dir}{filename} len: {len(text)}, token: {len(tokens)}\n")
+	# 	except Exception as e:
+	# 		with open('data_kr/video/num_token.txt', "a", encoding="utf-8") as log_file:
+	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+	# 			log_file.write(f"{text_dir}{filename} error: " + e + "\n")
 
-	with open('data_kr/video/num_token.txt', "a", encoding="utf-8") as log_file:
-		log_file.write(f"total tokens: {total_tokens}\n")
+	# with open('data_kr/video/num_token.txt', "a", encoding="utf-8") as log_file:
+	# 	log_file.write(f"total tokens: {total_tokens}\n")
 
 	# ### LLM으로 영상 자막 요약 ###
 	# for row in tqdm(df.itertuples(), total=len(df), desc="LLM summarizing"):
@@ -588,46 +588,52 @@ if __name__ == "__main__":
 	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 	# 			log_file.write(f"{timestamp} summary error: {summary_dir + filename}\t error: {e}\n")
 
-	# ### LLM으로 자막요약을 통해 등락 예측 ###
-	# for code in df["code"].unique():
-	# 	df_ = df[df["code"] == code].reset_index(drop=True)
+	### LLM으로 자막요약을 통해 등락 예측 ###
+	df = pd.read_csv('data_kr/video/뉴스 기사 수집본.csv', encoding='utf-8')
+	df = pd.read_csv('data_kr/video/뉴스 영상 수집본.csv', encoding='utf-8')
+	for code in df["code"].unique():
+		df_ = df[df["code"] == code].reset_index(drop=True)
 		
-	# 	predict_list = []
-	# 	reason_list = []
+		predict_list = []
+		reason_list = []
 
-	# 	for row in tqdm(df_.itertuples(), total=len(df_), desc=f"{code}LLM predicting"):
-	# 		if pd.isna(row.url) or row.url == '':
-	# 			predict_list.append(None)
-	# 			reason_list.append(None)
-	# 			continue
+		for row in tqdm(df_.itertuples(), total=len(df_), desc=f"{code}LLM predicting"):
+			if pd.isna(row.url) or row.url == '':
+				predict_list.append(None)
+				reason_list.append(None)
+				continue
 			
-	# 		code = str(row.code).zfill(6)	
-	# 		name = row.name
-	# 		summary_dir = f'preprocessed_data/llm/summary/{row.sector}/{code}/'
-	# 		predict_dir = f'preprocessed_data/llm/predict/{row.sector}/'
-	# 		os.makedirs(predict_dir, exist_ok=True)
+			code = str(row.code).zfill(6)	
+			name = row.name
+			summary_dir = f'preprocessed_data/llm/summary_text/{row.sector}/{code}/'
+			predict_dir = f'preprocessed_data/llm/predict_text/{row.sector}/{code}'
+			os.makedirs(predict_dir, exist_ok=True)
 
-	# 		try:
-	# 			filename = f'{row.year}-{row.quarter}-{str(row.month).zfill(2)}-{row.week}.txt'
-	# 			stock = f'{name}({code})'
-	# 			with open(summary_dir + f'{row.year}-{row.quarter}.txt', "r", encoding="utf-8") as file:
-	# 				summary = file.read()
-	# 			data = predict_market_from_summary(summary, f'{name}({code})')
-	# 			predict = data.split('\n')[0].split(':')[1].strip()
-	# 			reason = data.split('\n')[1].split(':')[1].strip()
-	# 			predict_list.append(predict)
-	# 			reason_list.append(reason)
+			try:
+				filename = f'{row.year}-{row.quarter}-{str(row.month).zfill(2)}-{row.week}.txt'
+				stock = f'{name}({code})'
+				with open(f'{summary_dir}{filename}', "r", encoding="utf-8") as file:
+					summary = file.read()
+				data = predict_market_from_summary(summary, f'{name}({code})')
 				
-	# 			with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
-	# 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-	# 				log_file.write(f"{timestamp} predict completed: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
-	# 		except Exception as e:
-	# 			with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
-	# 				timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-	# 				log_file.write(f"{timestamp} predict error: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
+				with open(f'{predict_dir}{filename}', "w", encoding="utf-8") as file:
+					file.write(summary)
+     
+				predict = data.split('\n')[0].split(':')[1].strip()
+				reason = data.split('\n')[1].split(':')[1].strip()
+				predict_list.append(predict)
+				reason_list.append(reason)
+				
+				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
+					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+					log_file.write(f"{timestamp} predict completed: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
+			except Exception as e:
+				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
+					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+					log_file.write(f"{timestamp} predict error: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
 
-	# 	df_predict = df_.copy()
-	# 	df_predict["prediction"] = predict_list
-	# 	df_predict["reason"] = reason_list
-	# 	df_predict = df_predict[["year", "quarter", "disclosure_date", "code", "name", "sector", "prediction", "reason"]]
-	# 	df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8-sig")
+		df_predict = df_.copy()
+		df_predict["prediction"] = predict_list
+		df_predict["reason"] = reason_list
+		df_predict = df_predict[["year", "quarter", "disclosure_date", "code", "name", "sector", "prediction", "reason"]]
+		df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8-sig")

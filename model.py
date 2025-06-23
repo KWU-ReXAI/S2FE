@@ -212,7 +212,17 @@ class MyModel(nn.Module):
     
     def get_rows_by_date_range(self, code: str, start_date_str: str, end_date_str: str) -> pd.DataFrame:
         code = str(code).zfill(6)
-        file_path = f"./result/experiment/{code}.csv"
+
+        # 가능한 섹터 목록
+        sectors = ['산업재', '정보기술']
+
+        # 실제 존재하는 파일 경로를 찾기
+        file_path = None
+        for sector in sectors:
+            potential_path = f"./preprocessed_data/llm/predict2/{sector}/{code}/{code}.csv"
+            if os.path.exists(potential_path):
+                file_path = potential_path
+                break
         # CSV 읽기
         df = pd.read_csv(file_path, encoding='utf-8-sig')
 
@@ -231,13 +241,11 @@ class MyModel(nn.Module):
     
     def LLM_task(self, model_list, start_date, end_date):
         initial_balance = 100000000 # 1억
-        balance = 100000000 # 1억
-        balance_model = 100000000
-        
-        # 1) model_list를 index 리스트로 변환
-        if model_list is None: return None
+        balance = initial_balance
+        balance_model = initial_balance
 
-        model_list = model_list.index.to_list()
+        # 1) model_list를 index 리스트로 변환
+        if model_list is None: return None, None, None
 
         # 2) 해당 분기의 가장 늦는 공시일 얻기
         start_datetime = self.DM.get_disclosure_date(start_date)
@@ -253,11 +261,18 @@ class MyModel(nn.Module):
             df_list.append(df)
 
 
-        start_dt = datetime.strptime(start_datetime, '%Y-%m-%d') + timedelta(days=1)
+        start_dt = datetime.strptime(start_datetime, '%Y-%m-%d') + timedelta(days=1) # 점검 필요
         end_dt = datetime.strptime(end_datetime, '%Y-%m-%d') - timedelta(days=1)
         current = start_dt ## 거래일
 
+        ### 월 단위로 거래된 주식 종목 리스트: [[삼성전자, LG], [LG, HMM], [SK하이닉스, HMM]]
+        month_stock_list = []
+        ### 거래 일자 저장 리스트
+        month_trade_dates = []
         while current <= end_dt:
+
+            month_trade_dates.append(current.strftime("%Y-%m-%d"))
+
             # df_select는 한 달 주기로 뽑히는 종목들
             df_select = pd.DataFrame(columns=[
                 "code", "score"
@@ -283,13 +298,21 @@ class MyModel(nn.Module):
                 ]
             ### threshold는 상의 후 결정하기
             threshold = 3
-            # df_select에는 이번달에 거래해야 할 종목만 남음
+            # df_select_model: 사실상 분기별로 나오는 종목 전부
             df_select_model = df_select.copy()
-            df_select = df_select[df_select['score'] >= threshold]            
-            num_stock = len(df_select)
+
+            # 종목 거르기 및 걸러진 종목 저장
+            df_select = df_select[df_select['score'] >= threshold]
+            month_stock_list.append(df_select['code'].tolist())
+
+            # 잔액을 원본 종목 전체 개수로 나눔
             num_stock_model = len(df_select_model)
-            balance_divided_model = balance_model //num_stock_model
-            balance_divided = balance // num_stock
+            balance_divided_model = balance_model // num_stock_model if num_stock_model != 0 else balance_model
+
+            # 잔액을 LLM에 의해 걸러진 종목 개수로 나눔(월별로 다름)
+            num_stock = len(df_select)
+            balance_divided = balance // num_stock if num_stock != 0 else balance
+
             ###### 구매 코드 구현하기 ######
             buy_dt = current
             sell_dt = current + relativedelta(months=1)
@@ -297,33 +320,35 @@ class MyModel(nn.Module):
 
             charge = 0.005
 
+            # LLM에 의해 걸러진 종목만 거래
             for row in df_select.itertuples():
-                code = str(row.code).zfill(6)
+                code = str(int(row.code)).zfill(6)
                 df_price = pd.read_csv(f"data_kr/price/{code}.csv")
                 df_price['날짜'] = pd.to_datetime(df_price['날짜'])
                 buy_price = df_price[df_price['날짜'] >= buy_dt].iloc[0]['종가']
                 sell_price = df_price[df_price['날짜'] <= sell_dt].iloc[-1]['종가']
                 
-                ### 거래 (수수료 고려 X) ###
+                ### 거래 (판매 수수료 0.5%) ###
                 num_stock = balance_divided // buy_price
                 balance -= buy_price * num_stock
                 balance += (sell_price * num_stock) * (1 - charge)
 
+            # 분기별 전체 종목 거래
             for row in df_select_model.itertuples():
-                code_model = str(row.code).zfill(6)
+                code_model = str(int(row.code)).zfill(6)
                 df_price_model = pd.read_csv(f"data_kr/price/{code_model}.csv")
                 df_price_model['날짜'] = pd.to_datetime(df_price_model['날짜'])
                 buy_price_model = df_price_model[df_price_model['날짜'] >= buy_dt].iloc[0]['종가']
                 sell_price_model = df_price_model[df_price_model['날짜'] <= sell_dt].iloc[-1]['종가']
 
-                ### 거래 (수수료 고려 X) ###
+                ### 거래 (판매 수수료 0.5%) ###
                 num_stock_model = balance_divided_model // buy_price_model
                 balance_model -= buy_price_model * num_stock_model
                 balance_model += (sell_price_model * num_stock_model) * (1 - charge)
                 
             current += relativedelta(months=1)
 
-        return balance / initial_balance, balance_model / initial_balance
+        return balance / initial_balance, balance_model / initial_balance, month_stock_list, month_trade_dates
 
     def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, LLMagg = "False"):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
@@ -334,7 +359,6 @@ class MyModel(nn.Module):
         test_data = {}  # 섹터별 테스트 데이터를 저장할 딕셔너리
         symbols = {}  # 각 섹터별 종목(Symbol) 정보를 저장할 딕셔너리
 
-        idx = 0
         clustered_stocks_list = []
 
         if use_all == "SectorAll" or use_all == "All":  # 전체 데이터를 불러옴
@@ -353,8 +377,8 @@ class MyModel(nn.Module):
         pf_mem_ks = []
         num_of_stock = []  # 매일 선택된 주식 개수 저장
 
-        pf_mem_first = []
-        pf_mem_first_ks = []
+        quarter_model_return = []
+        quarter_llm_return = []
 
         if verbose: print(f"\n------[{self.phase}]------",flush=True)
 
@@ -385,13 +409,37 @@ class MyModel(nn.Module):
                 else:
                     # 기본: topK만
                     selected = topK.index.to_list()"""
-                LLM_return, Model_return = self.LLM_task(topK, strdate, next_strdate)
-                #selected = topK[topK.index.isin(up_code)].index.to_list()
 
-                #real_last_topK_stock.extend(selected)
+                selected = topK.index.to_list()
+                real_last_topK_stock.extend(selected)
 
-            clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)
-            idx += 1
+            ### real_last_topK_stock: 섹터별 상위 20% 종목들
+            LLM_return, Model_return, month_stock_lists, month_trade_dates = self.LLM_task(real_last_topK_stock, strdate, next_strdate)
+
+            ###
+            # 기존:
+            # 0,1,2,3,4,5
+            # 0,3570,8060,4710,1120,3550
+            # 1,11200,3490,10120,29530,1120
+            # 새 종목 저장 csv:
+            # 0,1,2,3,4,5,6
+            # 2020_Q4,2021-03-05,3570,8060,4710,1120,3550
+            # 2020_Q4,2021-04-05,3570,8060,,,
+            # 2020_Q4,2021-05-05,8060,4710,1120,,
+            # 2021_Q1,2021-05-16,11200,3490,10120,29530,1120
+            # 2021_Q1,2021-06-16,11200,29530,1120,,
+            # 2021_Q1,2021-07-16,11200,1120,,,
+            # 인덱스 == (n, 가장 늦은 공시일): 분기별 종목
+            # 인덱스 == (n, m): 페이즈 내 n분기에 m 날짜에 거래한 종목
+            # 모델은 분기별 종목을 매달 사고 팜
+            ###
+
+            idx = 0
+            clustered_stocks_list.append([f"{strdate}", f"{month_trade_dates[idx]}"] + real_last_topK_stock)
+            if isTest:
+                for month_list in month_stock_lists:
+                    clustered_stocks_list.append([f"{strdate}", f"{month_trade_dates[idx]}"] + month_list)
+                    idx += 1
             self.final_stock_k = len(real_last_topK_stock)  # 최종적으로 선택된 주식 개수를 저장
 
             if verbose: print(real_last_topK_stock,flush=True)  # 선택된 최종 종목을 출력
@@ -402,6 +450,10 @@ class MyModel(nn.Module):
                     f"{dir}/train_selected_stocks_{self.phase}.csv", index=False)
             num_of_stock.append(len(real_last_topK_stock))
 
+            ### 분기별 모델과 LLM 필터링의 수익률 저장 -> 아래에서 곱해서 계산
+            quarter_model_return.append(Model_return)
+            quarter_llm_return.append(LLM_return)
+
             daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate,False)
             daily_change_KOSPI = self.Utils.get_portfolio_memory(real_last_topK_stock,strdate,next_strdate,True)
             # 매일의 포트폴리오 수익률 계산
@@ -409,9 +461,15 @@ class MyModel(nn.Module):
             pf_mem.extend(daily_change)
             pf_mem_ks.extend(daily_change_KOSPI)
 
-        return_ratio = np.prod(np.array(pf_mem) + 1) - 1
+        # LLM 필터링 안 한 모델의 평가지표
+        return_ratio = np.prod(np.array(quarter_model_return)) - 1
         mdd = self.Utils.get_MDD(np.array(pf_mem) + 1)
         sharpe = self.Utils.get_sharpe_ratio(pf_mem)
+
+        # LLM 필터링 한 평가지표 -> MDD, SR은 get_portfolio_memory를 수정해야 할 거 같아서 일단 패스
+        return_ratio_llm = np.prod(np.array(quarter_llm_return)) - 1
+        mdd_llm = self.Utils.get_MDD(np.array(pf_mem) + 1)
+        sharpe_llm = self.Utils.get_sharpe_ratio(pf_mem)
 
         return_ratio_ks = np.prod(np.array(pf_mem_ks) + 1) - 1
         mdd_ks = self.Utils.get_MDD(np.array(pf_mem_ks) + 1)
@@ -423,8 +481,10 @@ class MyModel(nn.Module):
             print(f"\nMDD: {mdd}\tSharpe: {sharpe}\tCAGR: {return_ratio}",flush=True)
             print(f"KOSPI MDD: {mdd_ks}\tKOSPI Sharpe: {sharpe_ks}\tKOSPI CAGR: {return_ratio_ks}",flush=True)
             print("----------------------",flush=True)
-
-        return return_ratio, sharpe, mdd,num_of_stock, return_ratio_ks, sharpe_ks, mdd_ks
+        if isTest:
+            return return_ratio, sharpe, mdd,num_of_stock, return_ratio_ks, sharpe_ks, mdd_ks, return_ratio_llm, sharpe_llm, mdd_llm
+        else:
+            return return_ratio, sharpe, mdd, num_of_stock, return_ratio_ks, sharpe_ks, mdd_ks
 
     def save(obj):
         return (obj.__class__, obj.__dict__)

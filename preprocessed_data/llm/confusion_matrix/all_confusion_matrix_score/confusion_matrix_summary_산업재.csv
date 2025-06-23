@@ -1,0 +1,9 @@
+﻿label,count,rate(%)
+PP,206.0,45.88
+PN,147.0,32.74
+NP,43.0,9.58
+NN,53.0,11.8
+TOTAL,449.0,
+정확도(Accuracy),57.68,
+정밀도(Precision),82.73,
+재현율(Recall),58.36,

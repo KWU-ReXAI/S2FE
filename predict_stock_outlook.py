@@ -459,7 +459,7 @@ def get_video_datas(channel_name, min_view_cnt):
 		pd.DataFrame(video_datas, columns=['video_id', 'published_at', 'view_count']).to_csv(f'{dir}/{year_quarter}/{year_quarter}.csv', index=False)
     
 if __name__ == "__main__":
-	df = pd.read_csv("data_kr/video/자료 수집 최종본.csv")
+	# df = pd.read_csv("data_kr/video/자료 수집 최종본.csv")
 	
 	# ### 오디오 다운로드 ###
 	# for row in df.itertuples():
@@ -588,9 +588,8 @@ if __name__ == "__main__":
 	# 			timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 	# 			log_file.write(f"{timestamp} summary error: {summary_dir + filename}\t error: {e}\n")
 
-	### LLM으로 자막요약을 통해 등락 예측 ###
+	### LLM으로 기사 자막요약을 통해 등락 예측 ###
 	df = pd.read_csv('data_kr/video/뉴스 기사 수집본.csv', encoding='utf-8')
-	df = pd.read_csv('data_kr/video/뉴스 영상 수집본.csv', encoding='utf-8')
 	for code in df["code"].unique():
 		df_ = df[df["code"] == code].reset_index(drop=True)
 		
@@ -606,7 +605,7 @@ if __name__ == "__main__":
 			code = str(row.code).zfill(6)	
 			name = row.name
 			summary_dir = f'preprocessed_data/llm/summary_text/{row.sector}/{code}/'
-			predict_dir = f'preprocessed_data/llm/predict_text/{row.sector}/{code}'
+			predict_dir = f'preprocessed_data/llm/predict_text/{row.sector}/{code}/'
 			os.makedirs(predict_dir, exist_ok=True)
 
 			try:
@@ -617,20 +616,70 @@ if __name__ == "__main__":
 				data = predict_market_from_summary(summary, f'{name}({code})')
 				
 				with open(f'{predict_dir}{filename}', "w", encoding="utf-8") as file:
-					file.write(summary)
+					file.write(data)
      
 				predict = data.split('\n')[0].split(':')[1].strip()
 				reason = data.split('\n')[1].split(':')[1].strip()
 				predict_list.append(predict)
 				reason_list.append(reason)
 				
-				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
+				with open('preprocessed_data/llm/predict_text/log.txt', "a", encoding="utf-8") as log_file:
 					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-					log_file.write(f"{timestamp} predict completed: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
+					log_file.write(f"{timestamp} predict completed: {predict_dir}{filename}\n")
 			except Exception as e:
-				with open('preprocessed_data/llm/predict/log.txt', "a", encoding="utf-8") as log_file:
+				with open('preprocessed_data/llm/predict_text/log.txt', "a", encoding="utf-8") as log_file:
 					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-					log_file.write(f"{timestamp} predict error: {predict_dir + f'{code}/{row.year}-{row.quarter}'}\n")
+					log_file.write(f"{timestamp} predict error: {predict_dir}{filename}\n")
+
+		df_predict = df_.copy()
+		df_predict["prediction"] = predict_list
+		df_predict["reason"] = reason_list
+		df_predict = df_predict[["year", "quarter", "disclosure_date", "code", "name", "sector", "prediction", "reason"]]
+		df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8-sig")
+  
+  
+	### LLM으로 영상 자막요약을 통해 등락 예측 ###
+	df = pd.read_csv('data_kr/video/뉴스 영상 수집본.csv', encoding='utf-8')
+	for code in df["code"].unique():
+		df_ = df[df["code"] == code].reset_index(drop=True)
+		
+		predict_list = []
+		reason_list = []
+
+		for row in tqdm(df_.itertuples(), total=len(df_), desc=f"{code}LLM predicting"):
+			if pd.isna(row.url) or row.url == '':
+				predict_list.append(None)
+				reason_list.append(None)
+				continue
+			
+			code = str(row.code).zfill(6)	
+			name = row.name
+			summary_dir = f'preprocessed_data/llm/summary_video/{row.sector}/{code}/'
+			predict_dir = f'preprocessed_data/llm/predict_video/{row.sector}/{code}/'
+			os.makedirs(predict_dir, exist_ok=True)
+
+			try:
+				filename = f'{row.year}-{row.quarter}-{str(row.month).zfill(2)}-{row.week}.txt'
+				stock = f'{name}({code})'
+				with open(f'{summary_dir}{filename}', "r", encoding="utf-8") as file:
+					summary = file.read()
+				data = predict_market_from_summary(summary, f'{name}({code})')
+				
+				with open(f'{predict_dir}{filename}', "w", encoding="utf-8") as file:
+					file.write(data)
+     
+				predict = data.split('\n')[0].split(':')[1].strip()
+				reason = data.split('\n')[1].split(':')[1].strip()
+				predict_list.append(predict)
+				reason_list.append(reason)
+				
+				with open('preprocessed_data/llm/predict_video/log.txt', "a", encoding="utf-8") as log_file:
+					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+					log_file.write(f"{timestamp} predict completed: {predict_dir}{filename}\n")
+			except Exception as e:
+				with open('preprocessed_data/llm/predict_video/log.txt', "a", encoding="utf-8") as log_file:
+					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+					log_file.write(f"{timestamp} predict error: {predict_dir}{filename}\n")
 
 		df_predict = df_.copy()
 		df_predict["prediction"] = predict_list

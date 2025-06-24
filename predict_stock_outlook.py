@@ -629,14 +629,7 @@ if __name__ == "__main__":
 			except Exception as e:
 				with open('preprocessed_data/llm/predict_text/log.txt', "a", encoding="utf-8") as log_file:
 					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-					log_file.write(f"{timestamp} predict error: {predict_dir}{filename}\n")
-
-		df_predict = df_.copy()
-		df_predict["prediction"] = predict_list
-		df_predict["reason"] = reason_list
-		df_predict = df_predict[["year", "quarter", "disclosure_date", "code", "name", "sector", "prediction", "reason"]]
-		df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8-sig")
-  
+					log_file.write(f"{timestamp} predict error: {predict_dir}{filename}\n")  
   
 	### LLM으로 영상 자막요약을 통해 등락 예측 ###
 	df = pd.read_csv('data_kr/video/뉴스 영상 수집본.csv', encoding='utf-8')
@@ -680,9 +673,94 @@ if __name__ == "__main__":
 				with open('preprocessed_data/llm/predict_video/log.txt', "a", encoding="utf-8") as log_file:
 					timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 					log_file.write(f"{timestamp} predict error: {predict_dir}{filename}\n")
+     
+    ##### 기사 예측 결과 정리 #####
+	df=pd.read_csv('./data_kr/video/뉴스 기사 수집본.csv', encoding='utf-8')
+	for code in df["code"].unique():
+		df_ = df[df["code"] == code].reset_index(drop=True)
+		predict_list = []
+		reason_list = []
+		score_list = []
 
+		for row in tqdm(df_.itertuples(), total=len(df_), desc=f"{code}LLM predicting"):
+			if pd.isna(row.url) or row.url == '':
+				predict_list.append(None)
+				reason_list.append(None)
+				score_list.append(None)
+				continue
+			
+			code = str(row.code).zfill(6)	
+			name = row.name
+			predict_dir = f'preprocessed_data/llm/predict_text/{row.sector}/{code}/'
+			os.makedirs(predict_dir, exist_ok=True)
+
+			try:
+				filename = f'{row.year}-{row.quarter}-{str(row.month).zfill(2)}-{row.week}.txt'
+				stock = f'{name}({code})'
+				with open(f'{predict_dir}{filename}', "r", encoding="utf-8") as file:
+					data = file.read()
+					
+				predict = data.split('\n')[0].split(':')[1].strip()
+				reason = data.split('\n')[1].split(':')[1].strip()
+				score = data.split('\n')[2].split(':')[1].strip()
+				predict_list.append(predict)
+				reason_list.append(reason)
+				score_list.append(int(score))
+				
+			except Exception as e:
+				predict_list.append("불가능")
+				reason_list.append("관련 없음")
+				score_list.append(0)
+				
 		df_predict = df_.copy()
 		df_predict["prediction"] = predict_list
 		df_predict["reason"] = reason_list
-		df_predict = df_predict[["year", "quarter", "disclosure_date", "code", "name", "sector", "prediction", "reason"]]
-		df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8-sig")
+		df_predict["score"] = score_list
+		df_predict = df_predict[["year", "quarter", "month", "week", "code", "name", "sector", "upload_dt", "prediction", "reason", "score"]]
+		df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8")
+     
+     
+	##### 영상 예측 결과 정리 #####
+	df=pd.read_csv('./data_kr/video/뉴스 영상 수집본.csv', encoding='utf-8')
+	for code in df["code"].unique():
+		df_ = df[df["code"] == code].reset_index(drop=True)
+		predict_list = []
+		reason_list = []
+		score_list = []
+
+		for row in tqdm(df_.itertuples(), total=len(df_), desc=f"{code}LLM predicting"):
+			if pd.isna(row.url) or row.url == '':
+				predict_list.append(None)
+				reason_list.append(None)
+				score_list.append(None)
+				continue
+			
+			code = str(row.code).zfill(6)	
+			name = row.name
+			predict_dir = f'preprocessed_data/llm/predict_video/{row.sector}/{code}/'
+			os.makedirs(predict_dir, exist_ok=True)
+
+			try:
+				filename = f'{row.year}-{row.quarter}-{str(row.month).zfill(2)}-{row.week}.txt'
+				stock = f'{name}({code})'
+				with open(f'{predict_dir}{filename}', "r", encoding="utf-8") as file:
+					data = file.read()
+					
+				predict = data.split('\n')[0].split(':')[1].strip()
+				reason = data.split('\n')[1].split(':')[1].strip()
+				score = data.split('\n')[2].split(':')[1].strip()
+				predict_list.append(predict)
+				reason_list.append(reason)
+				score_list.append(int(score))
+				
+			except Exception as e:
+				predict_list.append("불가능")
+				reason_list.append("관련 없음")
+				score_list.append(0)
+				
+		df_predict = df_.copy()
+		df_predict["prediction"] = predict_list
+		df_predict["reason"] = reason_list
+		df_predict["score"] = score_list
+		df_predict = df_predict[["year", "quarter", "month", "week", "code", "name", "sector", "upload_dt", "prediction", "reason", "score"]]
+		df_predict.to_csv(f"{predict_dir}{code}.csv", index=False, encoding="utf-8")

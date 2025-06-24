@@ -210,21 +210,16 @@ class MyModel(nn.Module):
     def save_models(self,dir):
         joblib.dump(self,f"{dir}/model.joblib")
     
-    def get_rows_by_date_range(self, code: str, start_date_str: str, end_date_str: str) -> pd.DataFrame:
-        code = str(code).zfill(6)
-
-        # 가능한 섹터 목록
-        sectors = ['산업재', '정보기술']
-
+    def get_rows_by_date_range(self, code: str, start_date_str: str, end_date_str: str, data) -> pd.DataFrame:
         # 실제 존재하는 파일 경로를 찾기
         file_path = None
-        for sector in sectors:
-            potential_path = f"./preprocessed_data/llm/predict2/{sector}/{code}/{code}.csv"
-            if os.path.exists(potential_path):
-                file_path = potential_path
-                break
+        if data == 0: file_path = "./preprocessed_data/llm/predict_total/predict_video.csv"
+        elif data == 1: file_path = "./preprocessed_data/llm/predict_total/predict_text.csv"
+        elif data == 2: file_path = "./preprocessed_data/llm/predict_total/predict_mix.csv"
+        
         # CSV 읽기
-        df = pd.read_csv(file_path, encoding='utf-8-sig')
+        df = pd.read_csv(file_path, encoding='utf-8')
+        df = df[df['code'] == code]
 
         # upload_dt를 datetime으로 변환
         df['upload_dt'] = pd.to_datetime(df['upload_dt'])
@@ -239,7 +234,7 @@ class MyModel(nn.Module):
         # 겹치는 행 반환
         return df.loc[mask].reset_index(drop=True)
     
-    def LLM_task(self, model_list, start_date, end_date):
+    def LLM_task(self, model_list, start_date, end_date, data):
         initial_balance = 100000000 # 1억
         balance = initial_balance
         balance_model = initial_balance
@@ -350,7 +345,8 @@ class MyModel(nn.Module):
 
         return balance / initial_balance, balance_model / initial_balance, month_stock_list, month_trade_dates
 
-    def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, LLMagg = "False"):  # 백테스팅 수행
+    # data 0 -> 영상데이터 사용 / data 1 -> 기사데이터 사용 / data 2 -> 영상+기사 데이터 사용
+    def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, LLMagg = "False", data=0):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
         # 과거 데이터를 사용하여 모델의 예측이 실제 시장에서 얼마나 잘 맞았는지를 검증하는 과정
         test_start = self.DM.phase_list[self.phase][2 if withValidation else 1]
@@ -414,7 +410,7 @@ class MyModel(nn.Module):
                 real_last_topK_stock.extend(selected)
 
             ### real_last_topK_stock: 섹터별 상위 20% 종목들
-            LLM_return, Model_return, month_stock_lists, month_trade_dates = self.LLM_task(real_last_topK_stock, strdate, next_strdate)
+            LLM_return, Model_return, month_stock_lists, month_trade_dates = self.LLM_task(real_last_topK_stock, strdate, next_strdate, data)
 
             ###
             # 기존:

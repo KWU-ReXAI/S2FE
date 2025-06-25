@@ -23,6 +23,26 @@ from datamanager import DataManager
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+class BaggingModel:
+    def __init__(self, n_modules, input_size, hidden_size):
+        self.n_modules = n_modules
+        self.models = []
+
+        for i in range(n_modules):
+            self.models.append(MultiLayerPerceptron(input_size, hidden_size, 'cpu'))
+
+    def fit(self, X:torch.Tensor, y, epochs = 200, lr = 0.015):
+        num_samples = int(X.shape[0] * 0.8)
+        for i in range(self.n_modules):
+            index = torch.randperm(X.shape[0])[:num_samples]
+            sample_X = X[index]
+            sample_y = y[index]
+            self.models[i].fit(sample_X,sample_y,lr,epochs)
+
+    def predict(self, X):
+        outputs = [model(X).unsqueeze(0) for model in self.models]
+        result = torch.cat(outputs, dim=0).mean(dim=0)
+        return result.cpu().detach().numpy().squeeze()
 
 class MultiLayerPerceptron(nn.Module):
     def __init__(self, input_size, hidden_size, device):
@@ -155,7 +175,7 @@ class MyModel(nn.Module):
         df.to_csv(file_path, index=False)
 
     def trainClusterModels(self, withValidation=False):
-        print(f"trainClusterModels ({self.phase}), with validation {withValidation}: ")
+        print(f"trainClusterModels ({self.phase}), with validation {withValidation}, Model {self.ensemble}")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
         test_start = self.DM.phase_list[self.phase][2]
@@ -164,17 +184,50 @@ class MyModel(nn.Module):
         print(
             f"train: {self.DM.pno2date(train_start)} ~ {self.DM.pno2date(valid_start - 1)} / valid: {self.DM.pno2date(valid_start)} ~ {self.DM.pno2date(test_start - 1)}"
             f" / test: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end - 1)}")
-        for sector in self.cluster_list:
-            train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
-            if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
-            a, b = train_data.shape[0], train_data.shape[1]
-            train_data = train_data.reshape(a * b, -1)
-            train_data = torch.Tensor(train_data, ).to(self.device)
-            the_model = AggregationModel(train_data.shape[1] - 1, self.n_rules, self.hidden, self.device)
-            the_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, self.epochs_anfis, self.lr_MLP,
-                          self.lr_anfis)
 
-            self.sector_models[sector] = the_model
+        if self.ensemble == "RF":
+            for sector in self.cluster_list:
+                train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
+                if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
+                a,b = train_data.shape[0], train_data.shape[1]
+                train_data = train_data.reshape(a*b,-1)
+                the_model = RandomForestRegressor()
+                the_model.fit(train_data[:,:-1], train_data[:,-1])
+                self.sector_models[sector] = the_model
+
+        elif self.ensemble == "bagging":
+            for sector in self.cluster_list:
+                train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
+                if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
+                a,b = train_data.shape[0], train_data.shape[1]
+                train_data = train_data.reshape(a*b,-1)
+                train_data = torch.Tensor(train_data).to(self.device)
+                the_model = BaggingModel(10,train_data.shape[1]-1,self.hidden)
+                the_model.fit(train_data[:,:-1],train_data[:,-1])
+                self.sector_models[sector] = the_model
+
+        elif self.ensemble == "MLP":
+            for sector in self.cluster_list:
+                train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
+                if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
+                a,b = train_data.shape[0], train_data.shape[1]
+                train_data = train_data.reshape(a*b,-1)
+                train_data = torch.Tensor(train_data).to(self.device)
+                the_model = MultiLayerPerceptron(train_data.shape[1]-1,self.hidden,self.device)
+                data = DataLoader(TensorDataset(train_data[:,:-1], train_data[:,-1]), batch_size=64, shuffle=True)
+                the_model.fit(data,self.lr_MLP,self.epochs_MLP)
+                self.sector_models[sector] = the_model
+        else: #S3CE
+            for sector in self.cluster_list:
+                train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
+                if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
+                a, b = train_data.shape[0], train_data.shape[1]
+                train_data = train_data.reshape(a * b, -1)
+                train_data = torch.Tensor(train_data, ).to(self.device)
+                the_model = AggregationModel(train_data.shape[1] - 1, self.n_rules, self.hidden, self.device)
+                the_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, self.epochs_anfis, self.lr_MLP,
+                              self.lr_anfis)
+                self.sector_models[sector] = the_model
 
     def trainALLSectorModels(self, withValidation = False): # 전체 섹터를 하나의 모델로 학습
         # 전체 섹터 학습 모델
@@ -187,7 +240,8 @@ class MyModel(nn.Module):
         print(
             f"train: {self.DM.pno2date(train_start)} ~ {self.DM.pno2date(valid_start - 1)} / valid: {self.DM.pno2date(valid_start)} ~ {self.DM.pno2date(test_start - 1)}"
             f" / test: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end - 1)}")
-        train_data = np.ndarray([0])
+
+
         train_tmp, valid_tmp, _ = self.DM.data_phase("ALL",self.phase)
         if withValidation: train_tmp = np.concatenate((train_tmp, valid_tmp))
         train_data = train_tmp.reshape(train_tmp.shape[0]*train_tmp.shape[1],-1)
@@ -195,7 +249,7 @@ class MyModel(nn.Module):
 
         self.all_sector_model = AggregationModel(train_data.shape[1] - 1, self.n_rules, self.hidden, self.device)
         train_data = torch.Tensor(train_data).to(self.device)
-        self.all_sector_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, 200, self.lr_MLP,
+        self.all_sector_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, self.epochs_anfis, self.lr_MLP,
                                   self.lr_anfis)
         # 개별 섹터 모델과 비교하기 위해 전체 시장을 학습한 모델을 실험
 

@@ -303,6 +303,7 @@ class MyModel(nn.Module):
                                              symbols[sector])
 
                     if use_all == "SectorAll":
+
                         if self.ensemble == "MLP":
                             if not isinstance(all_data, torch.Tensor):
                                 all_data = torch.Tensor(all_data).to(self.device)
@@ -345,10 +346,10 @@ class MyModel(nn.Module):
                     if not isinstance(all_data, torch.Tensor):
                         all_data = torch.Tensor(all_data).to(self.device)
                     top_all = pd.Series(self.all_sector_model(all_data[i, :, :-1]).cpu().detach().numpy().squeeze(),
-                                        all_symbol["symbol"]).sort_values(ascending=False)
+                                        all_symbol["code"]).sort_values(ascending=False)
                 elif self.ensemble == "RF":
                     top_all = pd.Series(self.all_sector_model.predict(all_data[i, :, :-1]),
-                                        all_symbol["symbol"]).sort_values(ascending=False)
+                                        all_symbol["code"]).sort_values(ascending=False)
 
                 else:
                     model = self.all_sector_model
@@ -359,12 +360,10 @@ class MyModel(nn.Module):
 
                 real_last_topK_stock.extend(top_all.index[:self.final_stock_k].to_list())  # 최종 상위 k 개의 주식을 선택 및 추가
 
-            if use_all == "SectorAll" and agg == 'avg':  # SectorAll 모드에서
-                real_last_topK_stock = stocks.sort_values(ascending=False).index.to_list()[:self.final_stock_k]
-                # 개별 섹터와 전체 섹터 모델의 예측값 평균을 사용하여 종목을 결정
+
             clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)
             idx += 1
-            self.final_stock_k = len(real_last_topK_stock)  # 최종적으로 선택된 주식 개수를 저장
+            #self.final_stock_k = len(real_last_topK_stock)
 
             if verbose: print(real_last_topK_stock,flush=True)  # 선택된 최종 종목을 출력
             if isTest:
@@ -397,6 +396,58 @@ class MyModel(nn.Module):
             print("----------------------",flush=True)
 
         return return_ratio, sharpe, mdd,num_of_stock, return_ratio_ks, sharpe_ks, mdd_ks
+
+        # MyModel 클래스 내부에 새로운 메서드로 추가
+
+    def backtest_BuyHold(self, verbose=True, withValidation= False):
+        test_start = self.DM.phase_list[self.phase][2 if withValidation else 1]
+        test_end = self.DM.phase_list[self.phase][3 if withValidation else 2]
+        # 테스트 시작과 종료 시점 설정
+        test_data = {}  # 섹터별 테스트 데이터를 저장할 딕셔너리
+        symbols = {}  # 각 섹터별 종목(Symbol) 정보를 저장할 딕셔너리
+
+        idx = 0
+        clustered_stocks_list = []
+        all_symbol = pd.read_csv(f"./data_kr/symbol.csv")
+        initial_portfolio_stocks = all_symbol["code"].tolist()
+
+        pf_mem = []
+        pf_mem_ks = []
+
+        for pno in range(test_start, test_end):
+            print(f"Test in {self.DM.pno2date(pno)}:")
+            # 각 날짜마다 주식을 선택하고 수익률을 계산
+            i = pno - test_start
+            strdate = self.DM.pno2date(pno)  # 현재 날짜와
+            next_strdate = self.DM.pno2date(pno + 1)  # 다음 날짜 반환
+
+            selected_stocks = initial_portfolio_stocks
+
+            # 일일 수익률 계산 (기존 로직 재사용)
+            daily_change = self.Utils.get_portfolio_memory(selected_stocks, strdate, next_strdate, False)
+            daily_change_KOSPI = self.Utils.get_portfolio_memory(selected_stocks, strdate, next_strdate, True)
+
+            pf_mem.extend(daily_change)
+            pf_mem_ks.extend(daily_change_KOSPI)
+
+        return_ratio = np.prod(np.array(pf_mem) + 1) - 1
+        mdd = self.Utils.get_MDD(np.array(pf_mem) + 1)
+        sharpe = self.Utils.get_sharpe_ratio(pf_mem)
+
+        return_ratio_ks = np.prod(np.array(pf_mem_ks) + 1) - 1
+        mdd_ks = self.Utils.get_MDD(np.array(pf_mem_ks) + 1)
+        sharpe_ks = self.Utils.get_sharpe_ratio(pf_mem_ks)
+
+        if verbose:
+            print(f"\nMDD: {mdd}\tSharpe: {sharpe}\tCAGR: {return_ratio}",flush=True)
+            print(f"KOSPI MDD: {mdd_ks}\tKOSPI Sharpe: {sharpe_ks}\tKOSPI CAGR: {return_ratio_ks}",flush=True)
+            print("----------------------",flush=True)
+
+        return return_ratio, sharpe, mdd,178, return_ratio_ks, sharpe_ks, mdd_ks
+
+
+
+
 
     def save(obj):
         return (obj.__class__, obj.__dict__)

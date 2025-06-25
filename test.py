@@ -19,6 +19,7 @@ parser.add_argument('--train_dir',type=str,nargs='?',default="train_result_dir")
 parser.add_argument('--test_dir',type=str,nargs='?',default="test_result_dir") # 결과 디렉토리 명
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE")
+parser.add_argument('--use_all',type=str,nargs="?",default="SectorAll")
 parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
 parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # 0.1
 args = parser.parse_args()
@@ -63,8 +64,16 @@ for K in range(1,args.testNum+1): # 한번만 실행
         num_stocks = [] # 각 phase에서 선택된 주식 개수를 저장하는 리스트
         for phase in tqdm(phase_list): # 각 phase 별 진행상태를 시각적으로 출력
             model = joblib.load(f"{dir}/{args.train_dir}_{K}/train_result_model_{K}_{phase}/model.joblib")  # 저장된 모델 불러옴
-            cagr, sharpe, mdd, num_stock_tmp,cagr_ks,sharpe_ks,mdd_ks = model.backtest(verbose=True,agg=args.agg,use_all="SectorAll",inter_n=args.inter_n,withValidation= True, isTest=True, testNum=K, dir=test_dir) # 백테스팅 실행
-                
+            if args.ensemble ==  "buyhold":
+                cagr, sharpe, mdd, num_stock_tmp,cagr_ks,sharpe_ks,mdd_ks = model.backtest_BuyHold(verbose=True,withValidation= True) # 백테스팅 실행
+            else:
+                cagr, sharpe, mdd, num_stock_tmp, cagr_ks, sharpe_ks, mdd_ks = model.backtest(verbose=True,
+                                                                                              agg=args.agg,
+                                                                                              use_all=args.use_all,
+                                                                                              inter_n=args.inter_n,
+                                                                                              withValidation=True,
+                                                                                              isTest=True, testNum=K,
+                                                                                              dir=test_dir)  # 백테스팅 실행
             # 상위 20% 주식만을 선택
             num_stocks.append(num_stock_tmp) # 선택된 주식 개수를 저장
             result[phase] = {"CAGR":cagr,"Sharpe Ratio":sharpe,"MDD":mdd} # 백테스팅 결과 저장

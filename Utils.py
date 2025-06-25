@@ -22,6 +22,7 @@ class Utils:
         # memory: 포트폴리오의 가치(주가 혹은 누적 수익률 리스트)
         if len(memory) <= 1: return 0
         else:
+            memory = np.cumprod(memory)
             mdd = max((peak_pv - pv) / peak_pv for peak_pv, pv in zip(itertools.accumulate(memory, max), memory))
             return mdd
 

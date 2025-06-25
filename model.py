@@ -210,12 +210,13 @@ class MyModel(nn.Module):
     def save_models(self,dir):
         joblib.dump(self,f"{dir}/model.joblib")
     
-    def get_rows_by_date_range(self, code: str, start_date_str: str, end_date_str: str, data) -> pd.DataFrame:
+    def get_rows_by_date_range(self, code: str, start_date_str: str, end_date_str: str, data: int=0) -> pd.DataFrame:
         # 실제 존재하는 파일 경로를 찾기
         file_path = None
         if data == 0: file_path = "./preprocessed_data/llm/predict_total/predict_video.csv"
         elif data == 1: file_path = "./preprocessed_data/llm/predict_total/predict_text.csv"
         elif data == 2: file_path = "./preprocessed_data/llm/predict_total/predict_mix.csv"
+        else: raise ValueError('data 파라미터가 범위를 벗어남.')
         
         # CSV 읽기
         df = pd.read_csv(file_path, encoding='utf-8')
@@ -250,7 +251,7 @@ class MyModel(nn.Module):
         df_list = []
         for code in model_list:
             print(f"{code} of {start_date}~{end_date} : {start_datetime}~{end_datetime}")
-            df = self.get_rows_by_date_range(code, start_datetime, end_datetime)
+            df = self.get_rows_by_date_range(code, start_datetime, end_datetime, data)
             if df.empty:
                 continue
             df_list.append(df)

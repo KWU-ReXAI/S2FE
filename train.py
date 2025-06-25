@@ -23,7 +23,7 @@ parser.add_argument('--final_stock_k',type=int,nargs='?',default=10) # 최종적
 parser.add_argument('--result_name',type=str,nargs='?',default="train_result_model") # 결과 파일명
 parser.add_argument('--dir_name',type=str,nargs='?',default="train_result_dir") # 결과 디렉토리 명
 parser.add_argument('--use_all',type=str,nargs="?",default="SectorAll") # 모델을 평가하는 방식 설정
-parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE") # 사용할 앙상블 방법
+parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE")
 parser.add_argument('--clustering',action="store_true",default=True) # 클러스터링 여부
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 parser.add_argument('--Validation',action="store_true") # 클러스터링 여부
@@ -54,21 +54,21 @@ if os.path.isdir(dir) == False:
     os.mkdir(dir)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-file_path = "./result/train_parameter.csv"
+file_path = f"./result/result_{args.ensemble}/train_parameter.csv"
 os.makedirs(os.path.dirname(file_path), exist_ok=True)
 df = pd.DataFrame(columns=["Parameter"," ", "Value"])
 df.to_csv(file_path, index=False)
 recordmodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
                           args.final_stock_k, " ", device, args.ensemble, args.clustering, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden)
-recordmodel.recordParameter()
+recordmodel.recordParameter(file_path)
 
 for trainNum in range(0, args.testNum):
     print(f"\nTrain for Train_Model_{trainNum+1}")
-    dir = f"./result/{args.dir_name}_{trainNum+1}"
+    dir = f"./result/result_{args.ensemble}/{args.dir_name}_{trainNum+1}"
     if os.path.isdir(dir) == False:
         os.mkdir(dir)
     for phase in tqdm(DM.phase_list):
-        print(f"\nTrain Phase of Model {trainNum+1}: {phase}")
+        print(f"\nTrain Phase of Model {args.ensemble} {trainNum+1}: {phase}")
         if os.path.isdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}") == False:
             os.mkdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}")
         mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,

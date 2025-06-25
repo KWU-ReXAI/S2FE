@@ -21,6 +21,7 @@ parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 
 parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
 parser.add_argument('--inter_n',type=float,nargs='?',default=0.2) # 0.2
 parser.add_argument('--LLM',action="store_true") # 클러스터링 여부
+parser.add_argument('--data',type=int,nargs='?',default=0) # LLM 예측 데이터 선택 (0:video, 1:text, 2:video+text)
 #parser.add_argument('--LLMagg',type=str,nargs='?',default="False") # inter
 args = parser.parse_args()
 
@@ -66,7 +67,7 @@ for K in range(1,args.testNum+1): # 한번만 실행
         for phase in tqdm(phase_list): # 각 phase 별 진행상태를 시각적으로 출력
             model = joblib.load(f"{dir}/{args.train_dir}_{K}/train_result_model_{K}_{phase}/model.joblib")  # 저장된 모델 불러옴
             cagr, sharpe, mdd, num_stock_tmp, cagr_ks, sharpe_ks, mdd_ks, cagr_llm, sharpe_llm, mdd_llm\
-                = model.backtest(verbose=True,agg=args.agg,use_all="Sector",inter_n=args.inter_n,withValidation= True, isTest=True, testNum=K, dir=args.test_dir, withLLM=args.LLM) # 백테스팅 실행
+                = model.backtest(verbose=True,agg=args.agg,use_all="Sector",inter_n=args.inter_n,withValidation= True, isTest=True, testNum=K, dir=args.test_dir, withLLM=args.LLM, data=args.data) # 백테스팅 실행
                 
             # 상위 20% 주식만을 선택
             num_stocks.append(num_stock_tmp) # 선택된 주식 개수를 저장

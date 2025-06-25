@@ -459,16 +459,16 @@ class MyModel(nn.Module):
             pf_mem_ks.extend(daily_change_KOSPI)
 
         # LLM 필터링 안 한 모델의 평가지표
-        return_ratio = np.prod(np.array(quarter_model_return)) - 1
+        return_ratio = np.prod(np.array(quarter_model_return)) ** (1 / len(quarter_model_return)) - 1
         mdd = self.Utils.get_MDD(np.array(pf_mem) + 1)
         sharpe = self.Utils.get_sharpe_ratio(pf_mem)
 
         # LLM 필터링 한 평가지표 -> MDD, SR은 get_portfolio_memory를 수정해야 할 거 같아서 일단 패스
-        return_ratio_llm = np.prod(np.array(quarter_llm_return)) - 1
+        return_ratio_llm = np.prod(np.array(quarter_llm_return)) ** (1 / len(return_ratio_llm)) - 1
         mdd_llm = self.Utils.get_MDD(np.array(pf_mem) + 1)
         sharpe_llm = self.Utils.get_sharpe_ratio(pf_mem)
 
-        return_ratio_ks = np.prod(np.array(pf_mem_ks) + 1) - 1
+        return_ratio_ks = np.prod(np.array(pf_mem_ks) + 1) ** (1 / len(pf_mem_ks)) - 1
         mdd_ks = self.Utils.get_MDD(np.array(pf_mem_ks) + 1)
         sharpe_ks = self.Utils.get_sharpe_ratio(pf_mem_ks)
 

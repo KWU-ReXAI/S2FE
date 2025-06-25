@@ -199,7 +199,7 @@ class MyModel(nn.Module):
 
         self.all_sector_model = AggregationModel(train_data.shape[1] - 1, self.n_rules, self.hidden, self.device)
         train_data = torch.Tensor(train_data).to(self.device)
-        self.all_sector_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, 200, self.lr_MLP,
+        self.all_sector_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, self.epochs_anfis, self.lr_MLP,
                                   self.lr_anfis)
         # 개별 섹터 모델과 비교하기 위해 전체 시장을 학습한 모델을 실험
 

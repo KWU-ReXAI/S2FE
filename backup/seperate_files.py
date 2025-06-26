@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import glob
-from pandas.tseries.offsets import DateOffset
+import re
 
 # 1) 위에서 정의한 컬럼 목록과 처리 함수
 '''COLUMNS_TO_DROP = [
@@ -534,8 +534,131 @@ def detect_csv_encodings(folder_path):
             except Exception as e:
                 print(f"{filename}: 에러 발생 - {e}")
 
-if __name__ == "__main__":
-    detect_csv_encodings("../data_kr/video")
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.font_manager as fm
+import matplotlib.dates as mdates  # 날짜 형식 지정을 위해 추가
+import os
+
+
+def set_korean_font():
+    """ 운영체제에 맞는 한글 폰트를 설정합니다. """
+    system_name = os.name
+
+    if system_name == 'nt':  # Windows
+        font_family = 'Malgun Gothic'
+    elif system_name == 'darwin':  # Mac OS
+        font_family = 'AppleGothic'
+    else:  # Linux
+        font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
+        if os.path.exists(font_path):
+            font_family = 'NanumGothic'
+        else:
+            font_family = 'sans-serif'
+
+    plt.rc('font', family=font_family)
+    plt.rc('axes', unicode_minus=False)
+
+
+def analyze_and_plot_performance(model_a_path: str, model_b_path: str, output_path: str, model_a_name, model_b_name):
+    """
+    두 모델의 성과를 분석하고, 누적수익률과 월별 성과차이를 시각화하여 파일로 저장합니다.
+    """
+    try:
+        df_a = pd.read_csv(model_a_path)
+        df_b = pd.read_csv(model_b_path)
+
+        for df in [df_a, df_b]:
+            df['date'] = pd.to_datetime(df['date'])
+            if 'return' not in df.columns:
+                raise KeyError(f"파일에 'return' 컬럼이 없습니다. 실제 컬럼: {df.columns.tolist()}")
+
+        df_a = df_a.rename(columns={'return': 'return_a'}).set_index('date')
+        df_b = df_b.rename(columns={'return': 'return_b'}).set_index('date')
+
+        merged_df = pd.merge(df_a[['return_a']], df_b[['return_b']], on='date', how='outer').fillna(0)
+
+        merged_df['cumulative_a'] = (1 + merged_df['return_a']).cumprod() - 1
+        merged_df['cumulative_b'] = (1 + merged_df['return_b']).cumprod() - 1
+        merged_df['monthly_difference'] = (merged_df['return_a'] - merged_df['return_b']) * 100
+
+        set_korean_font()
+        fig, axes = plt.subplots(2, 1, figsize=(15, 14), sharex=True)
+        fig.suptitle('모델 A vs 모델 B 성과 분석', fontsize=20, y=0.95)
+
+        # --- 첫 번째 그래프: 누적 수익률 추이 ---
+        ax1 = axes[0]
+        ax1.plot(merged_df.index, merged_df['cumulative_a'], label=f'{model_a_name} 누적 수익률', color='crimson', linewidth=2)
+        ax1.plot(merged_df.index, merged_df['cumulative_b'], label=f'{model_b_name} 누적 수익률', color='royalblue', linewidth=2)
+        ax1.set_title('모델별 누적 수익률 추이', fontsize=16)
+        ax1.set_ylabel('누적 수익률', fontsize=12)
+        ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'{y:.0%}'))
+        ax1.legend()
+        ax1.grid(True, linestyle='--', linewidth=0.5)
+
+        # --- 두 번째 그래프: 월별 성과 차이 ---
+        ax2 = axes[1]
+        max_diff_date = merged_df['monthly_difference'].idxmax()
+        min_diff_date = merged_df['monthly_difference'].idxmin()
+
+        ax2.plot(merged_df.index, merged_df['monthly_difference'], label=f'월별 성과 차이 ({model_a_name} - {model_b_name})', color='green')
+        ax2.axhline(0, color='gray', linestyle='--', linewidth=1)
+        ax2.scatter(max_diff_date, merged_df.loc[max_diff_date, 'monthly_difference'], color='red', s=80, zorder=5,
+                    label=f'{model_a_name} 최대 우위')
+        ax2.scatter(min_diff_date, merged_df.loc[min_diff_date, 'monthly_difference'], color='blue', s=80, zorder=5,
+                    label=f'{model_b_name} 최대 우위')
+        ax2.set_title('월별 수익률 차이', fontsize=16)
+        ax2.set_xlabel('날짜', fontsize=12)
+        ax2.set_ylabel('초과 수익률 (%p)', fontsize=12)
+        ax2.legend()
+        ax2.grid(True, linestyle='--', linewidth=0.5)
+
+        # --- [수정된 부분] x축 날짜 형식 지정 ---
+        # 날짜 포맷을 'YYYY-MM' 형식으로 지정합니다.
+        date_format = mdates.DateFormatter('%Y-%m')
+        ax2.xaxis.set_major_formatter(date_format)
+
+        # x축 라벨이 겹치지 않도록 30도 회전시킵니다.
+        plt.setp(ax2.get_xticklabels(), rotation=30, ha="right")
+        # --- [수정 끝] ---
+
+        # 레이아웃을 조절하여 라벨이 잘리지 않도록 합니다.
+        fig.tight_layout(pad=2.5)
+
+        output_dir = os.path.dirname(output_path)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            print(f"'{output_dir}' 디렉터리를 생성했습니다.")
+
+        plt.savefig(output_path, dpi=300)
+        print(f"\n[성공] 분석 그래프를 '{output_path}' 경로에 저장했습니다.")
+
+        #plt.show()
+
+    except FileNotFoundError as e:
+        print(f"오류: 파일을 찾을 수 없습니다. 경로를 확인해주세요.\n{e}")
+    except KeyError as e:
+        print(f"오류: {e}")
+    except Exception as e:
+        print(f"알 수 없는 오류가 발생했습니다: {e}")
+
+
+# --- 코드 실행 부분 ---
+if __name__ == '__main__':
+    for j in range(1,11):
+        for i in range(1, 5):
+            model_A_path = f'../result/test_result_dir_data2/test_monthly_llm_return_p{i}_{j}.csv'
+            model_B_path = f'../result/test_result_dir_data0/test_monthly_llm_return_p{i}_{j}.csv'
+
+            # 2. 결과 그래프를 저장할 경로와 파일명을 지정하세요.
+            output_file_path = f'../result/test_analysis/p{i}_model{j}_영상기사_영상.png'
+
+            # 3. 분석 함수 실행
+            analyze_and_plot_performance(model_A_path, model_B_path, output_file_path, "영상+기사", "영상")
+
+
 """
 # 198: symbol
 #12 18 13 5 29 5 7 1 13 22 33 14 4 2 1

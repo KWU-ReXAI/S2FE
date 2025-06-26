@@ -296,7 +296,7 @@ class MyModel(nn.Module):
                     code_val, score_sum
                 ]
             ### threshold는 상의 후 결정하기
-            threshold = 1.5
+            threshold = 2
             # df_select_model: 사실상 분기별로 나오는 종목 전부
             df_select_model = df_select.copy()
 

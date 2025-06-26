@@ -158,7 +158,7 @@ for i, metric in enumerate(metrics):
     # phase_vals_ks = result_df_ks.loc[metric].values
     phase_vals_llm = avg_df_llm["Average"].loc[metric].values
 
-    if metric == "CAGR":
+    """if metric == "CAGR":
         # 1) 산술평균
         arith_avg = phase_vals.mean()
         # arith_ks = phase_vals_ks.mean()
@@ -173,6 +173,22 @@ for i, metric in enumerate(metrics):
         avg_values.extend([f"{arith_avg:.4f}", f"{geo_avg:.4f}"])
         # ks_values.extend([f"{arith_ks:.4f}", f"{geo_ks:.4f}"])
         avg_values_llm.extend([f"{arith_avg_llm:.4f}", f"{geo_avg_llm:.4f}"])
+        col_labels = list(phases) + ["Average", "Total"]"""
+    if metric == "CAGR":
+        # CAGR 값들을 퍼센트(%) 형식으로 변환 (소수점 둘째 자리까지)
+        avg_values = [f"{val * 100:.2f}%" for val in phase_vals]
+        avg_values_llm = [f"{val * 100:.2f}%" for val in phase_vals_llm]
+
+        # 1) 산술평균
+        arith_avg = phase_vals.mean()
+        arith_avg_llm = phase_vals_llm.mean()
+        # 2) 기하평균
+        geo_avg = np.prod(1 + phase_vals) ** (1.0 / len(phases)) - 1
+        geo_avg_llm = np.prod(1 + phase_vals_llm) ** (1.0 / len(phases)) - 1
+
+        # 평균값들도 퍼센트(%) 형식으로 변환하여 리스트에 추가
+        avg_values.extend([f"{arith_avg * 100:.2f}%", f"{geo_avg * 100:.2f}%"])
+        avg_values_llm.extend([f"{arith_avg_llm * 100:.2f}%", f"{geo_avg_llm * 100:.2f}%"])
         col_labels = list(phases) + ["Average", "Total"]
     else:
         # Sharpe, MDD는 기존 산술평균만

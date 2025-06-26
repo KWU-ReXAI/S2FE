@@ -215,7 +215,7 @@ class MyModel(nn.Module):
         file_path = None
         if data == 0: file_path = "./preprocessed_data/llm/predict_total/predict_video.csv"
         elif data == 1: file_path = "./preprocessed_data/llm/predict_total/predict_text.csv"
-        elif data == 2: file_path = "./preprocessed_data/llm/predict_total/predict_mix.csv"
+        elif data == 2: file_path = "./preprocessed_data/llm/predict_total/predict_mix2.csv"
         else: raise ValueError('data 파라미터가 범위를 벗어남.')
         
         # CSV 읽기

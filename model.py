@@ -235,12 +235,10 @@ class MyModel(nn.Module):
         # 겹치는 행 반환
         return df.loc[mask].reset_index(drop=True)
     
-    def LLM_task(self, model_list, start_date, end_date, data, initial_balance, initial_balance_model):
+    def LLM_task(self, model_list, start_date, end_date, data, initial_balance):
         balance = initial_balance
-        balance_model = initial_balance_model
-
         # 1) model_list를 index 리스트로 변환
-        if model_list is None: return None, None, None
+        if model_list is None: return None, None, None, None
 
         # 2) 해당 분기의 가장 늦는 공시일 얻기
         start_datetime = self.DM.get_disclosure_date(start_date)
@@ -248,22 +246,21 @@ class MyModel(nn.Module):
         
         # 3) 개별 코드별로 DataFrame 모아두기
         df_list = []
-        for code in model_list:
-            print(f"{code} of {start_date}~{end_date} : {start_datetime}~{end_datetime}")
-            df = self.get_rows_by_date_range(code, start_datetime, end_datetime, data)
-            if df.empty:
-                continue
-            df_list.append(df)
+        if data != 3:
+            for code in model_list:
+                print(f"{code} of {start_date}~{end_date} : {start_datetime}~{end_datetime}")
+                df = self.get_rows_by_date_range(code, start_datetime, end_datetime, data)
+                if df.empty:
+                    continue
+                df_list.append(df)
 
 
         start_dt = datetime.strptime(start_datetime, '%Y-%m-%d') + timedelta(days=1) # 점검 필요
         end_dt = datetime.strptime(end_datetime, '%Y-%m-%d') - timedelta(days=1)
         current = start_dt ## 거래일
 
-        ### 월 단위 llm 필터링 버전 거래 수익률(1달 뒤 자산 / 현재 자산 - 1)
-        month_return_llm = []
-        ### 월 단위 모델 필터링 버전 거래 수익률(1달 뒤 자산 / 현재 자산 - 1)
-        month_return_model = []
+        ### 월 단위 거래 수익률(1달 뒤 자산 / 현재 자산 - 1)
+        month_return = []
         ### 월 단위로 거래된 주식 종목 리스트: [[삼성전자, LG], [LG, HMM], [SK하이닉스, HMM]]
         month_stock_list = []
         ### 거래 일자 저장 리스트
@@ -272,10 +269,19 @@ class MyModel(nn.Module):
 
             month_trade_dates.append(current.strftime("%Y-%m-%d"))
 
-            # df_select는 한 달 주기로 뽑히는 종목들
-            df_select = pd.DataFrame(columns=[
-                "code", "score"
-            ])
+            if data == 3:
+                # 데이터프레임 생성을 위한 딕셔너리 구성
+                tmp = {
+                    'code': model_list,
+                    'score': None
+                }
+                # 딕셔너리를 사용하여 데이터프레임 생성
+                df_select = pd.DataFrame(tmp)
+            else:
+                # df_select는 한 달 주기로 뽑히는 종목들
+                df_select = pd.DataFrame(columns=[
+                    "code", "score"
+                ])
             for df_now in df_list:
                 df_now['upload_dt'] = pd.to_datetime(df_now['upload_dt'])
 
@@ -297,16 +303,11 @@ class MyModel(nn.Module):
                 ]
             ### threshold는 상의 후 결정하기
             threshold = 2
-            # df_select_model: 사실상 분기별로 나오는 종목 전부
-            df_select_model = df_select.copy()
 
-            # 종목 거르기 및 걸러진 종목 저장
-            df_select = df_select[df_select['score'] >= threshold]
+            if data != 3:
+                # 종목 거르기 및 걸러진 종목 저장
+                df_select = df_select[df_select['score'] >= threshold]
             month_stock_list.append(df_select['code'].tolist())
-
-            # 잔액을 원본 종목 전체 개수로 나눔
-            num_stock_model = len(df_select_model)
-            balance_divided_model = balance_model // num_stock_model if num_stock_model != 0 else balance_model
 
             # 잔액을 LLM에 의해 걸러진 종목 개수로 나눔(월별로 다름)
             num_stock = len(df_select)
@@ -321,6 +322,7 @@ class MyModel(nn.Module):
 
             # LLM에 의해 걸러진 종목만 거래
             prev_balance = balance # 월별 수익률 계산 위함
+            monthly_pv = []
             for row in df_select.itertuples():
                 code = str(int(row.code)).zfill(6)
                 df_price = pd.read_csv(f"data_kr/price/{code}.csv")
@@ -332,27 +334,11 @@ class MyModel(nn.Module):
                 num_stock = balance_divided // buy_price
                 balance -= buy_price * num_stock
                 balance += (sell_price * num_stock) * (1 - charge)
-            month_return_llm.append(balance / prev_balance - 1) # 월별 수익률: 이후 pv/이전 pv - 1
-
-            # 분기별 전체 종목 거래
-            prev_balance_model = balance_model  # 월별 수익률 계산 위함
-            for row in df_select_model.itertuples():
-                code_model = str(int(row.code)).zfill(6)
-                df_price_model = pd.read_csv(f"data_kr/price/{code_model}.csv")
-                df_price_model['날짜'] = pd.to_datetime(df_price_model['날짜'])
-                buy_price_model = df_price_model[df_price_model['날짜'] >= buy_dt].iloc[0]['종가']
-                sell_price_model = df_price_model[df_price_model['날짜'] <= sell_dt].iloc[-1]['종가']
-
-                ### 거래 (판매 수수료 0.5%) ###
-                num_stock_model = balance_divided_model // buy_price_model
-                balance_model -= buy_price_model * num_stock_model
-                balance_model += (sell_price_model * num_stock_model) * (1 - charge)
-            month_return_model.append(balance_model / prev_balance_model - 1)  # 월별 수익률: 이후 pv/이전 pv - 1
+            month_return.append(balance / prev_balance - 1) # 월별 수익률: 이후 pv/이전 pv - 1
             current += relativedelta(months=1)
-        return month_return_llm, month_return_model, month_stock_list, month_trade_dates, balance, balance_model
+        return month_return, month_stock_list, month_trade_dates, balance
 
-    # data 0 -> 영상데이터 사용 / data 1 -> 기사데이터 사용 / data 2 -> 영상+기사 데이터 사용
-    def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, LLMagg = "False", data=0):  # 백테스팅 수행
+    def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, LLMagg = "False"):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
         # 과거 데이터를 사용하여 모델의 예측이 실제 시장에서 얼마나 잘 맞았는지를 검증하는 과정
         test_start = self.DM.phase_list[self.phase][2 if withValidation else 1]
@@ -361,7 +347,7 @@ class MyModel(nn.Module):
         test_data = {}  # 섹터별 테스트 데이터를 저장할 딕셔너리
         symbols = {}  # 각 섹터별 종목(Symbol) 정보를 저장할 딕셔너리
 
-        clustered_stocks_list = []
+        clustered_stocks_list = [[] for x in range(4)]
 
         if use_all == "SectorAll" or use_all == "All":  # 전체 데이터를 불러옴
             _, _, all_data = self.DM.data_phase("ALL", self.phase)
@@ -375,20 +361,18 @@ class MyModel(nn.Module):
             symbols[sector] = symbol_index["Code"]
 
         ## 백테스팅 진행
-        pf_mem = []  # 각 날짜별 포트폴리오 수익률 기록
         pf_mem_ks = []
         num_of_stock = []  # 매일 선택된 주식 개수 저장
 
-        pf_mem_model = []
-        pf_mem_llm = []
+        pf_mem = [[] for x in range(4)]
         pf_mem_dates = []
 
         if verbose: print(f"\n------[{self.phase}]------",flush=True)
 
         print(f"Test Period: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end-1)}")
 
-        balance = 100000000 # 1억 -> 분기별로 초기화되는 잔액을 위와 같이 수정
-        balance_model = 100000000
+        balance = [100000000 for i in range(4)]  # 1억 -> 분기별로 초기화되는 잔액을 위와 같이 수정
+
         for pno in range(test_start, test_end):  # test_start ~ end 기간동안 매일 반복 실행
             print(f"Test in {self.DM.pno2date(pno)}:")
             # 각 날짜마다 주식을 선택하고 수익률을 계산
@@ -420,89 +404,84 @@ class MyModel(nn.Module):
                 real_last_topK_stock.extend(selected)
 
             ### real_last_topK_stock: 섹터별 상위 20% 종목들
-            month_return_llm, month_return_model, month_stock_lists, month_trade_dates, balance, balance_model = \
-                self.LLM_task(real_last_topK_stock, strdate, next_strdate, data, balance, balance_model)
+            ### 0: video, 1: article, 2: mix, 3: model(without LLM)
+            for idx, data in enumerate(['video', 'article', 'mix', 'model']):
+                month_return, month_stock_lists, month_trade_dates, balance[idx] = \
+                    self.LLM_task(real_last_topK_stock, strdate, next_strdate, idx, balance[idx])
 
-            ###
-            # 월 단위 종목 csv:
-            # 0,1,2,3,4,5,6
-            # 2020_Q4,2021-03-05,3570,8060,4710,1120,3550
-            # 2020_Q4,2021-03-05,3570,3550
-            # 2020_Q4,2021-04-05,3570,8060
-            # 2020_Q4,2021-05-05,8060,4710,1120
-            # ...
-            # 분기별 첫 행은 분기 별로 선택된 종목
-            # 나머지 행은 LLM 필터링 후 선택한 종목
-            ###
+                index = 0
+                if isTest:
+                    for month_list in month_stock_lists:
+                        clustered_stocks_list[idx].append([f"{strdate}", f"{month_trade_dates[index]}"] + month_list)
+                        index += 1
+                self.final_stock_k = len(real_last_topK_stock)  # 최종적으로 선택된 주식 개수를 저장
 
-            idx = 0
-            clustered_stocks_list.append([f"{strdate}", f"{month_trade_dates[idx]}"] + real_last_topK_stock)
-            if isTest:
-                for month_list in month_stock_lists:
-                    clustered_stocks_list.append([f"{strdate}", f"{month_trade_dates[idx]}"] + month_list)
-                    idx += 1
-            self.final_stock_k = len(real_last_topK_stock)  # 최종적으로 선택된 주식 개수를 저장
+                if verbose: print(real_last_topK_stock,flush=True)  # 선택된 최종 종목을 출력
+                if isTest:
+                    pd.DataFrame(clustered_stocks_list[idx]).to_csv(f"./result/{dir}/test_selected_stocks_{data}_{self.phase}_{testNum}.csv", index=False)
+                if not isTest:
+                    pd.DataFrame(clustered_stocks_list[idx]).to_csv(
+                        f"{dir}/train_selected_stocks_{self.phase}.csv", index=False)
+                num_of_stock.append(len(real_last_topK_stock))
 
-            if verbose: print(real_last_topK_stock,flush=True)  # 선택된 최종 종목을 출력
-            if isTest:
-                pd.DataFrame(clustered_stocks_list).to_csv(f"./result/{dir}/test_selected_stocks_{self.phase}_{testNum}.csv", index=False)
-            if not isTest:
-                pd.DataFrame(clustered_stocks_list).to_csv(
-                    f"{dir}/train_selected_stocks_{self.phase}.csv", index=False)
-            num_of_stock.append(len(real_last_topK_stock))
+                ### 수익률, 거래일 저장
+                pf_mem[idx].extend(month_return)
+                if data == 'model': pf_mem_dates.extend(month_trade_dates)
 
-            ### 월별 모델과 LLM 필터링의 수익률, 그리고 거래일 저장
-            pf_mem_model.extend(month_return_model)
-            pf_mem_llm.extend(month_return_llm)
-            pf_mem_dates.extend(month_trade_dates)
-
-            daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate,False)
-            daily_change_KOSPI = self.Utils.get_portfolio_memory(real_last_topK_stock,strdate,next_strdate,True)
-            # 매일의 포트폴리오 수익률 계산
-            # 선택된 주식 리스트, 현재 및 다음 날짜의 주가 데이터 이용
-            pf_mem.extend(daily_change)
-            pf_mem_ks.extend(daily_change_KOSPI)
-
-        llm_return_dict = {
-            'date': pf_mem_dates,
-            'return': pf_mem_llm
-        }
-        model_return_dict = {
-            'date': pf_mem_dates,
-            'return': pf_mem_model
-        }
-        df_return_llm = pd.DataFrame(llm_return_dict)
-        df_return_model = pd.DataFrame(model_return_dict)
+                daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate,False)
+                daily_change_KOSPI = self.Utils.get_portfolio_memory(real_last_topK_stock,strdate,next_strdate,True)
+                # 매일의 포트폴리오 수익률 계산
+                # 선택된 주식 리스트, 현재 및 다음 날짜의 주가 데이터 이용
+                pf_mem.extend(daily_change)
+                pf_mem_ks.extend(daily_change_KOSPI)
 
         if isTest:
-            df_return_llm.to_csv(
-                f"./result/{dir}/test_monthly_llm_return_{self.phase}_{testNum}.csv", index=False)
-            df_return_model.to_csv(
-                f"./result/{dir}/test_monthly_model_return_{self.phase}_{testNum}.csv", index=False)
+            ### 0: video, 1: article, 2: mix, 3: model(without LLM)
+            for idx, data in enumerate(['video', 'article', 'mix', 'model']):
+                return_dict = {
+                    'date': pf_mem_dates,
+                    'return': pf_mem[idx]
+                }
+                df_return = pd.DataFrame(return_dict)
+                df_return.to_csv(
+                f"./result/{dir}/test_monthly_{data}_return_{self.phase}_{testNum}.csv", index=False)
 
 
         # LLM 필터링 안 한 모델의 평가지표
-        return_ratio = np.prod(np.array(pf_mem_model) + 1) - 1
-        mdd = self.Utils.get_MDD(np.array(pf_mem_model) + 1)
-        sharpe = self.Utils.get_sharpe_ratio(pf_mem_model)
+        return_ratio = np.prod(np.array(pf_mem[3]) + 1) - 1
+        mdd = self.Utils.get_MDD(np.array(pf_mem[3]) + 1)
+        sharpe = self.Utils.get_sharpe_ratio(pf_mem[3])
 
-        # LLM 필터링 한 평가지표
-        return_ratio_llm = np.prod(np.array(pf_mem_llm) + 1) - 1
-        mdd_llm = self.Utils.get_MDD(np.array(pf_mem_llm) + 1)
-        sharpe_llm = self.Utils.get_sharpe_ratio(pf_mem_llm)
+        # 영상 평가지표
+        return_ratio_video = np.prod(np.array(pf_mem[0]) + 1) - 1
+        mdd_video = self.Utils.get_MDD(np.array(pf_mem[0]) + 1)
+        sharpe_video = self.Utils.get_sharpe_ratio(pf_mem[0])
 
+        # 기사 평가지표
+        return_ratio_article = np.prod(np.array(pf_mem[1]) + 1) - 1
+        mdd_article= self.Utils.get_MDD(np.array(pf_mem[1]) + 1)
+        sharpe_article = self.Utils.get_sharpe_ratio(pf_mem[1])
+
+        # 영상+기사 평가지표
+        return_ratio_mix = np.prod(np.array(pf_mem[2]) + 1) - 1
+        mdd_mix = self.Utils.get_MDD(np.array(pf_mem[2]) + 1)
+        sharpe_mix = self.Utils.get_sharpe_ratio(pf_mem[2])
+
+        # KOSPI (출력 X, Train에서 에러 없기 위함)
         return_ratio_ks = np.prod(np.array(pf_mem_ks) + 1) - 1
         mdd_ks = self.Utils.get_MDD(np.array(pf_mem_ks) + 1)
         sharpe_ks = self.Utils.get_sharpe_ratio(pf_mem_ks)
 
 
-
         if verbose:
             print(f"\nMDD: {mdd}\tSharpe: {sharpe}\tCAGR: {return_ratio}",flush=True)
-            print(f"KOSPI MDD: {mdd_ks}\tKOSPI Sharpe: {sharpe_ks}\tKOSPI CAGR: {return_ratio_ks}",flush=True)
+            print(f"Video MDD: {mdd_video}\tVideo Sharpe: {sharpe_video}\tVideo CAGR: {return_ratio_video}",flush=True)
+            print(f"Article MDD: {mdd_article}\tArticle Sharpe: {sharpe_article}\tArticle CAGR: {return_ratio_article}", flush=True)
+            print(f"Mix MDD: {mdd_mix}\tMix Sharpe: {sharpe_mix}\tMix CAGR: {return_ratio_mix}", flush=True)
             print("----------------------",flush=True)
         if isTest:
-            return return_ratio, sharpe, mdd,num_of_stock, return_ratio_ks, sharpe_ks, mdd_ks, return_ratio_llm, sharpe_llm, mdd_llm
+            return return_ratio, sharpe, mdd,num_of_stock, return_ratio_video, sharpe_video, mdd_video, \
+                return_ratio_article, sharpe_article, mdd_article, return_ratio_mix, sharpe_mix, mdd_mix
         else:
             return return_ratio, sharpe, mdd, num_of_stock, return_ratio_ks, sharpe_ks, mdd_ks
 

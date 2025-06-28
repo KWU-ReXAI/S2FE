@@ -677,17 +677,14 @@ if __name__ == "__main__":
 	### LLM으로 영상자막요약 + 기사자막요약을 통해 등락 예측 ###
 	df_v = pd.read_csv('data_kr/video/뉴스 영상 수집본.csv', encoding='utf-8')
 	df_v.rename(columns={'url':'v_url', 'upload_dt':'v_upload_dt'}, inplace=True)
-	df_v = df_v["year","quarter","month","week","code","name","sector","after","before","v_url","v_upload_dt"]
- 
+	df_v = df_v[["year","quarter","month","week","code","name","sector","after","before","v_url","v_upload_dt"]]
+
 	df_a = pd.read_csv('data_kr/video/뉴스 기사 수집본.csv', encoding='utf-8')
 	df_a.rename(columns={'url':'a_url', 'upload_dt':'a_upload_dt'}, inplace=True)
-	df_a = df_a["a_url","a_upload_dt"]
-	bool_list = pd.isna(df_v['v_url']) & pd.isna(df_a['a_url']) # 영상 기사 둘 다 존재하는 기간
+	df_a = df_a[["a_url","a_upload_dt"]]
+
+	df = pd.concat([df_v, df_a], axis=1)
  
-	df = pd.condat([df_v, df_a["a_url","a_upload_dt"]], axis=1)
-	df = df[bool_list]
-	
-	##### 여기부터는 미구현 #######
 	for code in df["code"].unique():
 		df_ = df[df["code"] == code].reset_index(drop=True)
 		
@@ -695,23 +692,27 @@ if __name__ == "__main__":
 		reason_list = []
 
 		for row in tqdm(df_.itertuples(), total=len(df_), desc=f"{code}LLM predicting"):
-			if pd.isna(row.url) or row.url == '':
+			if pd.isna(row.v_url) or pd.isna(row.a_url) :
 				predict_list.append(None)
 				reason_list.append(None)
 				continue
 			
 			code = str(row.code).zfill(6)
 			name = row.name
-			summary_dir = f'preprocessed_data/llm/summary_total/{row.sector}/{code}/'
-			predict_dir = f'preprocessed_data/llm/predict_total/{row.sector}/{code}/'
+			v_summary_dir = f'preprocessed_data/llm/summary_video/{row.sector}/{code}/'
+			t_summary_dir = f'preprocessed_data/llm/summary_text/{row.sector}/{code}/'
+			predict_dir = f'preprocessed_data/llm/predict_mix/{row.sector}/{code}/'
 			os.makedirs(predict_dir, exist_ok=True)
 
 			try:
 				filename = f'{row.year}-{row.quarter}-{str(row.month).zfill(2)}-{row.week}.txt'
 				stock = f'{name}({code})'
-				with open(f'{summary_dir}{filename}', "r", encoding="utf-8") as file:
-					summary = file.read()
-				data = predict_market_from_summary(summary, f'{name}({code})')
+				with open(f'{v_summary_dir}{filename}', "r", encoding="utf-8") as file:
+					v_summary = file.read()
+				with open(f'{t_summary_dir}{filename}', "r", encoding="utf-8") as file:
+					t_summary = file.read()
+     
+				data = predict_market_from_summary(v_summary + t_summary, f'{name}({code})')
 				
 				with open(f'{predict_dir}{filename}', "w", encoding="utf-8") as file:
 					file.write(data)

@@ -237,6 +237,7 @@ class MyModel(nn.Module):
     
     def LLM_task(self, model_list, start_date, end_date, data, initial_balance):
         balance = initial_balance
+        daily_pv = []
         # 1) model_list를 index 리스트로 변환
         if model_list is None: return None, None, None, None
 
@@ -312,6 +313,7 @@ class MyModel(nn.Module):
             # 잔액을 LLM에 의해 걸러진 종목 개수로 나눔(월별로 다름)
             num_stock = len(df_select)
             balance_divided = balance // num_stock if num_stock != 0 else balance
+            balance_remainder = balance % num_stock if num_stock != 0 else 0
 
             ###### 구매 코드 구현하기 ######
             buy_dt = current
@@ -323,20 +325,37 @@ class MyModel(nn.Module):
             # LLM에 의해 걸러진 종목만 거래
             prev_balance = balance # 월별 수익률 계산 위함
             monthly_pv = []
-            for row in df_select.itertuples():
-                code = str(int(row.code)).zfill(6)
+            if df_select.empty:
+                code = str(int(model_list[0])).zfill(6)
                 df_price = pd.read_csv(f"data_kr/price/{code}.csv")
                 df_price['날짜'] = pd.to_datetime(df_price['날짜'])
-                buy_price = df_price[df_price['날짜'] >= buy_dt].iloc[0]['종가']
-                sell_price = df_price[df_price['날짜'] <= sell_dt].iloc[-1]['종가']
-                
-                ### 거래 (판매 수수료 0.5%) ###
-                num_stock = balance_divided // buy_price
-                balance -= buy_price * num_stock
-                balance += (sell_price * num_stock) * (1 - charge)
+                prices = df_price[(df_price['날짜'] >= buy_dt) & (df_price['날짜'] <= sell_dt)]['종가'].tolist()
+                result = [balance for x in range(len(prices))]
+            else:
+                for row in df_select.itertuples():
+                    code = str(int(row.code)).zfill(6)
+                    df_price = pd.read_csv(f"data_kr/price/{code}.csv")
+                    df_price['날짜'] = pd.to_datetime(df_price['날짜'])
+                    buy_price = df_price[df_price['날짜'] >= buy_dt].iloc[0]['종가']
+                    sell_price = df_price[df_price['날짜'] <= sell_dt].iloc[-1]['종가']
+
+                    ### 거래 (판매 수수료 0.5%) ###
+                    num_stock = balance_divided // buy_price
+                    balance -= buy_price * num_stock
+                    balance += (sell_price * num_stock) * (1 - charge)
+
+                    ### 일간 pv 변화 종목별로 기록
+                    prices = df_price[(df_price['날짜'] >= buy_dt) & (df_price['날짜'] <= sell_dt)]['종가'].tolist()
+                    prices = [x * num_stock + balance_divided % buy_price for x in prices]
+                    prices[-1] *= (1 - charge)
+                    monthly_pv.append(prices)
+                # 모든 종목의 일간 pv 더하기 + 거래 잔액 추가
+                result = [sum(elements) for elements in zip(*monthly_pv)]
+                result = [x + balance_remainder for x in result]
+            daily_pv.extend(result)
             month_return.append(balance / prev_balance - 1) # 월별 수익률: 이후 pv/이전 pv - 1
             current += relativedelta(months=1)
-        return month_return, month_stock_list, month_trade_dates, balance
+        return month_return, month_stock_list, month_trade_dates, balance, daily_pv
 
     def backtest(self, verbose=True, use_all='Sector', agg='inter', inter_n=0.1, withValidation = False, isTest=True, testNum=0, dir="", withLLM = False, LLMagg = "False"):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
@@ -365,13 +384,14 @@ class MyModel(nn.Module):
         num_of_stock = []  # 매일 선택된 주식 개수 저장
 
         pf_mem = [[] for x in range(4)]
+        pf_mem_daily = [[] for x in range(4)] # 일 단위 MDD를 위한 메모리
         pf_mem_dates = []
 
         if verbose: print(f"\n------[{self.phase}]------",flush=True)
 
         print(f"Test Period: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end-1)}")
 
-        balance = [100000000 for i in range(4)]  # 1억 -> 분기별로 초기화되는 잔액을 위와 같이 수정
+        balance = [100000000.0 for i in range(4)]  # 1억 -> 분기별로 초기화되는 잔액을 위와 같이 수정
 
         for pno in range(test_start, test_end):  # test_start ~ end 기간동안 매일 반복 실행
             print(f"Test in {self.DM.pno2date(pno)}:")
@@ -406,7 +426,7 @@ class MyModel(nn.Module):
             ### real_last_topK_stock: 섹터별 상위 20% 종목들
             ### 0: video, 1: article, 2: mix, 3: model(without LLM)
             for idx, data in enumerate(['video', 'article', 'mix', 'model']):
-                month_return, month_stock_lists, month_trade_dates, balance[idx] = \
+                month_return, month_stock_lists, month_trade_dates, balance[idx], daily_pv = \
                     self.LLM_task(real_last_topK_stock, strdate, next_strdate, idx, balance[idx])
 
                 index = 0
@@ -426,6 +446,7 @@ class MyModel(nn.Module):
 
                 ### 수익률, 거래일 저장
                 pf_mem[idx].extend(month_return)
+                pf_mem_daily[idx].extend(daily_pv)
                 if data == 'model': pf_mem_dates.extend(month_trade_dates)
 
                 daily_change = self.Utils.get_portfolio_memory(real_last_topK_stock, strdate, next_strdate,False)
@@ -449,22 +470,22 @@ class MyModel(nn.Module):
 
         # LLM 필터링 안 한 모델의 평가지표
         return_ratio = np.prod(np.array(pf_mem[3]) + 1) - 1
-        mdd = self.Utils.get_MDD(np.array(pf_mem[3]) + 1)
+        mdd = self.Utils.get_MDD(np.array(pf_mem_daily[3]) + 1)
         sharpe = self.Utils.get_sharpe_ratio(pf_mem[3])
 
         # 영상 평가지표
         return_ratio_video = np.prod(np.array(pf_mem[0]) + 1) - 1
-        mdd_video = self.Utils.get_MDD(np.array(pf_mem[0]) + 1)
+        mdd_video = self.Utils.get_MDD(np.array(pf_mem_daily[0]) + 1)
         sharpe_video = self.Utils.get_sharpe_ratio(pf_mem[0])
 
         # 기사 평가지표
         return_ratio_article = np.prod(np.array(pf_mem[1]) + 1) - 1
-        mdd_article= self.Utils.get_MDD(np.array(pf_mem[1]) + 1)
+        mdd_article= self.Utils.get_MDD(np.array(pf_mem_daily[1]) + 1)
         sharpe_article = self.Utils.get_sharpe_ratio(pf_mem[1])
 
         # 영상+기사 평가지표
         return_ratio_mix = np.prod(np.array(pf_mem[2]) + 1) - 1
-        mdd_mix = self.Utils.get_MDD(np.array(pf_mem[2]) + 1)
+        mdd_mix = self.Utils.get_MDD(np.array(pf_mem_daily[2]) + 1)
         sharpe_mix = self.Utils.get_sharpe_ratio(pf_mem[2])
 
         # KOSPI (출력 X, Train에서 에러 없기 위함)
@@ -492,3 +513,10 @@ class MyModel(nn.Module):
         obj = cls.__new__(cls)
         obj.__dict__.update(attributes)
         return obj
+
+if __name__ == '__main__':
+    model = joblib.load(f"./result/train_result_dir_1/train_result_model_1_p1/model.joblib")  # 저장된 모델 불러옴
+    cagr, sharpe, mdd, num_stock_tmp, cagr_video, sharpe_video, mdd_video, cagr_article, sharpe_article, mdd_article, cagr_mix, sharpe_mix, mdd_mix \
+        = model.backtest(verbose=True, agg="inter", use_all="Sector", inter_n=0.2, withValidation=True,
+                         isTest=True, testNum=1, dir="test_result_dir", withLLM=False)
+    print(mdd, mdd_video, mdd_article, mdd_mix)

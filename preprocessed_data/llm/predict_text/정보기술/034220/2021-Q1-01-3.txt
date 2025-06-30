@@ -1,7 +1,5 @@
-```json
 {
 	"sentiment": "긍정",
 	"reasoning": "외국인과 기관의 순매수 증가, 대형 OLED와 POLED의 제품 다각화로 인한 수익성 개선 전망, LCD TV 패널 가격 강세 전망, 신규 OLED 사업 정상화로 주가 상승 여력 높음.",
 	"score": 1
 }
-```

@@ -622,6 +622,10 @@ def analyze_and_plot_performance(model_a_path: str, model_b_path: str, output_pa
 
         # x축 라벨이 겹치지 않도록 30도 회전시킵니다.
         plt.setp(ax2.get_xticklabels(), rotation=30, ha="right")
+        ax1.xaxis.set_major_formatter(date_format)
+
+        # x축 라벨이 겹치지 않도록 30도 회전시킵니다.
+        plt.setp(ax1.get_xticklabels(), rotation=30, ha="right")
         # --- [수정 끝] ---
 
         # 레이아웃을 조절하여 라벨이 잘리지 않도록 합니다.
@@ -645,42 +649,106 @@ def analyze_and_plot_performance(model_a_path: str, model_b_path: str, output_pa
         print(f"알 수 없는 오류가 발생했습니다: {e}")
 
 
-# --- 코드 실행 부분 ---
-if __name__ == '__main__':
-    for j in range(1,11):
-        for i in range(1, 5):
-            model_A_path = f'../result/test_result_dir_data2/test_monthly_llm_return_p{i}_{j}.csv'
-            model_B_path = f'../result/test_result_dir_data0/test_monthly_llm_return_p{i}_{j}.csv'
-
-            # 2. 결과 그래프를 저장할 경로와 파일명을 지정하세요.
-            output_file_path = f'../result/test_analysis/p{i}_model{j}_영상기사_영상.png'
-
-            # 3. 분석 함수 실행
-            analyze_and_plot_performance(model_A_path, model_B_path, output_file_path, "영상+기사", "영상")
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 
 
-"""
-# 198: symbol
-#12 18 13 5 29 5 7 1 13 22 33 14 4 2 1
-if __name__ == "__main__":
-    compareFolderAndSymbol(
-        folder_path='./backup/data_kr_sector/k_features/최대주주변동',
-        symbol_path='./data_kr/symbol.csv'
-    )
+def plot_kospi200_chart(csv_path: str):
+    """
+    주어진 CSV 파일 경로를 사용하여 KOSPI 200 지수 차트를 생성하고 표시합니다.
+    x축은 매년 4분기 시작일을 기준으로 '{연도}_Q4' 형식으로 표시됩니다.
+    'KS200.csv' 파일의 '날짜', '종가' 컬럼명에 맞춰 수정되었으며, 범례가 제거되었습니다.
+    x축 범위는 2015년 4분기부터 2024년 4분기까지로 제한됩니다.
+    x축/y축 라벨과 눈금 값 모두 크고 굵게 표시됩니다.
 
-    cleanSymbolWithFolder(
-        folder_path='./data_kr/merged',
-        symbol_path='./data_kr/symbol.csv'
-    )
-    removeInvalidSymbolsAndFiles(
-        folder_path='./data_kr/merged',
-        symbol_path='./data_kr/symbol.csv',
-        expected_rows=37
-    )
-    seperate_comma()
+    Args:
+        csv_path (str): KOSPI 200 데이터가 포함된 CSV 파일의 경로.
+    """
+    try:
+        # 한글 폰트 설정
+        try:
+            plt.rc('font', family='Malgun Gothic')  # Windows
+        except:
+            try:
+                plt.rc('font', family='AppleGothic')  # macOS
+            except:
+                font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
+                if fm.findfont(fm.FontProperties(fname=font_path)):
+                    plt.rc('font', family=fm.FontProperties(fname=font_path).get_name())
+        plt.rcParams['axes.unicode_minus'] = False
 
-    merge_date_regression()
-    save_by_sector()
-    filter_all_files_by_sector()
-    save_sector_codes()"""
+        # 1. CSV 파일 읽기 및 데이터 필터링
+        df = pd.read_csv(csv_path, parse_dates=['날짜'], index_col='날짜')
+        df.sort_index(inplace=True)
+        start_date = '2015-10-01'
+        end_date = '2024-12-31'
+        df_filtered = df.loc[start_date:end_date].copy()
 
+        if df_filtered.empty:
+            print(f"오류: {start_date}부터 {end_date}까지의 데이터가 파일에 없습니다.")
+            return
+
+        price_column = '종가'
+        if price_column not in df_filtered.columns:
+            raise ValueError(f"차트를 그릴 가격 데이터 컬럼('{price_column}')을 찾을 수 없습니다.")
+
+        # 2. 그래프 생성
+        fig, ax = plt.subplots(figsize=(17, 8))  # 세로 길이를 조금 늘려 공간 확보
+        ax.plot(df_filtered.index, df_filtered[price_column], color='royalblue',linewidth=2.5)
+
+        # 3. x축 눈금 및 레이블 설정
+        years = range(2015, 2025)
+        xticks = [pd.Timestamp(f'{year}-10-01') for year in years]
+        xtick_labels = [f'{year}_Q4' for year in years]
+        ax.set_xticks(xticks)
+        ax.set_xticklabels(xtick_labels, rotation=45, ha='center')
+
+        # 4. x축 범위 명시적 설정
+        ax.set_xlim(pd.Timestamp(start_date), pd.Timestamp(end_date))
+        ax.set_ylim(200,450)
+
+        # 5. 그래프 스타일 및 정보 추가
+        #ax.set_title('KOSPI 200 지수 (2015_Q4 - 2024_Q4)', fontsize=18, fontweight='bold', pad=20)
+        ax.set_ylabel('KOSPI200 Index', fontsize=25, fontweight='bold')
+        ax.set_xlabel('Date', fontsize=25, fontweight='bold')
+
+        # 6. x축과 y축 눈금 값 스타일 변경 (수정된 부분)
+        # 글씨 크기를 12로, 굵게(bold) 설정
+        plt.setp(ax.get_xticklabels(), fontsize=20, fontweight='bold')
+        plt.setp(ax.get_yticklabels(), fontsize=20, fontweight='bold')
+
+
+        for spine in ax.spines.values():
+            spine.set_linewidth(1.5)
+
+        # 'color'를 'facecolor'로 변경하여 면과 테두리 색을 분리
+        ax.axvspan('2020-10-01', '2021-10-01', facecolor='skyblue', alpha=0.3, edgecolor='black', linewidth=3, zorder=-4)
+        ax.axvspan('2021-10-01', '2022-10-01', facecolor='lightgreen', alpha=0.3, edgecolor='black', linewidth=3,
+                   zorder=-3)
+        ax.axvspan('2022-10-01', '2023-10-01', facecolor='yellow', alpha=0.3, edgecolor='black', linewidth=3, zorder=-2)
+        ax.axvspan('2023-10-01', '2024-10-01', facecolor='lightpink', alpha=0.3, edgecolor='black', linewidth=3,
+                   zorder=-1)
+        # y축 400~450 & x축 2016-10-01 ~ 2020-10-01 영역을 투명 회색으로 표시
+        ax.fill_between([pd.to_datetime('2016-10-01'), pd.to_datetime('2020-10-01')], 400, 450, color='lightgray', alpha=1,
+                        zorder=-3.5)
+        ax.fill_between([pd.to_datetime('2017-10-01'), pd.to_datetime('2021-10-01')], 350, 400, color='lightgray', alpha=1,
+                        zorder=-2.5)
+        #ax.fill_between([pd.to_datetime('2018-10-01'), pd.to_datetime('2022-10-01')], 300, 350, color='lightgray', alpha=1,zorder=-1.5)
+        #ax.fill_between([pd.to_datetime('2019-10-01'), pd.to_datetime('2023-10-01')], 250, 300, color='lightgray', alpha=1,               zorder=-0.5)
+        ax.grid(True, linestyle='-', alpha=0.6)
+
+        # 레이아웃을 조정하여 라벨이 잘리지 않도록 합니다.
+        plt.tight_layout()
+        plt.show();
+
+    except FileNotFoundError:
+        print(f"오류: '{csv_path}' 파일을 찾을 수 없습니다. 파일 경로를 확인해주세요.")
+    except KeyError as e:
+        print(f"오류: CSV 파일에서 필요한 컬럼({e})을 찾을 수 없습니다. 파일 내용을 확인해주세요.")
+    except Exception as e:
+        print(f"오류가 발생했습니다: {e}")
+
+
+
+plot_kospi200_chart('../data_kr/price/KS200.csv')

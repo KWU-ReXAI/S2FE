@@ -1,7 +1,5 @@
-```json
 {
 	"sentiment": "긍정",
 	"reasoning": "한전KPS가 원전 및 SMR 관련 이슈로 인해 주가 상승 가능성이 높다는 긍정적인 전망이 제시됨.",
 	"score": 1
 }
-```

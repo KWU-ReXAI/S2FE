@@ -1,7 +1,5 @@
-```json
 {
 	"sentiment": "중립",
 	"reasoning": "기사 요약은 CJ CheilJedang의 기내식 사업 확장에 관한 내용으로, CJ대한통운과 직접적인 관련이 없어 주가에 영향을 미칠 정보가 부족함.",
 	"score": 0
 }
-```

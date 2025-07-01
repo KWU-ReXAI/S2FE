@@ -1,7 +1,5 @@
-```json
 {
 	"sentiment": "긍정",
 	"reasoning": "삼성SDI가 BMW와 협력 강화 방안을 논의하고, BMW의 최신 전기차에 삼성SDI의 배터리가 탑재되는 점이 긍정적으로 작용할 수 있음.",
 	"score": 1
 }
-```

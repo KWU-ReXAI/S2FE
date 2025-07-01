@@ -48,13 +48,13 @@ DM = DataManager(features_n= args.features_n, cluster_n=cluster_n)
 DM.create_date_list()
 result = {}
 result_ks = {}
-
+folder_name = f"result_{args.ensemble}_{args.use_all}"
 dir = f"./result"
 if os.path.isdir(dir) == False:
     os.mkdir(dir)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-file_path = f"./result/result_{args.ensemble}/train_parameter.csv"
+file_path = f"./result/{folder_name}/train_parameter.csv"
 os.makedirs(os.path.dirname(file_path), exist_ok=True)
 df = pd.DataFrame(columns=["Parameter"," ", "Value"])
 df.to_csv(file_path, index=False)
@@ -64,7 +64,7 @@ recordmodel.recordParameter(file_path)
 
 for trainNum in range(0, args.testNum):
     print(f"\nTrain for Train_Model_{trainNum+1}")
-    dir = f"./result/result_{args.ensemble}/{args.dir_name}_{trainNum+1}"
+    dir = f"./result/{folder_name}/{args.dir_name}_{trainNum+1}"
     if os.path.isdir(dir) == False:
         os.mkdir(dir)
     for phase in tqdm(DM.phase_list):
@@ -78,8 +78,13 @@ for trainNum in range(0, args.testNum):
             cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest_BuyHold(verbose=True, withValidation=not args.Validation)
 
         else:
-            mymodel.trainALLSectorModels(withValidation=not args.Validation)
-            mymodel.trainClusterModels(withValidation=not args.Validation)
+            if args.use_all == "All":
+                mymodel.trainALLSectorModels(withValidation=not args.Validation)
+            elif args.use_all == "Sector":
+                mymodel.trainClusterModels(withValidation=not args.Validation)
+            else:
+                mymodel.trainALLSectorModels(withValidation=not args.Validation)
+                mymodel.trainClusterModels(withValidation=not args.Validation)
             cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.agg,
                                                                                 inter_n=args.inter_n,
                                                                                 use_all=args.use_all,
@@ -128,7 +133,7 @@ plt.ylabel("Evaluation indicator values")
 plt.title("Changes in evaluation indicators by phase")
 plt.legend()
 plt.grid(True)
-plt.savefig(f"./result/result_KOSPI_graph.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
-result_df_ks.to_csv(f"./result/result_KOSPI_file.csv", encoding='utf-8-sig')
+plt.savefig(f"./result/{folder_name}/result_KOSPI_graph.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
+result_df_ks.to_csv(f"./result/{folder_name}/result_KOSPI_file.csv", encoding='utf-8-sig')
 
 

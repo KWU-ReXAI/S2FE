@@ -37,21 +37,23 @@ phase_list = DM.phase_list.keys()
 new_data = [{"Parameter": "inter_n", "Value": args.inter_n},{"Parameter": "aggregate", "Value": args.agg},
             {"Parameter": "Impute", "Value": Impute}]
 
+folder_name = f"result_{args.ensemble}_{args.use_all}"
+
 # 기존 train_parameter.csv 파일 읽어오기
-train_file_path = f"./result/result_{args.ensemble}/train_parameter.csv"
+train_file_path = f"./result/{folder_name}/train_parameter.csv"
 df_train = pd.read_csv(train_file_path)
 # 새로운 데이터를 DataFrame으로 변환 후, 기존 DataFrame과 합치기
 df_new = pd.DataFrame(new_data)
 df_combined = pd.concat([df_train, df_new], ignore_index=True)
 # 합쳐진 데이터를 test_parameter.csv로 저장하기
-test_file_path = f"./result/result_{args.ensemble}/test_parameter.csv"
+test_file_path = f"./result/{folder_name}/test_parameter.csv"
 df_combined.to_csv(test_file_path, index=False, encoding='utf-8-sig')
 
-dir = f"./result/result_{args.ensemble}/{args.test_dir}"
+dir = f"./result/{folder_name}/{args.test_dir}"
 if os.path.isdir(dir) == False:
     os.mkdir(dir)
-dir = f"./result/result_{args.ensemble}/"
-test_dir = f"./result/result_{args.ensemble}/{args.test_dir}"
+dir = f"./result/{folder_name}/"
+test_dir = f"./result/{folder_name}/{args.test_dir}"
 
 use_all_list =["All","Sector","SectorAll"] # 모델 평가 방식
 all_results={}
@@ -122,6 +124,8 @@ for i, metric in enumerate(metrics):
     phase_vals_ks = result_df_ks.loc[metric].values
 
     if metric == "CAGR":
+        avg_values = [f"{val * 100:.2f}%" for val in phase_vals]
+        ks_values = [f"{val * 100:.2f}%" for val in phase_vals_ks]
         # 1) 산술평균
         arith_avg = phase_vals.mean()
         arith_ks = phase_vals_ks.mean()
@@ -131,8 +135,8 @@ for i, metric in enumerate(metrics):
         geo_ks = np.prod(1 + phase_vals_ks) ** (1.0 / len(phases)) - 1
 
         # 두 개 모두 리스트에 추가
-        avg_values.extend([f"{arith_avg:.4f}", f"{geo_avg:.4f}"])
-        ks_values.extend([f"{arith_ks:.4f}", f"{geo_ks:.4f}"])
+        avg_values.extend([f"{arith_avg*100:.2f}%", f"{geo_avg*100:.2f}%"])
+        ks_values.extend([f"{arith_ks*100:.2f}%", f"{geo_ks*100:.2f}%"])
         col_labels = list(phases) + ["Average", "Total"]
     else:
         # Sharpe, MDD는 기존 산술평균만
@@ -156,7 +160,7 @@ for i, metric in enumerate(metrics):
 # 전체 서브플롯 간의 좌우 간격 및 하단 여백 조정
 plt.subplots_adjust(bottom=0.5, wspace=0.3)
 plt.tight_layout(rect=[0, 0.1, 1, 1])
-plt.savefig(f"{dir}/test_result_graph.png")
+plt.savefig(f"{test_dir}/test_result_graph.png")
 
 
 

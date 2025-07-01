@@ -155,7 +155,7 @@ class MyModel(nn.Module):
         df.to_csv(file_path, index=False)
 
     def trainClusterModels(self, withValidation=False):
-        print(f"trainClusterModels ({self.phase}), with validation {withValidation}, Model {self.ensemble}")
+        print(f"trainClusterModels ({self.phase}), with validation {withValidation}, Model {self.ensemble}:")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
         test_start = self.DM.phase_list[self.phase][2]
@@ -201,7 +201,7 @@ class MyModel(nn.Module):
 
     def trainALLSectorModels(self, withValidation = False): # 전체 섹터를 하나의 모델로 학습
         # 전체 섹터 학습 모델
-        print(f"trainALLSectorModels ({self.phase}), with validation {withValidation}: ")
+        print(f"trainALLSectorModels ({self.phase}), with validation {withValidation}, Model {self.ensemble}:")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
         test_start = self.DM.phase_list[self.phase][2]
@@ -303,7 +303,6 @@ class MyModel(nn.Module):
                                              symbols[sector])
 
                     if use_all == "SectorAll":
-
                         if self.ensemble == "MLP":
                             if not isinstance(all_data, torch.Tensor):
                                 all_data = torch.Tensor(all_data).to(self.device)
@@ -339,7 +338,8 @@ class MyModel(nn.Module):
                             real_last_topK_stock.extend(inter_stocks)
 
                     elif use_all == "Sector":  # Sector인 경우
-                        real_last_topK_stock.extend(topK.index[:2].to_list())  # 상위 2개의 종목을 선택
+                        cnt = len(topK)
+                        real_last_topK_stock.extend(topK.index[:int(cnt * inter_n)].to_list())  # 상위 2개의 종목을 선택
 
             elif use_all == "All":
                 if self.ensemble == "MLP":
@@ -357,8 +357,8 @@ class MyModel(nn.Module):
                         all_data = torch.Tensor(all_data).to(self.device)
                     top_all = model.predict(all_data[i, :, :-1], all_symbol["code"])
 
-
-                real_last_topK_stock.extend(top_all.index[:self.final_stock_k].to_list())  # 최종 상위 k 개의 주식을 선택 및 추가
+                cnt = len(top_all)
+                real_last_topK_stock.extend(top_all.index[:int(cnt * inter_n)].to_list())  # 최종 상위 k 개의 주식을 선택 및 추가
 
 
             clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)

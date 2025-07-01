@@ -213,9 +213,9 @@ class MyModel(nn.Module):
     def get_rows_by_date_range(self, code: str, start_date_str: str, end_date_str: str, data: int=0) -> pd.DataFrame:
         # 실제 존재하는 파일 경로를 찾기
         file_path = None
-        if data == 0: file_path = "./preprocessed_data/llm/predict_total/predict_video.csv"
-        elif data == 1: file_path = "./preprocessed_data/llm/predict_total/predict_text.csv"
-        elif data == 2: file_path = "./preprocessed_data/llm/predict_total/predict_mix2.csv"
+        if data == 0: file_path = "./preprocessed_data/llm/predict_video/predict.csv"
+        elif data == 1: file_path = "./preprocessed_data/llm/predict_text/predict.csv"
+        elif data == 2: file_path = "./preprocessed_data/llm/predict_mix/predict.csv"
         else: raise ValueError('data 파라미터가 범위를 벗어남.')
         
         # CSV 읽기
@@ -515,8 +515,15 @@ class MyModel(nn.Module):
         return obj
 
 if __name__ == '__main__':
-    model = joblib.load(f"./result/train_result_dir_1/train_result_model_1_p1/model.joblib")  # 저장된 모델 불러옴
-    cagr, sharpe, mdd, num_stock_tmp, cagr_video, sharpe_video, mdd_video, cagr_article, sharpe_article, mdd_article, cagr_mix, sharpe_mix, mdd_mix \
-        = model.backtest(verbose=True, agg="inter", use_all="Sector", inter_n=0.2, withValidation=True,
-                         isTest=True, testNum=1, dir="test_result_dir", withLLM=False)
-    print(mdd, mdd_video, mdd_article, mdd_mix)
+    testNum = 1
+    cluster_n = 5
+    DM = DataManager(features_n=6, cluster_n=cluster_n)  # 특징 개수 4개로 설정하여 데이터 매니저 초기화
+    DM.create_date_list()
+    phase_list = DM.phase_list.keys()
+
+    for K in range(1, testNum + 1):
+        for phase in phase_list:
+            model = joblib.load(f"./result/train_result_dir_{K}/train_result_model_{K}_{phase}/model.joblib")  # 저장된 모델 불러옴
+            cagr, sharpe, mdd, num_stock_tmp, cagr_video, sharpe_video, mdd_video, cagr_article, sharpe_article, mdd_article, cagr_mix, sharpe_mix, mdd_mix \
+                = model.backtest(verbose=True, agg="inter", use_all="Sector", inter_n=0.2, withValidation=True,
+                                 isTest=True, testNum=K, dir="test_result_dir", withLLM=False)

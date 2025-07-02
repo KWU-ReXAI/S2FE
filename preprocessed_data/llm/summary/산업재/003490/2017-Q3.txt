@@ -1,7 +1,1 @@
-- **Introduction of Biofuel in Aviation**: A domestic airline has operated a passenger flight using biofuel derived from plants like corn for the first time. This marks a significant step in the aviation industry's efforts to adopt more sustainable fuel sources.
-
-- **Flight Details**: The flight in question was Korean Air flight KEO38, which departed from Chicago Airport and arrived at Incheon Airport after a 14-hour journey. The aircraft used a fuel mixture consisting of 95% traditional aviation fuel (ZU) and 5% biofuel.
-
-- **Industry Projections**: The aviation industry anticipates that biofuel will become more widely adopted starting in 2020. By 2050, it is expected that biofuel will account for 25% of the total aviation fuel market, reflecting a significant shift towards more environmentally friendly fuel options.
-
-- **Environmental Impact**: The use of biofuel is part of a broader strategy to reduce the carbon footprint of air travel and promote sustainability within the industry.
+지난 8일 미국 시카고 공항을 이륙해 14시간을 날아 9일 오후 4시 30분 인천공항에 도착한 대한항공 KEO38 여객기는 기존 항공률인 ZU 95%, 바이오열료 5%인 바이오열료를 혼합한 항공률을 사용했다.

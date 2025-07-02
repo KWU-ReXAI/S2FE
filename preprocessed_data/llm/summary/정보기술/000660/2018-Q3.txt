@@ -1,18 +1,1 @@
-### Summary of Key Economic Ideas and Arguments:
-
-- **Stock Analysis: SK Hynix**
-  - **Current Situation**: The stock was purchased at 80,100 KRW, with a current price of 77,000 KRW. The investor holds a significant portion (60%) of their portfolio in this stock.
-  - **Investment Dilemma**: The investor is contemplating whether to sell or hold the stock.
-
-- **Expert Opinion and Recommendations**:
-  - **Holding Recommendation**: The expert suggests that the investor should not rush to sell the stock despite the current price being lower than the purchase price. The decline is not significant enough to warrant immediate concern.
-  - **Market Conditions**: The semiconductor industry has faced challenges throughout the year, affecting stock performance. However, the current price is not drastically lower than the purchase price.
-  - **Future Outlook**: The expert anticipates that the stock price could recover to the purchase price range (80,000 - 81,000 KRW) in the short term.
-  - **Strategic Selling**: Once the stock price reaches the purchase price range, it is advisable to sell a portion of the holdings to reduce risk. The expert suggests selling at least one-third of the holdings.
-  - **Long-term Target**: For long-term strategy, the expert recommends setting a target price between 85,000 KRW and 90,000 KRW.
-
-- **Risk Management**:
-  - **Portfolio Diversification**: Holding a large portion of a single stock can lead to significant perceived losses, affecting decision-making. Diversification is recommended to mitigate this risk.
-
-### Conclusion:
-The video provides a detailed analysis of SK Hynix stock, advising investors to hold their position for the time being and consider partial selling when the stock price recovers to the purchase level. The expert emphasizes the importance of diversification to manage investment risk effectively.
+오늘 시장에서 시장에서 어떠한 종목군들이 선호했던 종목이었나 돈 맥주 몇 가지만 살펴보고 또 매매 기법 하나씩 하나씩 만들어 드리는 시간 갖도록 하겠습니다

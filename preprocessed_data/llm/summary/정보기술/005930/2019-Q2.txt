@@ -1,17 +1,1 @@
-**Summary of Key Economic Ideas and Developments:**
-
-1. **Technological Advancement:**
-   - Samsung Electronics has broken new ground by developing a 108-megapixel mobile image sensor, the ISOCELL Bright HMX, marking a significant leap from their previous 64-megapixel sensor released just three months prior.
-   - This advancement allows mobile devices to achieve high-resolution photography comparable to premium DSLR cameras, enabling ultra-high-resolution shooting and 6K video recording at 30 frames per second without loss of field of view.
-
-2. **Market Impact and Competition:**
-   - Despite Sony's dominant position in the global image sensor market with a 49.9% share compared to Samsung's 19.6%, Samsung's rapid technological advancements are expected to increase its market share.
-   - Samsung aims to leverage its cutting-edge technology to challenge Sony's dominance and potentially overturn the market dynamics by 2030.
-
-3. **Strategic Plans and Future Outlook:**
-   - Samsung plans to begin mass production of the ISOCELL Bright HMX in the current month and intends to incorporate the 64-megapixel sensor into the Redmi series, with discussions underway to integrate the 108-megapixel sensor into future products.
-   - The company is also targeting the automotive image sensor market, indicating a strategic expansion beyond mobile applications, which could further alter the competitive landscape in the image sensor industry.
-
-4. **Economic Implications:**
-   - Samsung's advancements in image sensor technology highlight the importance of innovation in maintaining competitive advantage and expanding market share in the tech industry.
-   - The potential shift in market dynamics underscores the role of technological leadership in influencing global market positions and economic outcomes in the electronics sector.
+지난 5월 삼성전자가 업계 최초로 6,400만 화소 이미지 센서를 공개했는데 석 달 만에 화소수를 1.6배나 증가시킨 세계 최고 수준의 이미지 센서를 개발한 것이다.

@@ -1,13 +1,1 @@
-The transcript describes a case of online shopping fraud in South Korea, highlighting key economic and legal issues related to e-commerce and consumer protection. Here is a concise summary of the main points:
-
-- **Fraudulent Activity**: A 24-year-old woman, identified as Ms. Yoon, exploited the refund system of an online social commerce shopping mall. She purchased high-value items, falsely entered return information, and received refunds without actually returning the products.
-
-- **Scale of Fraud**: Over a period of three months, starting in December of the previous year, Ms. Yoon conducted this fraudulent activity approximately 230 times, amassing illicit gains worth around 150 million Korean won.
-
-- **Methodology**: Ms. Yoon demonstrated meticulous planning by using her previous address for delivery, attempting to evade detection by law enforcement.
-
-- **Legal and Economic Implications**: The case underscores vulnerabilities in e-commerce refund systems and the need for robust consumer protection mechanisms. It also highlights the economic impact of such fraudulent activities on businesses.
-
-- **Ongoing Investigation**: The police have arrested Ms. Yoon on charges of computer-related fraud and are investigating whether any third-party handlers were involved in the disposal of the goods.
-
-This case illustrates the challenges faced by online retailers in preventing fraud and the importance of implementing effective verification processes to safeguard against such activities.
+CJ대한통운은 지난달 26~29일 일산 킨텍스에서 열린 '제6회 국제물류산업전'에 참가해 최근 개발한 드론 추락 감지 기술 및 낙하산 자동 작동장치 등을 선보였다.

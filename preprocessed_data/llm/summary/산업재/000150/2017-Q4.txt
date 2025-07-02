@@ -1,16 +1,1 @@
-**Summary of Key Economic Ideas and Developments:**
-
-- **Doosan Heavy Industries' Expansion into Vietnam's Wind Power Market:**
-  - Doosan Heavy Industries has entered the Vietnamese wind power market, marking a significant step in its international expansion strategy.
-  - The company has signed an agreement with Vietnam Electricity (EVN) to construct a 3MW offshore wind power demonstration complex, which will be integrated with an energy storage system (ESS).
-
-- **Partnerships and Agreements:**
-  - Doosan has also formed a business agreement with CC1, a comprehensive construction company in Vietnam, to develop a wind power complex. CC1 holds the rights to a 105MW wind power project, indicating a substantial scale of development.
-
-- **Strategic Economic Diplomacy:**
-  - Park Ji-won, the chairman of Doosan Heavy Industries, is currently in Vietnam as part of the economic delegation accompanying South Korean President Moon Jae-in. This highlights the role of economic diplomacy in facilitating international business ventures.
-
-**Logical Structure:**
-1. Introduction of Doosan Heavy Industries' new venture in Vietnam.
-2. Details of agreements with local entities (EVN and CC1) for wind power projects.
-3. Contextual information about the involvement of South Korean economic diplomacy in the expansion efforts.
+박지원 회장이 베트남 전력공사와 에너지 저장 장치, ESS 연계 3MW 해상 풍력발전 실증 단지 건설 협약을 체결했다고 밝혔으며 모두 105MW 규모 풍력발전 사업권을 보유한 베트남 종합건설 회사 CC1과 풍력발전 단지 개발을 위한 업무 협약도 맺었다.

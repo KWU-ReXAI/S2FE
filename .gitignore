@@ -5,3 +5,4 @@ result/
 __pycache__/
 .ipynb_checkpoints/
 data_kr/video/audio/
+.venv/

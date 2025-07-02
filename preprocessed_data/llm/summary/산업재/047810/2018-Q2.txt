@@ -1,11 +1,1 @@
-The transcript provided is not related to economics but rather discusses the development and deployment of satellites for weather and environmental monitoring in Korea. Here is a summary of the key points:
-
-- **Satellite Development**: The Cheollian EA satellite, developed with Korean technology, is set to be launched soon. It is a geostationary satellite that will monitor the Korean Peninsula from an altitude of 36,000 km.
-
-- **Technological Advancements**: Compared to its predecessor, Cheollian 1, the new satellite offers four times higher resolution and transmits observational data 18 times faster. This will enhance real-time monitoring of typhoon paths and space magnetic fields, contributing to public safety.
-
-- **Launch Preparations**: The satellite has completed assembly and functional testing and is undergoing final checks before being transported to the launch site in French Guiana. It is scheduled to be launched on an Ariane 5 rocket by the end of November.
-
-- **Future Developments**: The Cheollian 2 satellite, currently under assembly, is expected to launch next year. It will focus on monitoring air pollution, such as fine dust. Unlike the first Cheollian satellite, which was developed in collaboration with foreign partners, the Cheollian 2 and its twin are entirely designed and assembled using Korean technology.
-
-- **Technological Significance**: The development of the Cheollian 2 twin satellites marks a significant achievement for Korea, establishing it as a technological leader in both medium and large geostationary satellites.
+한국항공우주연구원은 매스웍스의 모델 기반 설계 솔루션을 도입해 항공 소프트웨어 국제표준 DO-178C에 부합하는 헬리콥터의 자동비행제어장치(AFCS)소프트웨어를 개발했다.

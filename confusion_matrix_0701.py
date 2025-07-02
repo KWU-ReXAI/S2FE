@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import platform
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 from tqdm import tqdm
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -159,11 +159,11 @@ if __name__ == '__main__':
 
 		# 시각화
 		plt.figure(figsize=(8, 6))
-		labels = ['양수 (Positive)', '음수 (Negative)']
+		labels = ['주가 상승', '주가 하락']
 		sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels)
-		plt.title('부호 예측 결과 Confusion Matrix', fontsize=16)
-		plt.xlabel('예측 부호 (Predicted Sign)', fontsize=12)
-		plt.ylabel('실제 부호 (Actual Sign)', fontsize=12)
+		plt.title('LLM 예측 결과 Confusion Matrix', fontsize=16)
+		plt.xlabel('Predicted', fontsize=12)
+		plt.ylabel('Actual', fontsize=12)
 		plt.savefig(f"{fpath}/confusion_matrix_{data}.png")
 
 		# 3. 결과 분석 및 DataFrame 생성
@@ -183,19 +183,22 @@ if __name__ == '__main__':
 		accuracy = accuracy_score(y_true, y_pred)
 		precision = precision_score(y_true, y_pred, pos_label=1, zero_division=0)
 		recall = recall_score(y_true, y_pred, pos_label=1, zero_division=0)
+		f1_score = f1_score(y_true, y_pred, pos_label=1, zero_division=0)
 
 		# DataFrame 생성
 		results_data = {
-			'label': ['PP (TP)', 'PN (FN)', 'NP (FP)', 'NN (TN)', 'Accuracy', 'Precision', 'Recall'],
-			'count': [pp_count, pn_count, np_count, nn_count, np.nan, np.nan, np.nan],
+			'label': ['PP (TP)', 'PN (FN)', 'NP (FP)', 'NN (TN)', 'Total', 'Accuracy', 'Precision', 'Recall', 'F1 Score'],
+			'count': [pp_count, pn_count, np_count, nn_count, np.nan, np.nan, np.nan, np.nan, np.nan],
 			'rate(%)': [
 				(pp_count / total) * 100,
 				(pn_count / total) * 100,
 				(np_count / total) * 100,
 				(nn_count / total) * 100,
+				np.nan,
 				accuracy * 100,
 				precision * 100,
-				recall * 100
+				recall * 100,
+				f1_score * 100
 			]
 		}
 

@@ -188,7 +188,7 @@ if __name__ == '__main__':
 		# DataFrame 생성
 		results_data = {
 			'label': ['PP (TP)', 'PN (FN)', 'NP (FP)', 'NN (TN)', 'Total', 'Accuracy', 'Precision', 'Recall', 'F1 Score'],
-			'count': [pp_count, pn_count, np_count, nn_count, np.nan, np.nan, np.nan, np.nan, np.nan],
+			'count': [pp_count, pn_count, np_count, nn_count, total, np.nan, np.nan, np.nan, np.nan],
 			'rate(%)': [
 				(pp_count / total) * 100,
 				(pn_count / total) * 100,

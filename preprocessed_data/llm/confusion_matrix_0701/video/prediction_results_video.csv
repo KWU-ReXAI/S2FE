@@ -3,7 +3,7 @@ PP (TP),494.0,30.72
 PN (FN),253.0,15.73
 NP (FP),583.0,36.26
 NN (TN),278.0,17.29
-Total,,
+Total,1608.0,
 Accuracy,,48.01
 Precision,,45.87
 Recall,,66.13

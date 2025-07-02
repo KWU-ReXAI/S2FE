@@ -183,7 +183,7 @@ if __name__ == '__main__':
 		accuracy = accuracy_score(y_true, y_pred)
 		precision = precision_score(y_true, y_pred, pos_label=1, zero_division=0)
 		recall = recall_score(y_true, y_pred, pos_label=1, zero_division=0)
-		f1_score = f1_score(y_true, y_pred, pos_label=1, zero_division=0)
+		f1 = f1_score(y_true, y_pred, pos_label=1, zero_division=0)
 
 		# DataFrame 생성
 		results_data = {
@@ -198,7 +198,7 @@ if __name__ == '__main__':
 				accuracy * 100,
 				precision * 100,
 				recall * 100,
-				f1_score * 100
+				f1 * 100
 			]
 		}
 

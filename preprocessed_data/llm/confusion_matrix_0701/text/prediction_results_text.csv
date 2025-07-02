@@ -1,8 +1,10 @@
 ﻿label,count,rate(%)
-PP (TP),616.0,38.48
-PN (FN),107.0,6.68
-NP (FP),752.0,46.97
-NN (TN),126.0,7.87
-Accuracy,,46.35
-Precision,,45.03
+PP (TP),616.0,38.5
+PN (FN),107.0,6.69
+NP (FP),751.0,46.94
+NN (TN),126.0,7.88
+Total,,
+Accuracy,,46.38
+Precision,,45.06
 Recall,,85.2
+F1 Score,,58.95

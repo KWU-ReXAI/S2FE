@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import glob
-from pandas.tseries.offsets import DateOffset
+import re
 
 # 1) 위에서 정의한 컬럼 목록과 처리 함수
 '''COLUMNS_TO_DROP = [
@@ -434,35 +434,321 @@ def add_disclosure_date(file_path, save_path=None):
     df.to_csv(save_path, index=False)
     print(f"저장 완료: {save_path}")
 
+def merge_LLM_date_regression(sector=" "):
+    merged_folder = f"../preprocessed_data/llm/predict/{sector}"
+    output_folder = f"../preprocessed_data/llm/date_regression/{sector}"
+    os.makedirs(output_folder, exist_ok=True)
+
+    file_paths = glob.glob(os.path.join(merged_folder, "*.csv"))
+    if not file_paths:
+        print("merged 폴더 내 CSV 파일이 없습니다.")
+        return
+
+    all_data = []
+    for file in file_paths:
+        try:
+            df = pd.read_csv(file, encoding='utf-8-sig')
+        except Exception as e:
+            print(f"{file} 파일을 읽는 중 오류 발생: {e}")
+            continue
+
+        # 여기서 drop & 컬럼 순서 재정렬
+        df = process_columns(df)
+
+        if 'year' in df.columns and 'quarter' in df.columns:
+            all_data.append(df)
+        else:
+            print(f"{file} 파일에 'year' 또는 'quarter' 컬럼이 없습니다.")
+
+    if not all_data:
+        print("병합할 데이터가 없습니다.")
+        return
+
+    combined_df = pd.concat(all_data, ignore_index=True)
+
+    # 그룹화 이전에 drop & 재정렬을 또 하고 싶다면 이곳에서도 가능
+    # combined_df = process_columns(combined_df)
+
+    groups = combined_df.groupby(['year', 'quarter'])
+    for (year, quarter), group in groups:
+        # 그룹별로도 drop & 재정렬을 적용할 수 있음
+        group = process_columns(group)
+
+        output_file = os.path.join(output_folder, f"{year}_{quarter}.csv")
+        group.to_csv(output_file, index=False, encoding='utf-8-sig')
+        print(f"연도 {year}, 분기 {quarter} 데이터가 {output_file}에 저장되었습니다.")
 
 
-if __name__ == "__main__":
-    compareFolderAndSymbol(
-        folder_path='./data_kr/merged',
-        symbol_path='./data_kr/symbol.csv'
-    )
-"""
-# 198: symbol
-#12 18 13 5 29 5 7 1 13 22 33 14 4 2 1
-if __name__ == "__main__":
-    compareFolderAndSymbol(
-        folder_path='./backup/data_kr_sector/k_features/최대주주변동',
-        symbol_path='./data_kr/symbol.csv'
-    )
+def merge_all_sectors_to_date_regression(base_merged_folder="../preprocessed_data/llm/predict",
+                                          output_folder="../preprocessed_data/llm/date_regression/cluster_1"):
+    os.makedirs(output_folder, exist_ok=True)
 
-    cleanSymbolWithFolder(
-        folder_path='./data_kr/merged',
-        symbol_path='./data_kr/symbol.csv'
-    )
-    removeInvalidSymbolsAndFiles(
-        folder_path='./data_kr/merged',
-        symbol_path='./data_kr/symbol.csv',
-        expected_rows=37
-    )
-    seperate_comma()
+    # 모든 섹터 폴더의 모든 CSV 수집
+    all_csv_files = glob.glob(os.path.join(base_merged_folder, "*", "*.csv"))
+    if not all_csv_files:
+        print("병합할 CSV 파일이 없습니다.")
+        return
 
-    merge_date_regression()
-    save_by_sector()
-    filter_all_files_by_sector()
-    save_sector_codes()"""
+    all_data = []
+    for file in all_csv_files:
+        try:
+            df = pd.read_csv(file, encoding='utf-8-sig')
+            df = process_columns(df)
+            if 'year' in df.columns and 'quarter' in df.columns:
+                all_data.append(df)
+            else:
+                print(f"{file} → 'year' 또는 'quarter' 컬럼이 없습니다.")
+        except Exception as e:
+            print(f"{file} → 파일 읽는 중 오류 발생: {e}")
 
+    if not all_data:
+        print("유효한 데이터가 없습니다.")
+        return
+
+    # 모든 섹터의 데이터 하나로 병합
+    combined_df = pd.concat(all_data, ignore_index=True)
+
+    # 연도/분기별로 그룹화하여 저장
+    groups = combined_df.groupby(['year', 'quarter'])
+    for (year, quarter), group in groups:
+        group = process_columns(group)
+        group = group.sort_values(by="code")
+        output_file = os.path.join(output_folder, f"{year}_{quarter}.csv")
+        group.to_csv(output_file, index=False, encoding='utf-8-sig')
+        print(f"✓ 연도 {year}, 분기 {quarter} 데이터가 {output_file}에 저장되었습니다.")
+
+import os
+import chardet
+
+def detect_csv_encodings(folder_path):
+    for filename in os.listdir(folder_path):
+        if filename.endswith(".csv"):
+            file_path = os.path.join(folder_path, filename)
+            try:
+                with open(file_path, 'rb') as f:
+                    raw_data = f.read(10000)  # 처음 10KB만 샘플로 사용
+                    result = chardet.detect(raw_data)
+                    encoding = result['encoding']
+                    confidence = result['confidence']
+                    print(f"{filename}: encoding = {encoding}, confidence = {confidence:.2f}")
+            except Exception as e:
+                print(f"{filename}: 에러 발생 - {e}")
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.font_manager as fm
+import matplotlib.dates as mdates  # 날짜 형식 지정을 위해 추가
+import os
+
+
+def set_korean_font():
+    """ 운영체제에 맞는 한글 폰트를 설정합니다. """
+    system_name = os.name
+
+    if system_name == 'nt':  # Windows
+        font_family = 'Malgun Gothic'
+    elif system_name == 'darwin':  # Mac OS
+        font_family = 'AppleGothic'
+    else:  # Linux
+        font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
+        if os.path.exists(font_path):
+            font_family = 'NanumGothic'
+        else:
+            font_family = 'sans-serif'
+
+    plt.rc('font', family=font_family)
+    plt.rc('axes', unicode_minus=False)
+
+
+def analyze_and_plot_performance(model_a_path: str, model_b_path: str, output_path: str, model_a_name, model_b_name):
+    """
+    두 모델의 성과를 분석하고, 누적수익률과 월별 성과차이를 시각화하여 파일로 저장합니다.
+    """
+    try:
+        df_a = pd.read_csv(model_a_path)
+        df_b = pd.read_csv(model_b_path)
+
+        for df in [df_a, df_b]:
+            df['date'] = pd.to_datetime(df['date'])
+            if 'return' not in df.columns:
+                raise KeyError(f"파일에 'return' 컬럼이 없습니다. 실제 컬럼: {df.columns.tolist()}")
+
+        df_a = df_a.rename(columns={'return': 'return_a'}).set_index('date')
+        df_b = df_b.rename(columns={'return': 'return_b'}).set_index('date')
+
+        merged_df = pd.merge(df_a[['return_a']], df_b[['return_b']], on='date', how='outer').fillna(0)
+
+        merged_df['cumulative_a'] = (1 + merged_df['return_a']).cumprod() - 1
+        merged_df['cumulative_b'] = (1 + merged_df['return_b']).cumprod() - 1
+        merged_df['monthly_difference'] = (merged_df['return_a'] - merged_df['return_b']) * 100
+
+        set_korean_font()
+        fig, axes = plt.subplots(2, 1, figsize=(15, 14), sharex=True)
+        fig.suptitle('모델 A vs 모델 B 성과 분석', fontsize=20, y=0.95)
+
+        # --- 첫 번째 그래프: 누적 수익률 추이 ---
+        ax1 = axes[0]
+        ax1.plot(merged_df.index, merged_df['cumulative_a'], label=f'{model_a_name} 누적 수익률', color='crimson', linewidth=2)
+        ax1.plot(merged_df.index, merged_df['cumulative_b'], label=f'{model_b_name} 누적 수익률', color='royalblue', linewidth=2)
+        ax1.set_title('모델별 누적 수익률 추이', fontsize=16)
+        ax1.set_ylabel('누적 수익률', fontsize=12)
+        ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'{y:.0%}'))
+        ax1.legend()
+        ax1.grid(True, linestyle='--', linewidth=0.5)
+
+        # --- 두 번째 그래프: 월별 성과 차이 ---
+        ax2 = axes[1]
+        max_diff_date = merged_df['monthly_difference'].idxmax()
+        min_diff_date = merged_df['monthly_difference'].idxmin()
+
+        ax2.plot(merged_df.index, merged_df['monthly_difference'], label=f'월별 성과 차이 ({model_a_name} - {model_b_name})', color='green')
+        ax2.axhline(0, color='gray', linestyle='--', linewidth=1)
+        ax2.scatter(max_diff_date, merged_df.loc[max_diff_date, 'monthly_difference'], color='red', s=80, zorder=5,
+                    label=f'{model_a_name} 최대 우위')
+        ax2.scatter(min_diff_date, merged_df.loc[min_diff_date, 'monthly_difference'], color='blue', s=80, zorder=5,
+                    label=f'{model_b_name} 최대 우위')
+        ax2.set_title('월별 수익률 차이', fontsize=16)
+        ax2.set_xlabel('날짜', fontsize=12)
+        ax2.set_ylabel('초과 수익률 (%p)', fontsize=12)
+        ax2.legend()
+        ax2.grid(True, linestyle='--', linewidth=0.5)
+
+        # --- [수정된 부분] x축 날짜 형식 지정 ---
+        # 날짜 포맷을 'YYYY-MM' 형식으로 지정합니다.
+        date_format = mdates.DateFormatter('%Y-%m')
+        ax2.xaxis.set_major_formatter(date_format)
+
+        # x축 라벨이 겹치지 않도록 30도 회전시킵니다.
+        plt.setp(ax2.get_xticklabels(), rotation=30, ha="right")
+        ax1.xaxis.set_major_formatter(date_format)
+
+        # x축 라벨이 겹치지 않도록 30도 회전시킵니다.
+        plt.setp(ax1.get_xticklabels(), rotation=30, ha="right")
+        # --- [수정 끝] ---
+
+        # 레이아웃을 조절하여 라벨이 잘리지 않도록 합니다.
+        fig.tight_layout(pad=2.5)
+
+        output_dir = os.path.dirname(output_path)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            print(f"'{output_dir}' 디렉터리를 생성했습니다.")
+
+        plt.savefig(output_path, dpi=300)
+        print(f"\n[성공] 분석 그래프를 '{output_path}' 경로에 저장했습니다.")
+
+        #plt.show()
+
+    except FileNotFoundError as e:
+        print(f"오류: 파일을 찾을 수 없습니다. 경로를 확인해주세요.\n{e}")
+    except KeyError as e:
+        print(f"오류: {e}")
+    except Exception as e:
+        print(f"알 수 없는 오류가 발생했습니다: {e}")
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+
+
+def plot_kospi200_chart(csv_path: str):
+    """
+    주어진 CSV 파일 경로를 사용하여 KOSPI 200 지수 차트를 생성하고 표시합니다.
+    x축은 매년 4분기 시작일을 기준으로 '{연도}_Q4' 형식으로 표시됩니다.
+    'KS200.csv' 파일의 '날짜', '종가' 컬럼명에 맞춰 수정되었으며, 범례가 제거되었습니다.
+    x축 범위는 2015년 4분기부터 2024년 4분기까지로 제한됩니다.
+    x축/y축 라벨과 눈금 값 모두 크고 굵게 표시됩니다.
+
+    Args:
+        csv_path (str): KOSPI 200 데이터가 포함된 CSV 파일의 경로.
+    """
+    try:
+        # 한글 폰트 설정
+        try:
+            plt.rc('font', family='Malgun Gothic')  # Windows
+        except:
+            try:
+                plt.rc('font', family='AppleGothic')  # macOS
+            except:
+                font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
+                if fm.findfont(fm.FontProperties(fname=font_path)):
+                    plt.rc('font', family=fm.FontProperties(fname=font_path).get_name())
+        plt.rcParams['axes.unicode_minus'] = False
+
+        # 1. CSV 파일 읽기 및 데이터 필터링
+        df = pd.read_csv(csv_path, parse_dates=['날짜'], index_col='날짜')
+        df.sort_index(inplace=True)
+        start_date = '2015-10-01'
+        end_date = '2024-10-01'
+        df_filtered = df.loc[start_date:end_date].copy()
+
+        if df_filtered.empty:
+            print(f"오류: {start_date}부터 {end_date}까지의 데이터가 파일에 없습니다.")
+            return
+
+        price_column = '종가'
+        if price_column not in df_filtered.columns:
+            raise ValueError(f"차트를 그릴 가격 데이터 컬럼('{price_column}')을 찾을 수 없습니다.")
+
+        # 2. 그래프 생성
+        fig, ax = plt.subplots(figsize=(17, 8))  # 세로 길이를 조금 늘려 공간 확보
+        ax.plot(df_filtered.index, df_filtered[price_column], color='royalblue',linewidth=2.5)
+
+        # 3. x축 눈금 및 레이블 설정
+        years = range(2015, 2025)
+        xticks = [pd.Timestamp(f'{year}-10-01') for year in years]
+        xtick_labels = [f'{year}_Q4' for year in years]
+        ax.set_xticks(xticks)
+        ax.set_xticklabels(xtick_labels, rotation=45, ha='center')
+
+        # 4. x축 범위 명시적 설정
+        ax.set_xlim(pd.Timestamp(start_date), pd.Timestamp(end_date))
+        ax.set_ylim(200,450)
+
+        # 5. 그래프 스타일 및 정보 추가
+        #ax.set_title('KOSPI 200 지수 (2015_Q4 - 2024_Q4)', fontsize=18, fontweight='bold', pad=20)
+        ax.set_ylabel('KOSPI200 Index', fontsize=25, fontweight='bold')
+        ax.set_xlabel('Date', fontsize=25, fontweight='bold')
+
+        # 6. x축과 y축 눈금 값 스타일 변경 (수정된 부분)
+        # 글씨 크기를 12로, 굵게(bold) 설정
+        plt.setp(ax.get_xticklabels(), fontsize=20, fontweight='bold')
+        plt.setp(ax.get_yticklabels(), fontsize=20, fontweight='bold')
+
+
+        for spine in ax.spines.values():
+            spine.set_linewidth(1.5)
+
+        # 'color'를 'facecolor'로 변경하여 면과 테두리 색을 분리
+        ax.axvspan('2020-10-01', '2021-10-01', facecolor='skyblue', alpha=0.3, edgecolor='black', linewidth=3, zorder=-4)
+        ax.axvspan('2021-10-01', '2022-10-01', facecolor='lightgreen', alpha=0.3, edgecolor='black', linewidth=3,
+                   zorder=-3)
+        ax.axvspan('2022-10-01', '2023-10-01', facecolor='yellow', alpha=0.3, edgecolor='black', linewidth=3, zorder=-2)
+        ax.axvspan('2023-10-01', '2024-10-01', facecolor='lightpink', alpha=0.3, edgecolor='black', linewidth=3,
+                   zorder=-1)
+        # y축 400~450 & x축 2016-10-01 ~ 2020-10-01 영역을 투명 회색으로 표시
+        ax.fill_between([pd.to_datetime('2016-01-01'), pd.to_datetime('2020-10-01')], 400, 450, color='lightgray', alpha=1,
+                        zorder=-3.5)
+        ax.fill_between([pd.to_datetime('2017-01-01'), pd.to_datetime('2021-10-01')], 350, 400, color='lightgray', alpha=1,
+                        zorder=-2.5)
+        #ax.fill_between([pd.to_datetime('2018-10-01'), pd.to_datetime('2022-10-01')], 300, 350, color='lightgray', alpha=1,zorder=-1.5)
+        #ax.fill_between([pd.to_datetime('2019-10-01'), pd.to_datetime('2023-10-01')], 250, 300, color='lightgray', alpha=1,zorder=-0.5)
+        ax.grid(True, linestyle='-', alpha=0.6)
+
+        # 레이아웃을 조정하여 라벨이 잘리지 않도록 합니다.
+        plt.tight_layout()
+        plt.show();
+
+    except FileNotFoundError:
+        print(f"오류: '{csv_path}' 파일을 찾을 수 없습니다. 파일 경로를 확인해주세요.")
+    except KeyError as e:
+        print(f"오류: CSV 파일에서 필요한 컬럼({e})을 찾을 수 없습니다. 파일 내용을 확인해주세요.")
+    except Exception as e:
+        print(f"오류가 발생했습니다: {e}")
+
+
+
+plot_kospi200_chart('../data_kr/price/KS200.csv')

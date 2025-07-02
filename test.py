@@ -22,6 +22,7 @@ parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE")
 parser.add_argument('--use_all',type=str,nargs="?",default="SectorAll")
 parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
 parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # 0.1
+parser.add_argument('--data',type=str,nargs="?",default="All")
 args = parser.parse_args()
 
 if isinstance(args.inter_n, float) and args.inter_n.is_integer():
@@ -37,7 +38,10 @@ phase_list = DM.phase_list.keys()
 new_data = [{"Parameter": "inter_n", "Value": args.inter_n},{"Parameter": "aggregate", "Value": args.agg},
             {"Parameter": "Impute", "Value": Impute}]
 
-folder_name = f"result_{args.ensemble}_{args.use_all}"
+if args.data == "All":
+    folder_name = f"result_{args.ensemble}_{args.use_all}"
+else:
+    folder_name = f"result_{args.ensemble}_{args.use_all}_{args.data}"
 
 # 기존 train_parameter.csv 파일 읽어오기
 train_file_path = f"./result/{folder_name}/train_parameter.csv"

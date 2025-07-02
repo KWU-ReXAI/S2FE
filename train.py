@@ -24,6 +24,7 @@ parser.add_argument('--result_name',type=str,nargs='?',default="train_result_mod
 parser.add_argument('--dir_name',type=str,nargs='?',default="train_result_dir") # 결과 디렉토리 명
 parser.add_argument('--use_all',type=str,nargs="?",default="SectorAll") # 모델을 평가하는 방식 설정
 parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE")
+parser.add_argument('--data',type=str,nargs="?",default="All")
 parser.add_argument('--clustering',action="store_true",default=True) # 클러스터링 여부
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
 parser.add_argument('--Validation',action="store_true") # 클러스터링 여부
@@ -48,7 +49,10 @@ DM = DataManager(features_n= args.features_n, cluster_n=cluster_n)
 DM.create_date_list()
 result = {}
 result_ks = {}
-folder_name = f"result_{args.ensemble}_{args.use_all}"
+if args.data == "All":
+    folder_name = f"result_{args.ensemble}_{args.use_all}"
+else:
+    folder_name = f"result_{args.ensemble}_{args.use_all}_{args.data}"
 dir = f"./result"
 if os.path.isdir(dir) == False:
     os.mkdir(dir)

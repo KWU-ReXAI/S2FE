@@ -82,6 +82,25 @@ class AggregationModel:
 
         return sorted_rank
 
+    def predict_agg3(self, X, symbol_index):
+        pred_anfis = self.anfis(X).cpu().detach().numpy().squeeze()
+        pred_mlp = self.mlp(X).cpu().detach().numpy().squeeze()
+        pred_rf = self.rf.predict(X.cpu().numpy()).squeeze()
+
+        top_anfis = pd.Series(pred_anfis, index=symbol_index).sort_values(ascending=False)
+        top_mlp = pd.Series(pred_mlp, index=symbol_index).sort_values(ascending=False)
+        top_rf = pd.Series(pred_rf, index=symbol_index).sort_values(ascending=False)
+
+        top_n_count = 20
+
+        # 4. 세 모델이 공통으로 추천하는 종목(교집합)을 찾음
+        set_anfis = set(top_anfis.index[:top_n_count])
+        set_mlp = set(top_mlp.index[:top_n_count])
+        set_rf = set(top_rf.index[:top_n_count])
+
+        inter_stocks = list(set_anfis.intersection(set_mlp).intersection(set_rf))
+        return inter_stocks
+
     def loss(self, X, y, agg2 = False):
         if agg2 != True: pred_anfis = self.anfis(X).cpu().detach().numpy().squeeze()
         pred_mlp = self.mlp(X).cpu().detach().numpy().squeeze()
@@ -351,19 +370,26 @@ class MyModel(nn.Module):
                     top_all = pd.Series(self.all_sector_model.predict(all_data[i, :, :-1]),
                                         all_symbol["code"]).sort_values(ascending=False)
 
+                elif self.ensemble == "agg3":
+                    model = self.all_sector_model
+                    if not isinstance(all_data, torch.Tensor):
+                        all_data = torch.Tensor(all_data).to(self.device)
+                    top_all = model.predict_agg3(all_data[i, :, :-1], all_symbol["code"])
+                    real_last_topK_stock.extend(top_all)
+
                 else:
                     model = self.all_sector_model
                     if not isinstance(all_data, torch.Tensor):
                         all_data = torch.Tensor(all_data).to(self.device)
                     top_all = model.predict(all_data[i, :, :-1], all_symbol["code"])
+                    cnt = len(top_all)
+                    real_last_topK_stock.extend(top_all.index[:int(cnt * inter_n)].to_list())  # 최종 상위 k 개의 주식을 선택 및 추가
 
-                cnt = len(top_all)
-                real_last_topK_stock.extend(top_all.index[:int(cnt * inter_n)].to_list())  # 최종 상위 k 개의 주식을 선택 및 추가
+
 
 
             clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)
             idx += 1
-            #self.final_stock_k = len(real_last_topK_stock)
 
             if verbose: print(real_last_topK_stock,flush=True)  # 선택된 최종 종목을 출력
             if isTest:

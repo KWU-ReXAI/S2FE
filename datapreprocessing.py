@@ -20,6 +20,10 @@ from dimensionality_reduction import *
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--isall',type=str,nargs='?',default="False")
+parser.add_argument('--fs',type=str,nargs='?',default="False")
+parser.add_argument('--Financial',type=bool,nargs='?',default=True)
+parser.add_argument('--Disclosure',type=bool,nargs='?',default=True)
+parser.add_argument('--',type=bool,nargs='?',default=True)
 args = parser.parse_args()
 
 ks200_price = pd.read_csv("./data_kr/price/KS200.csv")

@@ -279,7 +279,8 @@ class MyModel(nn.Module):
             _, _, data_tmp = self.DM.data_phase(sector, self.phase, cluster=self.clustering,model=model)
             test_data[sector] = data_tmp
 
-            symbol_index = pd.read_csv(f"./preprocessed_data/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
+            if model == "S3CE": symbol_index = pd.read_csv(f"./preprocessed_data/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
+            else: symbol_index = pd.read_csv(f"./preprocessed_data_{model}/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
             symbols[sector] = symbol_index["Code"]
 
         ## 백테스팅 진행

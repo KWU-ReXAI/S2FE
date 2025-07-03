@@ -40,11 +40,11 @@ def get_rows_by_date_range(code: str, start_date_str: str, end_date_str: str, da
 	# 실제 존재하는 파일 경로를 찾기
 	file_path = None
 	if data == 0:
-		file_path = "./preprocessed_data/llm/predict_video/predict.csv"
+		file_path = "./preprocessed_data/llm/predict_total/predict_video.csv"
 	elif data == 1:
-		file_path = "./preprocessed_data/llm/predict_text/predict.csv"
+		file_path = "./preprocessed_data/llm/predict_total/predict_text.csv"
 	elif data == 2:
-		file_path = "./preprocessed_data/llm/predict_mix/predict.csv"
+		file_path = "./preprocessed_data/llm/predict_total/predict_total.csv"
 	else:
 		raise ValueError('data 파라미터가 범위를 벗어남.')
 
@@ -68,7 +68,7 @@ def get_rows_by_date_range(code: str, start_date_str: str, end_date_str: str, da
 def LLM_accuracy(code, start_date, end_date, data):
 
 	df_score = pd.DataFrame(columns=[
-		"date", "code", "score", "weight", "return"
+		"date", "code", "score", "return"
 	])
 
 	# 2) 해당 분기의 가장 늦는 공시일 얻기
@@ -82,9 +82,7 @@ def LLM_accuracy(code, start_date, end_date, data):
 	current = start_dt  ## 거래일
 
 	while current <= end_dt:
-		df_monthly_score = pd.DataFrame(columns=[
-			"date", "code", "score", "weight", "return"
-		])
+		trade_date = current.strftime("%Y-%m-%d")
 		df['upload_dt'] = pd.to_datetime(df['upload_dt'])
 
 		### 자료 수집 기간: upload_start ~ upload_end ###
@@ -93,39 +91,38 @@ def LLM_accuracy(code, start_date, end_date, data):
 		chunk = df.loc[(upload_start <= df['upload_dt']) & (df['upload_dt'] <= upload_end)].copy()
 
 		chunk.reset_index(drop=True, inplace=True)
-		for row in chunk.itertuples():
-			df_monthly_score.loc[len(df_monthly_score)] = [
-				row.upload_dt.strftime('%Y-%m-%d'), code, row.score, row.Index + 1, None
-			]
 
-		### threshold는 상의 후 결정하기
-		# threshold = 2
+		chunk["score"] *= (chunk.index + 1) #가중치 넣음! 우선 임의로
+		score_sum = chunk["score"].sum()
+		threshold = 2
+		score = 1 if score_sum >= threshold else -1
+		df_score.loc[len(df_score)] = [
+			trade_date, code, score, None
+		]
 
 		###### 구매 코드 구현하기 ######
 		buy_dt = current
 		sell_dt = current + relativedelta(months=1)
 		sell_dt = sell_dt if sell_dt <= end_dt else end_dt
 
-		for row in df_monthly_score.itertuples():
-			df_price = pd.read_csv(f"data_kr/price/{str(int(code)).zfill(6)}.csv")
-			df_price['날짜'] = pd.to_datetime(df_price['날짜'])
-			buy_price = df_price[df_price['날짜'] >= buy_dt].iloc[0]['종가']
-			sell_price = df_price[df_price['날짜'] <= sell_dt].iloc[-1]['종가']
-			df_monthly_score.loc[row.Index, "return"] = sell_price / buy_price - 1
+		df_price = pd.read_csv(f"data_kr/price/{str(int(code)).zfill(6)}.csv")
+		df_price['날짜'] = pd.to_datetime(df_price['날짜'])
+		buy_price = df_price[df_price['날짜'] >= buy_dt].iloc[0]['종가']
+		sell_price = df_price[df_price['날짜'] <= sell_dt].iloc[-1]['종가']
+		df_score.loc[len(df_score) - 1, "return"] = sell_price / buy_price - 1
 
-		df_score = pd.concat([df_score, df_monthly_score])
 		current += relativedelta(months=1)
 	return df_score
 
 if __name__ == '__main__':
-	for idx, data in enumerate(tqdm(['video', 'text', 'mix'], desc="데이터 별 진행상황")):
+	for idx, data in enumerate(tqdm(['video', 'text', 'total'], desc="데이터 별 진행상황")):
 		fpath = f"./preprocessed_data/llm/confusion_matrix_0701/{data}"
 		os.makedirs(fpath, exist_ok=True)
 
 		df = pd.DataFrame(columns=[
-			"date", "code", "score", "weight", "return"
+			"date", "code", "score", "return"
 		])
-		df_code = pd.read_csv(f"./preprocessed_data/llm/predict_{data}/predict.csv", encoding='utf-8-sig')
+		df_code = pd.read_csv(f"./preprocessed_data/llm/predict_total/predict_{data}.csv", encoding='utf-8-sig')
 		code_list = df_code['code'].unique().tolist()
 		for code in tqdm(code_list, desc="코드별 진행상황"):
 			dates = ['2020_Q4', '2021_Q1', '2021_Q2', '2021_Q3', '2021_Q4',
@@ -136,6 +133,7 @@ if __name__ == '__main__':
 				if index == len(dates) - 1:
 					break
 				df = pd.concat([df, LLM_accuracy(code, dates[index], dates[index+1], idx)])
+		df.to_csv(f"{fpath}/score_and_return.csv", encoding='utf-8-sig', index=False)
 		df = df[~(df['score'] == 0.0)]
 		# 1. 부호를 기준으로 예측(y_pred)과 정답(y_true) 생성
 		y_pred = np.sign(df['score'].tolist()).astype(int)

@@ -369,6 +369,7 @@ class MyModel(nn.Module):
                 elif self.ensemble == "RF":
                     top_all = pd.Series(self.all_sector_model.predict(all_data[i, :, :-1]),
                                         all_symbol["code"]).sort_values(ascending=False)
+                    real_last_topK_stock.extend(top_all.index[:int(cnt * inter_n)].to_list())
 
                 elif self.ensemble == "agg3":
                     model = self.all_sector_model
@@ -469,7 +470,7 @@ class MyModel(nn.Module):
             print(f"KOSPI MDD: {mdd_ks}\tKOSPI Sharpe: {sharpe_ks}\tKOSPI CAGR: {return_ratio_ks}",flush=True)
             print("----------------------",flush=True)
 
-        return return_ratio, sharpe, mdd,178, return_ratio_ks, sharpe_ks, mdd_ks
+        return return_ratio, sharpe, mdd,177, return_ratio_ks, sharpe_ks, mdd_ks
 
 
 

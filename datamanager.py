@@ -68,7 +68,7 @@ class DataManager:
             raise ValueError(f"pno {pno}은 date_list의 범위를 벗어났습니다. date_list 길이: {len(self.date_list)}")
 
 
-    def data_phase(self, sector: str, phase: str, pandas_format=False, cluster=False, isall=False):
+    def data_phase(self, sector: str, phase: str, pandas_format=False, cluster=False, isall=False, model="S3CE"):
         train_start = self.phase_list[phase][0]
         valid_start = self.phase_list[phase][1]
         test_start = self.phase_list[phase][2]
@@ -77,6 +77,8 @@ class DataManager:
         """print(f"train: {self.pno2date(train_start)} ~ {self.pno2date(valid_start - 1)} / valid: {self.pno2date(valid_start)} ~ {self.pno2date(test_start-1)}"
               f" / test: {self.pno2date(test_start)} ~ {self.pno2date(test_end-1)}")"""
 
+        if model=="S3CE":target_folder = f"./preprocessed_data"
+        else: target_folder = f"./preprocessed_data_{model}"
         if isall:
             train_data = pd.DataFrame()
             valid_data = pd.DataFrame()
@@ -84,21 +86,21 @@ class DataManager:
 
             for pno in range(train_start, valid_start):
                 strdate = self.pno2date(pno)  # 예: "2015_Q1"
-                fp = f"./preprocessed_data/sectors/{sector}/{strdate}.csv"
+                fp = f"{target_folder}/sectors/{sector}/{strdate}.csv"
                 fs_data = pd.read_csv(fp)
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 train_data = pd.concat([train_data, fs_data], axis=0)
 
             for pno in range(valid_start, test_start):
                 strdate = self.pno2date(pno)
-                fp = f"./preprocessed_data/sectors/{sector}/{strdate}.csv"
+                fp = f"{target_folder}/sectors/{sector}/{strdate}.csv"
                 fs_data = pd.read_csv(fp)
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 valid_data = pd.concat([valid_data, fs_data], axis=0)
 
             for pno in range(test_start, test_end):
                 strdate = self.pno2date(pno)
-                fp = f"./preprocessed_data/sectors/{sector}/{strdate}.csv"
+                fp = f"{target_folder}/sectors/{sector}/{strdate}.csv"
                 fs_data = pd.read_csv(fp)
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 test_data = pd.concat([test_data, fs_data], axis=0)
@@ -140,19 +142,19 @@ class DataManager:
 
             for pno in range(train_start, valid_start):
                 strdate = self.pno2date(pno)
-                fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
+                fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv",index_col=[0])
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 train_list.append(fs_data)
 
             for pno in range(valid_start, test_start):
                 strdate = self.pno2date(pno)
-                fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv", index_col=[0])
+                fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv", index_col=[0])
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 valid_list.append(fs_data)
 
             for pno in range(test_start, test_end):
                 strdate = self.pno2date(pno)
-                fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv", index_col=[0])
+                fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv", index_col=[0])
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 test_list.append(fs_data)
 
@@ -165,19 +167,19 @@ class DataManager:
 
         for pno in range(train_start, valid_start):
             strdate = self.pno2date(pno)  # 예: "2015_Q1"
-            fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
+            fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv",index_col=[0])
             fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
             train_data.append(fs_data)
 
         for pno in range(valid_start, test_start):
             strdate = self.pno2date(pno)
-            fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
+            fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv",index_col=[0])
             fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
             valid_data.append(fs_data)
 
         for pno in range(test_start, test_end):
             strdate = self.pno2date(pno)
-            fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
+            fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv",index_col=[0])
             fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
             test_data.append(fs_data)
 

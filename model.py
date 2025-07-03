@@ -213,9 +213,9 @@ class MyModel(nn.Module):
     def get_rows_by_date_range(self, code: str, start_date_str: str, end_date_str: str, data: int=0) -> pd.DataFrame:
         # 실제 존재하는 파일 경로를 찾기
         file_path = None
-        if data == 0: file_path = "./preprocessed_data/llm/predict_video/predict.csv"
-        elif data == 1: file_path = "./preprocessed_data/llm/predict_text/predict.csv"
-        elif data == 2: file_path = "./preprocessed_data/llm/predict_mix/predict.csv"
+        if data == 0: file_path = "./preprocessed_data/llm/predict_total/predict_video.csv"
+        elif data == 1: file_path = "./preprocessed_data/llm/predict_total/predict_text.csv"
+        elif data == 2: file_path = "./preprocessed_data/llm/predict_total/predict_total.csv"
         else: raise ValueError('data 파라미터가 범위를 벗어남.')
         
         # CSV 읽기

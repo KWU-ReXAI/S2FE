@@ -40,11 +40,11 @@ def get_rows_by_date_range(code: str, start_date_str: str, end_date_str: str, da
 	# 실제 존재하는 파일 경로를 찾기
 	file_path = None
 	if data == 0:
-		file_path = "./preprocessed_data/llm/predict_video/predict.csv"
+		file_path = "./preprocessed_data/llm/predict_total/predict_video.csv"
 	elif data == 1:
-		file_path = "./preprocessed_data/llm/predict_text/predict.csv"
+		file_path = "./preprocessed_data/llm/predict_total/predict_text.csv"
 	elif data == 2:
-		file_path = "./preprocessed_data/llm/predict_mix/predict.csv"
+		file_path = "./preprocessed_data/llm/predict_total/predict_total.csv"
 	else:
 		raise ValueError('data 파라미터가 범위를 벗어남.')
 
@@ -115,14 +115,14 @@ def LLM_accuracy(code, start_date, end_date, data):
 	return df_score
 
 if __name__ == '__main__':
-	for idx, data in enumerate(tqdm(['video', 'text', 'mix'], desc="데이터 별 진행상황")):
+	for idx, data in enumerate(tqdm(['video', 'text', 'total'], desc="데이터 별 진행상황")):
 		fpath = f"./preprocessed_data/llm/confusion_matrix_0701/{data}"
 		os.makedirs(fpath, exist_ok=True)
 
 		df = pd.DataFrame(columns=[
 			"date", "code", "score", "return"
 		])
-		df_code = pd.read_csv(f"./preprocessed_data/llm/predict_{data}/predict.csv", encoding='utf-8-sig')
+		df_code = pd.read_csv(f"./preprocessed_data/llm/predict_total/predict_{data}.csv", encoding='utf-8-sig')
 		code_list = df_code['code'].unique().tolist()
 		for code in tqdm(code_list, desc="코드별 진행상황"):
 			dates = ['2020_Q4', '2021_Q1', '2021_Q2', '2021_Q3', '2021_Q4',

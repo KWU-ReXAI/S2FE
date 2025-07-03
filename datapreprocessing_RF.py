@@ -194,6 +194,20 @@ if True:
                 final_feature_dfs.append(df_shifted)
 
             df_final_features = pd.concat(final_feature_dfs, axis=1)
+            # 4-1. Lagged Feature 생성
+            """final_feature_dfs = []
+            for i in range(1, 5):
+                df_shifted = df_data[feature_cols].shift(i)
+                df_shifted.columns = [f"{col}_lag{i}" for col in feature_cols]
+                final_feature_dfs.append(df_shifted)
+            df_final_features = pd.concat(final_feature_dfs, axis=1)"""
+
+            # 4-2. 컬럼 순서 재정렬 (원본 특징별로 그룹화)
+            sorted_columns = []
+            for base_col in feature_cols:
+                for i in range(1, 5):
+                    sorted_columns.append(f"{base_col}_lag{i}")
+            df_final_features = df_final_features[sorted_columns]
 
             df_data_with_features = pd.concat([
                 df_data[['code', 'name', 'sector', 'year', 'quarter']],
@@ -223,11 +237,12 @@ if True:
 
         # 불필요한 공시일 컬럼 제거
         df_processing_data.drop(columns=['disclosure_date'], inplace=True)
+        df_processing_data.rename(columns={'code': 'Code'}, inplace=True)
 
         cols = df_processing_data.columns.tolist()  # 현재 컬럼 리스트를 가져옵니다.
-        cols.remove('code')  # 'code' 컬럼을 리스트에서 제거합니다.
+        cols.remove('Code')  # 'code' 컬럼을 리스트에서 제거합니다.
         label_index = cols.index('Label')  # 'Label' 컬럼의 위치를 찾습니다.
-        cols.insert(label_index + 1, 'code')  # 'Label' 컬럼 바로 다음에 'code'를 삽입합니다.
+        cols.insert(label_index + 1, 'Code')  # 'Label' 컬럼 바로 다음에 'code'를 삽입합니다.
         df_processing_data = df_processing_data[cols]
 
         # 최종 결과물 저장
@@ -236,6 +251,7 @@ if True:
             os.mkdir(save_path)
 
         # 분기별로 나누어 저장
+
         df_processed_data = df_processing_data.copy()
         start_year, start_quarter = 2015, 4
         end_year, end_quarter = 2024, 3
@@ -250,8 +266,8 @@ if True:
                 ]
 
             if not df_date_filtered.empty:
-                df_date_filtered = df_date_filtered.sort_values(by="code").reset_index(drop=True)
-                df_date_filtered.to_csv(f"{save_path}/{year}_{quarter_str}.csv", index=False, encoding='utf-8-sig')
+                df_date_filtered = df_date_filtered.sort_values(by="Code").reset_index(drop=True)
+                df_date_filtered.to_csv(f"{save_path}/{year}_{quarter_str}.csv", index=[0], encoding='utf-8-sig')
 
             if year == end_year and quarter_num == end_quarter:
                 break

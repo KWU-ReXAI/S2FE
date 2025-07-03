@@ -5,6 +5,7 @@ import warnings
 import matplotlib.pyplot as plt
 from datamanager import DataManager
 from model import MyModel
+from model_RF import RF_Model
 from tqdm import tqdm
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -75,25 +76,29 @@ for trainNum in range(0, args.testNum):
         print(f"\nTrain Phase of Model {args.ensemble} {trainNum+1}: {phase}")
         if os.path.isdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}") == False:
             os.mkdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}")
-        mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
+        if args.ensemble == "S3CE" or args.ensemble == "agg3":
+            mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
                           args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden)
+        elif args.ensemble == "RF":
+            mymodel = RF_Model(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
+                          args.final_stock_k, phase, args.ensemble,device)
 
         if args.ensemble == "buyhold":
             cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest_BuyHold(verbose=True, withValidation=not args.Validation)
 
         else:
             if args.use_all == "All":
-                mymodel.trainALLSectorModels(withValidation=not args.Validation)
+                mymodel.trainALLSectorModels(withValidation=not args.Validation,model=args.ensemble)
             elif args.use_all == "Sector":
-                mymodel.trainClusterModels(withValidation=not args.Validation)
+                mymodel.trainClusterModels(withValidation=not args.Validation,model=args.ensemble)
             else:
-                mymodel.trainALLSectorModels(withValidation=not args.Validation)
-                mymodel.trainClusterModels(withValidation=not args.Validation)
+                mymodel.trainALLSectorModels(withValidation=not args.Validation,model=args.ensemble)
+                mymodel.trainClusterModels(withValidation=not args.Validation,model=args.ensemble)
             cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.agg,
                                                                                 inter_n=args.inter_n,
                                                                                 use_all=args.use_all,
                                                                                 withValidation=not args.Validation,
-                                                                                isTest=False, dir=dir)
+                                                                                isTest=False, dir=dir,model=args.ensemble)
 
         result[phase] = {
             "CAGR": cagr,

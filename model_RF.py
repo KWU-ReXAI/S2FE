@@ -29,7 +29,7 @@ class AggregationModel:
         self.rf = RandomForestRegressor(
         n_estimators=200,    # 200개의 트리 사용 [cite: 1034]
         max_depth=10,        # 최대 깊이를 10으로 제한 [cite: 1049]
-        random_state=42,     # 결과 재현을 위한 시드 고정
+        #random_state=42,     # 결과 재현을 위한 시드 고정
         n_jobs=-1            # 모든 CPU 코어 사용
     )
         self.device = device
@@ -43,11 +43,11 @@ class AggregationModel:
 
         return pred_rf
 
-class MyModel(nn.Module):
+class RF_Model(nn.Module):
     def __init__(self, feature_n, valid_stock_k, valid_sector_k, each_sector_stock_k, final_stock_k, phase, device,
                  ensemble="S3CE", clustering=False, cluster_n=5, epochs_MLP = 300, epochs_anfis = 100, lr_MLP = 0.0001, lr_anfis = 0.01, hidden = 128):
         # 클래스 초기화
-        super(MyModel, self).__init__()
+        super(RF_Model, self).__init__()
         self.feature_n = feature_n  # 사용할 재무 feature 개수
         self.valid_stock_k = valid_stock_k  # 검증 데이터에서 선택할 주식 수
         self.valid_sector_k = valid_sector_k  # 검증 데이터에서 선택할 섹터 수
@@ -55,15 +55,6 @@ class MyModel(nn.Module):
         self.final_stock_k = final_stock_k  # 최종적으로 선택할 주식 수
         self.phase = phase  # 특정 실험의 데이터 기간
         self.ensemble = ensemble  # 사용할 앙상블 기법(MLP, RF, Aggregation 등)
-        self.clustering = clustering  # 섹터 군집화 활성화 여부
-
-        self.epochs_MLP = epochs_MLP  # MLP 학습 epoch
-        self.lr_MLP = lr_MLP  # 0.001
-        self.hidden = hidden  # MLP 은닉층 크기
-
-        self.epochs_anfis = epochs_anfis
-        self.lr_anfis = lr_anfis
-        self.n_rules = 10
 
         self.device = device
 
@@ -143,13 +134,6 @@ class MyModel(nn.Module):
             _, _, all_data = self.DM.data_phase("ALL", self.phase)
             all_symbol = pd.read_csv(f"./data_kr/symbol.csv")  # 전체 섹터 데이터 가져옴
 
-        for sector in self.cluster_list:  # 저장된 상위 섹터별 데이터를 로드
-            _, _, data_tmp = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
-            test_data[sector] = data_tmp
-
-            symbol_index = pd.read_csv(f"./preprocessed_data/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
-            symbols[sector] = symbol_index["Code"]
-
         ## 백테스팅 진행
         pf_mem = []  # 각 날짜별 포트폴리오 수익률 기록
         pf_mem_ks = []
@@ -171,7 +155,14 @@ class MyModel(nn.Module):
             stocks = pd.Series()  # 모든 섹터에서 선택된 주식을 저장
             real_last_topK_stock = []  # 최종적으로 선택된 상위 주식 저장
 
-            top_all = pd.Series(self.all_sector_model.predict(all_data[i, :, :-1]),all_symbol["code"]).sort_values(ascending=False)
+            top_all = pd.Series(self.all_sector_model.predict(all_data[i, :, :-1]),
+                                index=all_symbol["code"]).sort_values(ascending=False)
+
+            # 2. ## 수정된 부분 ##: 예측값이 0보다 큰 종목만 선택 (Long 포지션)
+            long_position_stocks = top_all[top_all > 0]
+
+            # 3. 선택된 종목의 코드(index)를 최종 포트폴리오 리스트에 추가
+            real_last_topK_stock.extend(long_position_stocks.index.to_list())
             real_last_topK_stock.extend(top_all.to_list())
 
             clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)

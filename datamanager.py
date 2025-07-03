@@ -79,6 +79,8 @@ class DataManager:
 
         if model=="S3CE":target_folder = f"./preprocessed_data"
         else: target_folder = f"./preprocessed_data_{model}"
+
+        print(f"Get Data of {model}")
         if isall:
             train_data = pd.DataFrame()
             valid_data = pd.DataFrame()
@@ -167,6 +169,8 @@ class DataManager:
 
         for pno in range(train_start, valid_start):
             strdate = self.pno2date(pno)  # 예: "2015_Q1"
+            if model == "RF":
+                if strdate == "2016_Q1" or strdate == "2016_Q2" or strdate == "2016_Q3": continue
             fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv",index_col=[0])
             fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
             train_data.append(fs_data)

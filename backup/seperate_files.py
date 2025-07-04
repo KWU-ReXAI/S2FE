@@ -700,13 +700,13 @@ def plot_kospi200_chart(csv_path: str):
         # 3. x축 눈금 및 레이블 설정
         years = range(2015, 2025)
         xticks = [pd.Timestamp(f'{year}-10-01') for year in years]
-        xtick_labels = [f'{year}_Q4' for year in years]
+        xtick_labels = [f'{year-2000}/10' for year in years]
         ax.set_xticks(xticks)
-        ax.set_xticklabels(xtick_labels, rotation=45, ha='center')
+        ax.set_xticklabels(xtick_labels, ha='center',fontsize=8)
 
         # 4. x축 범위 명시적 설정
         ax.set_xlim(pd.Timestamp(start_date), pd.Timestamp(end_date))
-        ax.set_ylim(200,450)
+        ax.set_ylim(160,450)
 
         # 5. 그래프 스타일 및 정보 추가
         #ax.set_title('KOSPI 200 지수 (2015_Q4 - 2024_Q4)', fontsize=18, fontweight='bold', pad=20)
@@ -730,9 +730,9 @@ def plot_kospi200_chart(csv_path: str):
         ax.axvspan('2023-10-01', '2024-10-01', facecolor='lightpink', alpha=0.3, edgecolor='black', linewidth=3,
                    zorder=-1)
         # y축 400~450 & x축 2016-10-01 ~ 2020-10-01 영역을 투명 회색으로 표시
-        ax.fill_between([pd.to_datetime('2016-01-01'), pd.to_datetime('2020-10-01')], 400, 450, color='lightgray', alpha=1,
+        ax.fill_between([pd.to_datetime('2015-10-01'), pd.to_datetime('2020-10-01')], 400, 450, color='lightgray', alpha=1,
                         zorder=-3.5)
-        ax.fill_between([pd.to_datetime('2017-01-01'), pd.to_datetime('2021-10-01')], 350, 400, color='lightgray', alpha=1,
+        ax.fill_between([pd.to_datetime('2016-10-01'), pd.to_datetime('2021-10-01')], 350, 400, color='lightgray', alpha=1,
                         zorder=-2.5)
         #ax.fill_between([pd.to_datetime('2018-10-01'), pd.to_datetime('2022-10-01')], 300, 350, color='lightgray', alpha=1,zorder=-1.5)
         #ax.fill_between([pd.to_datetime('2019-10-01'), pd.to_datetime('2023-10-01')], 250, 300, color='lightgray', alpha=1,zorder=-0.5)

@@ -307,39 +307,17 @@ class MyModel(nn.Module):
             if use_all == "Sector" or use_all == "SectorAll":  # SectorAll or Sector일 경우
                 for sector in self.cluster_list:  # 선택된 섹터별로 종목을 추천
 
-
-                    if self.ensemble == "MLP":
-                        topK = pd.Series(self.sector_models[sector](torch.Tensor(test_data[sector][i, :, :-1]).to(
-                            self.device)).cpu().detach().numpy().squeeze(), symbols[sector]).sort_values(
-                            ascending=False)
-
-                    elif self.ensemble == "RF":
-                        topK = pd.Series(self.sector_models[sector].predict(test_data[sector][i, :, :-1]),
-                                         symbols[sector]).sort_values(ascending=False)
-
-                    else:
-                        model = self.sector_models[sector]
-                        topK = model.predict(torch.Tensor(test_data[sector]).to(self.device)[i, :, :-1],
-                                             symbols[sector])
+                    model = self.sector_models[sector]
+                    topK = model.predict(torch.Tensor(test_data[sector]).to(self.device)[i, :, :-1],
+                                         symbols[sector])
 
                     if use_all == "SectorAll":
-                        if self.ensemble == "MLP":
-                            if not isinstance(all_data, torch.Tensor):
-                                all_data = torch.Tensor(all_data).to(self.device)
-                            top_all = pd.Series(
-                                self.all_sector_model(all_data[i, :, :-1]).cpu().detach().numpy().squeeze(),
-                                all_symbol["code"]).sort_values(ascending=False)
+                        self.all_sector_model.anfis = self.all_sector_model.anfis.type(torch.float64)
+                        model = self.all_sector_model
+                        if not isinstance(all_data, torch.Tensor):
+                            all_data = torch.Tensor(all_data).to(self.device)
+                        top_all = model.predict(all_data[i, :, :-1], all_symbol["code"])
 
-                        elif self.ensemble == "RF":
-                            top_all = pd.Series(self.all_sector_model.predict(all_data[i, :, :-1]),
-                                                all_symbol["code"]).sort_values(ascending=False)
-
-                        else:
-                            self.all_sector_model.anfis = self.all_sector_model.anfis.type(torch.float64)
-                            model = self.all_sector_model
-                            if not isinstance(all_data, torch.Tensor):
-                                all_data = torch.Tensor(all_data).to(self.device)
-                            top_all = model.predict(all_data[i, :, :-1], all_symbol["code"])
 
                         inter_symbol = top_all.index.intersection(topK.index)  # 각 섹터의 모델 예측값과 전체 섹터 모델의 예측값을 조합
 

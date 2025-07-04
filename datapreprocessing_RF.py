@@ -19,8 +19,6 @@ import argparse
 from feature_selection import *
 from dimensionality_reduction import *
 
-
-# --- BHAR 계산 함수 정의 ---
 def calculate_bhar(row, stock_prices, market_prices):
     """
     한 행의 데이터(종목코드, 공시일)를 받아 BHAR을 계산합니다.
@@ -50,7 +48,7 @@ def calculate_bhar(row, stock_prices, market_prices):
         # 누적 수익률 계산 (1 + 일일수익률)의 곱
         # 첫 날의 pct_change는 NaN이므로 0으로 처리
         stock_comp_return = (1 + stock_period['종가'].pct_change().fillna(0)).prod()
-        market_comp_return = (1 + market_prices['종가'].pct_change().fillna(0)).prod()
+        market_comp_return = (1 + market_period['종가'].pct_change().fillna(0)).prod()
 
         # BHAR = 개별주식 누적수익률 - 시장 누적수익률
         bhar = stock_comp_return - market_comp_return
@@ -171,10 +169,41 @@ if True:
             )
 
             # 3. 정규화
+            # 총자산으로 정규화할 대차대조표 항목 리스트
+            balance_sheet_cols = [
+                '유동자산',
+                '비유동자산',
+                '유동부채',
+                '비유동부채',
+                '부채총계',
+                '이익잉여금',
+                '자본총계',
+                '자본금',
+                '파생상품자산',
+                '파생상품부채',
+                '당기손익-공정가치측정금융자산',
+                '기타포괄손익-공정가치측정금융자산',
+                '차입부채',
+                '상각후원가측정금융자산'
+            ]
+
+            # 총매출로 정규화할 손익계산서 및 현금흐름표 항목 리스트
+            income_cashflow_cols = [
+                '영업이익',
+                '법인세차감전 순이익',
+                '당기순이익',
+                '당기순이익(손실)',
+                '총포괄손익',
+                '파생상품관련손익',
+                '영업비용',
+                '이자수익',
+                '이자비용',
+                '금융상품관련순손익'
+            ]
+
+            # 정규화 기준 변수 (이 변수들은 나누는 값으로 사용됨)
             ASSET_COL = '자산총계'
             SALES_COL = '매출액'
-            balance_sheet_cols = ['유동자산', '부채총계', '자본총계']
-            income_cashflow_cols = ['영업이익', '당기순이익', '영업활동현금흐름']
 
             if ASSET_COL in df_data.columns and SALES_COL in df_data.columns:
                 for col in balance_sheet_cols:
@@ -184,28 +213,22 @@ if True:
                 df_data.replace([np.inf, -np.inf], np.nan, inplace=True)
                 df_data.fillna(0, inplace=True)
 
+            df_data.drop([ASSET_COL, SALES_COL], axis=1, inplace=True)
             # 4. 롤링 윈도우 특징 생성
             feature_cols = [col for col in df_data.columns if
                             col not in ['code', 'name', 'sector', 'year', 'quarter', 'disclosure_date']]
             final_feature_dfs = []
-            for i in range(1, 5):
+            for i in range(0, 4):
                 df_shifted = df_data[feature_cols].shift(i)
                 df_shifted.columns = [f"{col}_lag{i}" for col in feature_cols]
                 final_feature_dfs.append(df_shifted)
 
             df_final_features = pd.concat(final_feature_dfs, axis=1)
-            # 4-1. Lagged Feature 생성
-            """final_feature_dfs = []
-            for i in range(1, 5):
-                df_shifted = df_data[feature_cols].shift(i)
-                df_shifted.columns = [f"{col}_lag{i}" for col in feature_cols]
-                final_feature_dfs.append(df_shifted)
-            df_final_features = pd.concat(final_feature_dfs, axis=1)"""
 
             # 4-2. 컬럼 순서 재정렬 (원본 특징별로 그룹화)
             sorted_columns = []
             for base_col in feature_cols:
-                for i in range(1, 5):
+                for i in range(0, 4):
                     sorted_columns.append(f"{base_col}_lag{i}")
             df_final_features = df_final_features[sorted_columns]
 

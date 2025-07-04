@@ -25,6 +25,7 @@ parser.add_argument('--financial',type=bool,nargs='?',default=False)
 parser.add_argument('--public',type=bool,nargs='?',default=False)
 parser.add_argument('--macroeconomic',type=bool,nargs='?',default=False)
 parser.add_argument('--use_all',type=bool,nargs='?',default=False)
+parser.add_argument('--n_features_t',type=bool,nargs='?',default=6)
 args = parser.parse_args()
 
 ks200_price = pd.read_csv("./data_kr/price/KS200.csv")
@@ -34,7 +35,7 @@ df_col_m = {}
 
 impute = SoftImpute(verbose=False)
 
-n_features_t = 6
+n_features_t = args.n_features_t
 
 def add_prefix_to_columns(df, prefix, exclude_cols=None):
     if exclude_cols is None:

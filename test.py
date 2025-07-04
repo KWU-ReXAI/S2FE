@@ -32,7 +32,7 @@ cluster_n = 5
 
 DM = DataManager(features_n=6,cluster_n=cluster_n) # 특징 개수 4개로 설정하여 데이터 매니저 초기화
 DM.create_date_list()
-device = torch.device('cpu')
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Impute = "SoftImpute"
 phase_list = DM.phase_list.keys()
 new_data = [{"Parameter": "inter_n", "Value": args.inter_n},{"Parameter": "aggregate", "Value": args.agg},

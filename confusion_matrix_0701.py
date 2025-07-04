@@ -92,9 +92,11 @@ def LLM_accuracy(code, start_date, end_date, data):
 
 		chunk.reset_index(drop=True, inplace=True)
 
-		chunk["score"] *= (chunk.index + 1) #가중치 넣음! 우선 임의로
+		total_period_days = (upload_end - upload_start).days
+		# 'Series' 전체에 .days를 적용할 수 없으므로 .dt 접근자 사용
+		chunk["score"] *= ((chunk['upload_dt'] - upload_start).dt.days + 1) / total_period_days
 		score_sum = chunk["score"].sum()
-		threshold = 2
+		threshold = 0.3
 		score = 1 if score_sum >= threshold else -1
 		df_score.loc[len(df_score)] = [
 			trade_date, code, score, None
@@ -157,11 +159,11 @@ if __name__ == '__main__':
 
 		# 시각화
 		plt.figure(figsize=(8, 6))
-		labels = ['주가 상승', '주가 하락']
+		labels = ['상승', '하락']
 		sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels)
-		plt.title('LLM 예측 결과 Confusion Matrix', fontsize=16)
+		plt.title(f'{data} Accuracy Confusion Matrix', fontsize=16)
 		plt.xlabel('Predicted', fontsize=12)
-		plt.ylabel('Actual', fontsize=12)
+		plt.ylabel('Label', fontsize=12)
 		plt.savefig(f"{fpath}/confusion_matrix_{data}.png")
 
 		# 3. 결과 분석 및 DataFrame 생성

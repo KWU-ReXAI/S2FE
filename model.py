@@ -292,7 +292,9 @@ class MyModel(nn.Module):
                 chunk = df_now.loc[(upload_start <= df_now['upload_dt']) & (df_now['upload_dt'] <= upload_end)].copy()
 
                 chunk.reset_index(drop=True, inplace=True)
-                chunk["score"] *= (chunk.index + 1) #가중치 넣음! 우선 임의로
+                total_period_days = (upload_end - upload_start).days
+                # 'Series' 전체에 .days를 적용할 수 없으므로 .dt 접근자 사용
+                chunk["score"] *= ((chunk['upload_dt'] - upload_start).dt.days + 1) / total_period_days
 
                 # score 합계 및 code 추출
                 score_sum = chunk["score"].sum()
@@ -303,7 +305,7 @@ class MyModel(nn.Module):
                     code_val, score_sum
                 ]
             ### threshold는 상의 후 결정하기
-            threshold = 2
+            threshold = 0.3
 
             if data != 3:
                 # 종목 거르기 및 걸러진 종목 저장

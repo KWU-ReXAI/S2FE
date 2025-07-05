@@ -28,7 +28,7 @@ def sweep():
 		subprocess.run(f"python datapreprocessing.py --use_all True --isall True --n_features_t {config.n_features_t}", shell=True)
 		subprocess.run(f"python datapreprocessing.py --use_all True --isall cluster --n_features_t {config.n_features_t}", shell=True)
 		subprocess.run(f"python clustering.py", shell=True)
-		subprocess.run(f"python datapreprocessing.py --use_all False --isall False", shell=True)
+		subprocess.run(f"python datapreprocessing.py --use_all True --isall False", shell=True)
 		subprocess.run(f"python train.py --testNum 20", shell=True)
 		subprocess.run(f"python test.py --testNum 20", shell=True)
   

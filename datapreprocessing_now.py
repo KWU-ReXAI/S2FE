@@ -37,6 +37,8 @@ impute = SoftImpute(verbose=False)
 
 n_features_t = args.n_features_t
 
+
+
 def add_prefix_to_columns(df, prefix, exclude_cols=None):
     if exclude_cols is None:
         exclude_cols = []
@@ -449,6 +451,7 @@ if args.isall == "False":
                  ],
                 axis=1)
         else:
+            df_processing_data.to_csv(f"./analysis/df_data_cluster_{cluster_index}_now.csv", index=False, encoding='utf-8-sig')
             remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
             df_processing_data.drop(columns=remove_features, inplace=True)
             vif_data.to_csv(f"{save_folder}/cluster_{cluster_index}/vif_data.csv", index=False, encoding='utf-8-sig')
@@ -469,6 +472,9 @@ if args.isall == "False":
                  df_processing_data.iloc[:, -2:]
                  ],
                 axis=1)
+
+        df_processed_data.to_csv(f"./analysis/df_data_cluster_{cluster_index}_now.csv", index=False,
+                                  encoding='utf-8-sig')
 
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|P_)', '', regex=True)
 
@@ -723,6 +729,7 @@ elif args.isall == "cluster":
                  ],
                 axis=1)
         else:
+            df_processing_data.to_csv(f"./analysis/df_data_{sector_list[0]}_now.csv", index=False, encoding='utf-8-sig')
             remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
             df_processing_data.drop(columns=remove_features, inplace=True)
             vif_data.to_csv(f"{save_folder}/{sector_list[0]}/vif_data.csv", index=False, encoding='utf-8-sig')
@@ -742,9 +749,7 @@ elif args.isall == "cluster":
                  ],
                 axis=1)
 
-
-
-
+        df_processed_data.to_csv(f"./analysis/df_data_{sector_list[0]}_now.csv", index=False, encoding='utf-8-sig')
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|P_)', '', regex=True)
 
         start_year = 2015
@@ -992,6 +997,7 @@ elif args.isall == "True":
                 axis=1)
 
         else:
+            df_processing_data.to_csv(f"./analysis/df_data_All_now.csv", index=False, encoding='utf-8-sig')
             remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
             df_processing_data.drop(columns=remove_features, inplace=True)
             vif_data.to_csv(f"{save_folder}/ALL/vif_data.csv", index=False, encoding='utf-8-sig')

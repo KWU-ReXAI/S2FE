@@ -398,6 +398,9 @@ if args.isall == "False":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
+        df_processing_data.to_csv(f"./analysis/df_data_cluster_{cluster_index}.csv", index=False,
+                                  encoding='utf-8-sig')
+
         remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
         df_processing_data.drop(columns=remove_features, inplace=True)
         vif_data.to_csv(f"{save_folder}/cluster_{cluster_index}/vif_data.csv", index=False, encoding='utf-8-sig')
@@ -418,6 +421,8 @@ if args.isall == "False":
              df_processing_data.iloc[:, -2:]
              ],
             axis=1)
+        df_processed_data.to_csv(f"./analysis/df_data_cluster_{cluster_index}.csv", index=False,
+                                  encoding='utf-8-sig')
 
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|P_)', '', regex=True)
 
@@ -624,6 +629,7 @@ elif args.isall == "cluster":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
+        df_processing_data.to_csv(f"./analysis/df_data_{sector_list[0]}.csv",index=False,encoding='utf-8-sig')
         remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
         df_processing_data.drop(columns=remove_features, inplace=True)
         vif_data.to_csv(f"{save_folder}/{sector_list[0]}/vif_data.csv", index=False, encoding='utf-8-sig')
@@ -643,6 +649,9 @@ elif args.isall == "cluster":
              df_processing_data.iloc[:, -2:]
              ],
             axis=1)
+
+        df_processed_data.to_csv(f"./analysis/df_data_{sector_list[0]}.csv", index=False,
+                                 encoding='utf-8-sig')
 
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|P_)', '', regex=True)
 
@@ -846,6 +855,8 @@ elif args.isall == "True":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
+        df_processing_data.to_csv(f"./analysis/df_data_All.csv", index=False, encoding='utf-8-sig')
+
         remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
         df_processing_data.drop(columns=remove_features, inplace=True)
         vif_data.to_csv(f"{save_folder}/ALL/vif_data.csv", index=False, encoding='utf-8-sig')
@@ -855,7 +866,7 @@ elif args.isall == "True":
         print("Using Backward Elimination for feature selection")
         selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3],
                                                  df_processing_data["Label"], n_features_t)
-        selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
+        selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", encoding='utf-8-sig')
 
         df_processed_data = pd.concat(
             [df_processing_data.iloc[:, 1:5],

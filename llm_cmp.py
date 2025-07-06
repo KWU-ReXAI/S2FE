@@ -46,7 +46,7 @@ quarters_path = "./data_kr/date_regression/"
 price_path = "./data_kr/price/"
 quarters = sorted(os.listdir(quarters_path))
 
-os.makedirs("./preprocessed_data/llm_cmp_result", exist_ok=True)
+os.makedirs("preprocessed_data_Financial/llm_cmp_result", exist_ok=True)
 
 #  산업별 반복
 for sector_name, llm_path in llm_paths.items():

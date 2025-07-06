@@ -750,5 +750,76 @@ def plot_kospi200_chart(csv_path: str):
         print(f"오류가 발생했습니다: {e}")
 
 
+import pandas as pd
+import glob
+import os
 
-plot_kospi200_chart('../data_kr/price/KS200.csv')
+
+def analyze_merged_csv(folder_path):
+    """
+    지정된 폴더의 모든 CSV 파일을 세로로 병합하고, 열 목록을 출력합니다.
+    이후 결측치가 50%가 넘는 열과 해당 열의 결측치 개수를 출력합니다.
+
+    Args:
+        folder_path (str): CSV 파일들이 위치한 폴더의 경로입니다.
+                           예: './data_kr/merged/'
+    """
+    # 1. 폴더 경로를 사용하여 모든 CSV 파일의 전체 경로를 리스트로 가져옵니다.
+    all_csv_files = glob.glob(os.path.join(folder_path, "*.csv"))
+
+    if not all_csv_files:
+        print(f"'{folder_path}' 폴더에서 CSV 파일을 찾을 수 없습니다. 🤷")
+        return
+
+    # 2. 찾은 모든 CSV 파일을 순서대로 읽어 데이터프레임 리스트를 만듭니다.
+    df_list = [pd.read_csv(file) for file in all_csv_files]
+    print(f"총 {len(df_list)}개의 CSV 파일을 찾았습니다.")
+
+    # 3. 데이터프레임들을 세로 방향(axis=0)으로 모두 합칩니다.
+    # ignore_index=True는 기존 파일들의 인덱스를 무시하고 새로 인덱스를 부여합니다.
+    merged_df = pd.concat(df_list, axis=0, ignore_index=True)
+    print("✅ 모든 CSV 파일을 성공적으로 병합했습니다!")
+
+    print("-" * 50)  # 구분을 위한 라인
+
+    # 4. 병합된 데이터프레임의 전체 열 목록을 출력합니다.
+    print("📋 병합 후 전체 열 목록입니다:")
+    print(merged_df.columns.tolist())
+
+    print("-" * 50)  # 구분을 위한 라인
+
+    # 5. 결측치가 50%가 넘는 열을 찾아 결측치 정보와 함께 출력합니다.
+    print("🔍 결측치가 50% 이상인 열 목록입니다:")
+
+    # 전체 행의 개수를 구합니다.
+    total_rows = len(merged_df)
+    # 각 열의 결측치 개수를 계산합니다.
+    missing_values = merged_df.isnull().sum()
+
+    # 결측치가 50%를 넘는 열이 있는지 확인하기 위한 플래그
+    found_missing_columns = False
+
+    for column_name, missing_count in missing_values.items():
+        if missing_count == 0:
+            continue
+
+        # 결측치 비율을 계산합니다.
+        missing_percentage = (missing_count / total_rows) * 100
+
+        # 비율이 50%를 초과하는 경우 해당 열의 정보를 출력합니다.
+        if missing_percentage > 50:
+            print(f"  - 열 이름: '{column_name}'")
+            print(f"    - 결측치 개수: {missing_count}개")
+            print(f"    - 결측치 비율: {missing_percentage:.2f}%")
+            found_missing_columns = True
+
+    if not found_missing_columns:
+        print("결측치가 50% 이상인 열이 없습니다. ✨")
+
+
+# --- 함수 실행 ---
+# 아래 변수에 분석하고 싶은 CSV 파일들이 있는 폴더 경로를 지정해주세요.
+TARGET_FOLDER_PATH = './data_kr/merged/'
+
+# 함수를 호출하여 분석을 시작합니다.
+analyze_merged_csv(TARGET_FOLDER_PATH)

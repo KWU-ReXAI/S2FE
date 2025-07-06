@@ -1,1 +1,0 @@
-삼성SDS는 12일 ‘리얼서밋(REAL Summit) 2023’에서 지적 작업을 자동화하는 솔루션 ‘브리티 코파일럿(Brity Copilot)’, 클라우드 시스템에 생성형 AI 결합을 가속화(Accelerator)하는 플랫폼

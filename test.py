@@ -62,17 +62,18 @@ test_dir = f"./result/{folder_name}/{args.test_dir}"
 use_all_list =["All","Sector","SectorAll"] # 모델 평가 방식
 all_results={}
 for K in range(1,args.testNum+1): # 한번만 실행
-    print(f"\nTest for Train_Model_{K}")
-    list_num_stocks = [] # 각 실험에서 선택된 주식 개수를 저장할 리스트
-    for m in range(2,3): # 20번 실행
+    list_num_stocks = []
+    for m in range(2,3):
         result = {} # 백테스팅 결과를 저장할 딕셔너리
         result_ks = {}
         num_stocks = [] # 각 phase에서 선택된 주식 개수를 저장하는 리스트
         for phase in tqdm(phase_list): # 각 phase 별 진행상태를 시각적으로 출력
+            print(f"\nTest for Train_Model_{K}_{phase}: {dir}{args.train_dir}_{K}/train_result_model_{K}_{phase}/model.joblib")
             model = joblib.load(f"{dir}/{args.train_dir}_{K}/train_result_model_{K}_{phase}/model.joblib")  # 저장된 모델 불러옴
             if args.ensemble ==  "buyhold":
                 cagr, sharpe, mdd, num_stock_tmp,cagr_ks,sharpe_ks,mdd_ks = model.backtest_BuyHold(verbose=True,withValidation= True) # 백테스팅 실행
             else:
+                print(f"\n[START BACKTEST]: agg={args.agg}, use_all={args.use_all}, inter_n={args.inter_n}, withValidation=True, isTest=True, testNum = {K}")
                 cagr, sharpe, mdd, num_stock_tmp, cagr_ks, sharpe_ks, mdd_ks = model.backtest(verbose=True,
                                                                                               agg=args.agg,
                                                                                               use_all=args.use_all,
@@ -80,7 +81,6 @@ for K in range(1,args.testNum+1): # 한번만 실행
                                                                                               withValidation=True,
                                                                                               isTest=True, testNum=K,
                                                                                               dir=test_dir)  # 백테스팅 실행
-            # 상위 20% 주식만을 선택
             num_stocks.append(num_stock_tmp) # 선택된 주식 개수를 저장
             result[phase] = {"CAGR":cagr,"Sharpe Ratio":sharpe,"MDD":mdd} # 백테스팅 결과 저장
             result_ks[phase] = {"CAGR":cagr_ks,"Sharpe Ratio":sharpe_ks,"MDD":mdd_ks}

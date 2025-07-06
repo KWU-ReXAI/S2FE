@@ -20,11 +20,6 @@ from dimensionality_reduction import *
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--isall',type=str,nargs='?',default="False")
-parser.add_argument('--fs_rf',type=bool,nargs='?',default=False)
-parser.add_argument('--financial',type=bool,nargs='?',default=False)
-parser.add_argument('--public',type=bool,nargs='?',default=False)
-parser.add_argument('--macroeconomic',type=bool,nargs='?',default=False)
-parser.add_argument('--use_all',type=bool,nargs='?',default=False)
 parser.add_argument('--n_features_t',type=bool,nargs='?',default=6)
 args = parser.parse_args()
 
@@ -252,61 +247,35 @@ if args.isall == "False":
                 if ticker == "code":
                     continue
                 ticker_str = str(ticker).zfill(6)
-                base_df = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                cols_to_keep = ["code", "name", "sector", "year", "quarter"]
-                base_df = base_df[[col for col in cols_to_keep if col in base_df.columns]]
-                dfs_to_concat = [base_df]
-                if args.use_all or args.financial:
-                    df_financial_tmp = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                    df_financial_tmp.drop(columns=cols_to_keep, inplace=True, errors='ignore')
+                df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv")
+                df_tmp = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
+                df_kfeature_tmp = concat_k_features(ticker_str)
+                df_macro_tmp = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
+                df_macro_tmp.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
 
-                    df_financial_tmp = add_prefix_to_columns(df_financial_tmp, "F_")
-                    dfs_to_concat.append(df_financial_tmp)
+                df_tmp = add_prefix_to_columns(df_tmp, "F_",exclude_cols=["year", "quarter", "code", "name", "sector"])
+                df_kfeature_tmp = add_prefix_to_columns(df_kfeature_tmp, "P_", exclude_cols=["연도", "분기"])
+                df_macro_tmp = add_prefix_to_columns(df_macro_tmp, "M_", exclude_cols=["연도", "분기"])
 
-                if args.use_all or args.public:
-                    df_kfeature_tmp = concat_k_features(ticker_str)
-                    df_kfeature_tmp = add_prefix_to_columns(df_kfeature_tmp, "P_", exclude_cols=["연도", "분기"])
-                    dfs_to_concat.append(df_kfeature_tmp)
-
-                if args.use_all or args.macroeconomic:
-                    df_macro_tmp = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
-                    df_macro_tmp.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
-                    df_macro_tmp = add_prefix_to_columns(df_macro_tmp, "M_", exclude_cols=["연도", "분기"])
-                    dfs_to_concat.append(df_macro_tmp)
-                df_concat = pd.concat(dfs_to_concat, axis=1)
-
+                df_concat = pd.concat([df_tmp, df_macro_tmp, df_kfeature_tmp], axis=1)
                 df_sector_stocks = pd.concat([df_sector_stocks, df_concat])
 
         nan_ratio = df_sector_stocks.isna().mean()
         over_50_columns = nan_ratio[nan_ratio >= 0.5].index.to_list()
+
         for ticker in tqdm(clustered_ticker_list):
             if ticker == "code":
                 continue
             ticker_str = str(ticker).zfill(6)
-            base_df = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-            cols_to_keep = ["code", "name", "sector", "year", "quarter"]
-            base_df = base_df[[col for col in cols_to_keep if col in base_df.columns]]
-            dfs_to_concat = [base_df]
-
-            if args.use_all or args.financial:
-                # 재무 데이터는 기본 열(cols_to_keep)을 제외하고 가져와 중복을 방지합니다.
-                df_financial = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                df_financial.drop(columns=cols_to_keep, inplace=True, errors='ignore')
-                df_financial = df_financial.drop(columns=['disclosure_date'])
-                df_financial = add_prefix_to_columns(df_financial, "F_")
-                dfs_to_concat.append(df_financial)
-
-            if args.use_all or args.public:
-                df_kfeature = concat_k_features(ticker_str)
-                df_kfeature = add_prefix_to_columns(df_kfeature, "P_", exclude_cols=["연도", "분기"])
-                dfs_to_concat.append(df_kfeature)
-
-            if args.use_all or args.macroeconomic:
-                df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
-                df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
-                df_macro = add_prefix_to_columns(df_macro, "M_", exclude_cols=["연도", "분기"])
-                dfs_to_concat.append(df_macro)
-            df_data = pd.concat(dfs_to_concat, axis=1)
+            df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
+            df_kfeature = concat_k_features(ticker_str)
+            df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
+            df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+            df_data = add_prefix_to_columns(df_data, "F_", exclude_cols=["year", "quarter","code","name","sector","disclosure_date"])
+            df_data = df_data.drop(columns=['disclosure_date'])
+            df_kfeature = add_prefix_to_columns(df_kfeature, "P_", exclude_cols=["연도", "분기"])
+            df_macro = add_prefix_to_columns(df_macro, "M_", exclude_cols=["연도", "분기"])
+            df_data = pd.concat([df_data, df_macro,df_kfeature], axis=1)
 
             base_cols = ['code', 'name', 'year', 'quarter', 'sector']
             feature_cols = df_data.filter(regex="^(F_|M_|P_)").columns.tolist()
@@ -429,46 +398,26 @@ if args.isall == "False":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        if args.fs_rf:
-            rgr = RandomForestRegressor()
-            rgr.fit(df_processing_data.iloc[:, 5:-2], df_processing_data.iloc[:, -2:-1])
+        remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
+        df_processing_data.drop(columns=remove_features, inplace=True)
+        vif_data.to_csv(f"{save_folder}/cluster_{cluster_index}/vif_data.csv", index=False, encoding='utf-8-sig')
 
-            feature_importance = pd.Series(rgr.feature_importances_,
-                                           index=df_processing_data.columns[5:-2]).sort_values(
-                ascending=False)
-            feature_importance[:6].to_csv(f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
-                                     encoding='utf-8-sig')
+        df_processing_data.to_csv(f"{save_folder}/cluster_{cluster_index}/after_DR.csv", index=False,
+                                  encoding='utf-8-sig')
 
-            select_col = feature_importance.index[:6]
-            df_col[sector] = select_col
-            df_processed_data = pd.concat(
-                [df_processing_data.iloc[:, 1:5],
-                 df_processing_data.iloc[:, -3:-2],
-                 df_processing_data[select_col],
-                 df_processing_data.iloc[:, -2:]
-                 ],
-                axis=1)
-        else:
-            remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
-            df_processing_data.drop(columns=remove_features, inplace=True)
-            vif_data.to_csv(f"{save_folder}/cluster_{cluster_index}/vif_data.csv", index=False, encoding='utf-8-sig')
+        print("Using Backward Elimination for feature selection")
+        selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3],
+                                                 df_processing_data["Label"], n_features_t)
+        selected_features.to_csv(f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
+                                 encoding='utf-8-sig')
 
-            df_processing_data.to_csv(f"{save_folder}/cluster_{cluster_index}/after_DR.csv", index=False,
-                                      encoding='utf-8-sig')
-
-            print("Using Backward Elimination for feature selection")
-            selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3],
-                                                     df_processing_data["Label"], n_features_t)
-            selected_features.to_csv(f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
-                                     encoding='utf-8-sig')
-
-            df_processed_data = pd.concat(
-                [df_processing_data.iloc[:, 1:5],
-                 df_processing_data.iloc[:, -3:-2],
-                 df_processing_data[selected_features["Feature"].tolist()],
-                 df_processing_data.iloc[:, -2:]
-                 ],
-                axis=1)
+        df_processed_data = pd.concat(
+            [df_processing_data.iloc[:, 1:5],
+             df_processing_data.iloc[:, -3:-2],
+             df_processing_data[selected_features["Feature"].tolist()],
+             df_processing_data.iloc[:, -2:]
+             ],
+            axis=1)
 
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|P_)', '', regex=True)
 
@@ -518,29 +467,17 @@ elif args.isall == "cluster":
                 if ticker == "code":
                     continue
                 ticker_str = str(ticker).zfill(6)
-                base_df = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                cols_to_keep = ["code", "name", "sector","year", "quarter"]
-                base_df = base_df[[col for col in cols_to_keep if col in base_df.columns]]
-                dfs_to_concat = [base_df]
-                if args.use_all or args.financial:
-                    df_financial_tmp = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                    df_financial_tmp.drop(columns=cols_to_keep, inplace=True, errors='ignore')
+                df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv")
+                df_tmp = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
+                df_kfeature_tmp = concat_k_features(ticker_str)
+                df_macro_tmp = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
+                df_macro_tmp.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
 
-                    df_financial_tmp = add_prefix_to_columns(df_financial_tmp, "F_")
-                    dfs_to_concat.append(df_financial_tmp)
+                df_tmp = add_prefix_to_columns(df_tmp, "F_", exclude_cols=["year", "quarter", "code", "name", "sector"])
+                df_kfeature_tmp = add_prefix_to_columns(df_kfeature_tmp, "P_", exclude_cols=["연도", "분기"])
+                df_macro_tmp = add_prefix_to_columns(df_macro_tmp, "M_", exclude_cols=["연도", "분기"])
 
-                if args.use_all or args.public:
-                    df_kfeature_tmp = concat_k_features(ticker_str)
-                    df_kfeature_tmp = add_prefix_to_columns(df_kfeature_tmp, "P_", exclude_cols=["연도", "분기"])
-                    dfs_to_concat.append(df_kfeature_tmp)
-
-                if args.use_all or args.macroeconomic:
-                    df_macro_tmp = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
-                    df_macro_tmp.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
-                    df_macro_tmp = add_prefix_to_columns(df_macro_tmp, "M_", exclude_cols=["연도", "분기"])
-                    dfs_to_concat.append(df_macro_tmp)
-                df_concat = pd.concat(dfs_to_concat, axis=1)
-
+                df_concat = pd.concat([df_tmp, df_macro_tmp, df_kfeature_tmp], axis=1)
                 df_sector_stocks = pd.concat([df_sector_stocks, df_concat])
 
         nan_ratio = df_sector_stocks.isna().mean()
@@ -549,35 +486,20 @@ elif args.isall == "cluster":
             if ticker == "code":
                 continue
             ticker_str = str(ticker).zfill(6)
-            base_df = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-            cols_to_keep = ["code", "name", "sector","year", "quarter"]
-            base_df = base_df[[col for col in cols_to_keep if col in base_df.columns]]
-            dfs_to_concat = [base_df]
-
-            if args.use_all or args.financial:
-                # 재무 데이터는 기본 열(cols_to_keep)을 제외하고 가져와 중복을 방지합니다.
-                df_financial = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                df_financial.drop(columns=cols_to_keep, inplace=True, errors='ignore')
-                df_financial = df_financial.drop(columns=['disclosure_date'])
-                df_financial = add_prefix_to_columns(df_financial, "F_")
-                dfs_to_concat.append(df_financial)
-
-            if args.use_all or args.public:
-                df_kfeature = concat_k_features(ticker_str)
-                df_kfeature = add_prefix_to_columns(df_kfeature, "P_", exclude_cols=["연도", "분기"])
-                dfs_to_concat.append(df_kfeature)
-
-            if args.use_all or args.macroeconomic:
-                df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
-                df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
-                df_macro = add_prefix_to_columns(df_macro, "M_", exclude_cols=["연도", "분기"])
-                dfs_to_concat.append(df_macro)
-            df_data = pd.concat(dfs_to_concat, axis=1)
+            df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
+            df_kfeature = concat_k_features(ticker_str)
+            df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
+            df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+            df_data = add_prefix_to_columns(df_data, "F_", exclude_cols=["year", "quarter", "code", "name", "sector",
+                                                                         "disclosure_date"])
+            df_data = df_data.drop(columns=['disclosure_date'])
+            df_kfeature = add_prefix_to_columns(df_kfeature, "P_", exclude_cols=["연도", "분기"])
+            df_macro = add_prefix_to_columns(df_macro, "M_", exclude_cols=["연도", "분기"])
+            df_data = pd.concat([df_data, df_macro, df_kfeature], axis=1)
 
             base_cols = ['code', 'name', 'year', 'quarter', 'sector']
             feature_cols = df_data.filter(regex="^(F_|M_|P_)").columns.tolist()
             final_cols = base_cols + feature_cols
-
 
             df_data.drop(over_50_columns, axis=1, inplace=True, errors="ignore")
             ###
@@ -702,47 +624,25 @@ elif args.isall == "cluster":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        if args.fs_rf:
-            rgr = RandomForestRegressor()
-            rgr.fit(df_processing_data.iloc[:, 5:-2], df_processing_data.iloc[:, -2:-1])
+        remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
+        df_processing_data.drop(columns=remove_features, inplace=True)
+        vif_data.to_csv(f"{save_folder}/{sector_list[0]}/vif_data.csv", index=False, encoding='utf-8-sig')
 
-            feature_importance = pd.Series(rgr.feature_importances_,
-                                           index=df_processing_data.columns[5:-2]).sort_values(
-                ascending=False)
-            feature_importance[:6].to_csv(f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
-                                     encoding='utf-8-sig')
+        df_processing_data.to_csv(f"{save_folder}/{sector_list[0]}/after_DR.csv", index=False, encoding='utf-8-sig')
 
-            select_col = feature_importance.index[:6]
-            df_col[sector] = select_col
-            df_processed_data = pd.concat(
-                [df_processing_data.iloc[:, 1:5],
-                 df_processing_data.iloc[:, -3:-2],
-                 df_processing_data[select_col],
-                 df_processing_data.iloc[:, -2:]
-                 ],
-                axis=1)
-        else:
-            remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
-            df_processing_data.drop(columns=remove_features, inplace=True)
-            vif_data.to_csv(f"{save_folder}/{sector_list[0]}/vif_data.csv", index=False, encoding='utf-8-sig')
+        print("Using Backward Elimination for feature selection")
+        selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
+                                                 n_features_t)
+        selected_features.to_csv(f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
+                                 encoding='utf-8-sig')
 
-            df_processing_data.to_csv(f"{save_folder}/{sector_list[0]}/after_DR.csv", index=False, encoding='utf-8-sig')
-
-            print("Using Backward Elimination for feature selection")
-            selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
-                                                     n_features_t)
-            selected_features.to_csv(f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
-                                     encoding='utf-8-sig')
-            df_processed_data = pd.concat(
-                [df_processing_data.iloc[:, 1:5],
-                 df_processing_data.iloc[:, -3:-2],
-                 df_processing_data[selected_features["Feature"].tolist()],
-                 df_processing_data.iloc[:, -2:]
-                 ],
-                axis=1)
-
-
-
+        df_processed_data = pd.concat(
+            [df_processing_data.iloc[:, 1:5],
+             df_processing_data.iloc[:, -3:-2],
+             df_processing_data[selected_features["Feature"].tolist()],
+             df_processing_data.iloc[:, -2:]
+             ],
+            axis=1)
 
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|P_)', '', regex=True)
 
@@ -790,61 +690,36 @@ elif args.isall == "True":
                 if ticker == "code":
                     continue
                 ticker_str = str(ticker).zfill(6)
-                base_df = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                cols_to_keep = ["code", "name", "sector", "year", "quarter"]
-                base_df = base_df[[col for col in cols_to_keep if col in base_df.columns]]
-                dfs_to_concat = [base_df]
-                if args.use_all or args.financial:
-                    df_financial_tmp = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                    df_financial_tmp.drop(columns=cols_to_keep, inplace=True, errors='ignore')
+                df_price = pd.read_csv(f"./data_kr/price/{ticker_str}.csv")
+                df_tmp = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
+                df_kfeature_tmp = concat_k_features(ticker_str)
+                df_macro_tmp = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
+                df_macro_tmp.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
 
-                    df_financial_tmp = add_prefix_to_columns(df_financial_tmp, "F_")
-                    dfs_to_concat.append(df_financial_tmp)
+                df_tmp = add_prefix_to_columns(df_tmp, "F_", exclude_cols=["year", "quarter", "code", "name", "sector"])
+                df_kfeature_tmp = add_prefix_to_columns(df_kfeature_tmp, "P_", exclude_cols=["연도", "분기"])
+                df_macro_tmp = add_prefix_to_columns(df_macro_tmp, "M_", exclude_cols=["연도", "분기"])
 
-                if args.use_all or args.public:
-                    df_kfeature_tmp = concat_k_features(ticker_str)
-                    df_kfeature_tmp = add_prefix_to_columns(df_kfeature_tmp, "P_", exclude_cols=["연도", "분기"])
-                    dfs_to_concat.append(df_kfeature_tmp)
-
-                if args.use_all or args.macroeconomic:
-                    df_macro_tmp = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
-                    df_macro_tmp.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
-                    df_macro_tmp = add_prefix_to_columns(df_macro_tmp, "M_", exclude_cols=["연도", "분기"])
-                    dfs_to_concat.append(df_macro_tmp)
-                df_concat = pd.concat(dfs_to_concat, axis=1)
-
+                df_concat = pd.concat([df_tmp, df_macro_tmp, df_kfeature_tmp], axis=1)
                 df_sector_stocks = pd.concat([df_sector_stocks, df_concat])
 
         nan_ratio = df_sector_stocks.isna().mean()
         over_50_columns = nan_ratio[nan_ratio >= 0.5].index.to_list()
+
         for ticker in tqdm(clustered_ticker_list):
             if ticker == "code":
                 continue
             ticker_str = str(ticker).zfill(6)
-            base_df = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-            cols_to_keep = ["code", "name", "sector", "year", "quarter"]
-            base_df = base_df[[col for col in cols_to_keep if col in base_df.columns]]
-            dfs_to_concat = [base_df]
-
-            if args.use_all or args.financial:
-                # 재무 데이터는 기본 열(cols_to_keep)을 제외하고 가져와 중복을 방지합니다.
-                df_financial = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
-                df_financial.drop(columns=cols_to_keep, inplace=True, errors='ignore')
-                df_financial = df_financial.drop(columns=['disclosure_date'])
-                df_financial = add_prefix_to_columns(df_financial, "F_")
-                dfs_to_concat.append(df_financial)
-
-            if args.use_all or args.public:
-                df_kfeature = concat_k_features(ticker_str)
-                df_kfeature = add_prefix_to_columns(df_kfeature, "P_", exclude_cols=["연도", "분기"])
-                dfs_to_concat.append(df_kfeature)
-
-            if args.use_all or args.macroeconomic:
-                df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
-                df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
-                df_macro = add_prefix_to_columns(df_macro, "M_", exclude_cols=["연도", "분기"])
-                dfs_to_concat.append(df_macro)
-            df_data = pd.concat(dfs_to_concat, axis=1)
+            df_data = pd.read_csv(f"./data_kr/merged/{ticker_str}.csv")
+            df_kfeature = concat_k_features(ticker_str)
+            df_macro = pd.read_csv(f"./data_kr/macro_economic/merged.csv")
+            df_macro.drop(columns=['연도', '분기'], errors='ignore', inplace=True)
+            df_data = add_prefix_to_columns(df_data, "F_", exclude_cols=["year", "quarter", "code", "name", "sector",
+                                                                         "disclosure_date"])
+            df_data = df_data.drop(columns=['disclosure_date'])
+            df_kfeature = add_prefix_to_columns(df_kfeature, "P_", exclude_cols=["연도", "분기"])
+            df_macro = add_prefix_to_columns(df_macro, "M_", exclude_cols=["연도", "분기"])
+            df_data = pd.concat([df_data, df_macro, df_kfeature], axis=1)
 
             base_cols = ['code', 'name', 'year', 'quarter', 'sector']
             feature_cols = df_data.filter(regex="^(F_|M_|P_)").columns.tolist()
@@ -971,44 +846,24 @@ elif args.isall == "True":
         df_processing_data.iloc[:, -2:-1] = pd.DataFrame(y_imputed, columns=df_processing_data.columns[-2:-1],
                                                          index=df_processing_data.index)
 
-        if args.fs_rf:
-            rgr = RandomForestRegressor()
-            rgr.fit(df_processing_data.iloc[:, 5:-2], df_processing_data.iloc[:, -2:-1])
+        remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
+        df_processing_data.drop(columns=remove_features, inplace=True)
+        vif_data.to_csv(f"{save_folder}/ALL/vif_data.csv", index=False, encoding='utf-8-sig')
 
-            feature_importance = pd.Series(rgr.feature_importances_,
-                                           index=df_processing_data.columns[5:-2]).sort_values(
-                ascending=False)
-            feature_importance[:6].to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
+        df_processing_data.to_csv(f"{save_folder}/ALL/after_DR.csv", index=False, encoding='utf-8-sig')
 
-            select_col = feature_importance.index[:6]
-            df_col[sector] = select_col
-            df_processed_data = pd.concat(
-                [df_processing_data.iloc[:, 1:5],
-                 df_processing_data.iloc[:, -3:-2],
-                 df_processing_data[select_col],
-                 df_processing_data.iloc[:, -2:]
-                 ],
-                axis=1)
+        print("Using Backward Elimination for feature selection")
+        selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3],
+                                                 df_processing_data["Label"], n_features_t)
+        selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
 
-        else:
-            remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
-            df_processing_data.drop(columns=remove_features, inplace=True)
-            vif_data.to_csv(f"{save_folder}/ALL/vif_data.csv", index=False, encoding='utf-8-sig')
-
-            df_processing_data.to_csv(f"{save_folder}/ALL/after_DR.csv", index=False, encoding='utf-8-sig')
-
-            print("Using Backward Elimination for feature selection")
-            selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3],
-                                                     df_processing_data["Label"], n_features_t)
-            selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
-
-            df_processed_data = pd.concat(
-                [df_processing_data.iloc[:, 1:5],
-                 df_processing_data.iloc[:, -3:-2],
-                 df_processing_data[selected_features["Feature"].tolist()],
-                 df_processing_data.iloc[:, -2:]
-                 ],
-                axis=1)
+        df_processed_data = pd.concat(
+            [df_processing_data.iloc[:, 1:5],
+             df_processing_data.iloc[:, -3:-2],
+             df_processing_data[selected_features["Feature"].tolist()],
+             df_processing_data.iloc[:, -2:]
+             ],
+            axis=1)
 
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|P_)', '', regex=True)
 

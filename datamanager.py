@@ -78,9 +78,11 @@ class DataManager:
               f" / test: {self.pno2date(test_start)} ~ {self.pno2date(test_end-1)}")"""
 
         if model=="S3CE":target_folder = f"./preprocessed_data"
-        else: target_folder = f"./preprocessed_data_{model}"
+        else:
+            target_folder = f"./preprocessed_data_{model}"
+            print(f"Get Data of {model}")
 
-        print(f"Get Data of {model}")
+
         if isall:
             train_data = pd.DataFrame()
             valid_data = pd.DataFrame()

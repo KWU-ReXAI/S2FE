@@ -92,9 +92,10 @@ for trainNum in range(0, args.testNum):
             elif args.use_all == "Sector":
                 mymodel.trainClusterModels(withValidation=not args.Validation,model=args.ensemble)
             else:
+                print(f"Train Start: cluster_n={cluster_n}, use_all={args.use_all}, lr_anfis={args.lr_anfis}, lr_MLP={args.lr_MLP}, epochs_MLP={args.epochs_MLP}, epochs_anfis={args.epochs_anfis}, hidden={args.hidden}, withValidation={not args.Validation}")
                 mymodel.trainALLSectorModels(withValidation=not args.Validation,model=args.ensemble)
                 mymodel.trainClusterModels(withValidation=not args.Validation,model=args.ensemble)
-            cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.agg,
+            """cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.agg,
                                                                                 inter_n=args.inter_n,
                                                                                 use_all=args.use_all,
                                                                                 withValidation=not args.Validation,
@@ -107,9 +108,10 @@ for trainNum in range(0, args.testNum):
         }
         result_ks[phase] = {"CAGR": cagr_ks,
                             "Sharpe Ratio": sharpe_ks,
-                            "MDD": mdd_ks}
+                            "MDD": mdd_ks}"""
 
         mymodel.save_models(f"{dir}/{args.result_name}_{trainNum+1}_{phase}")
+        print(f"Save Model at {dir}/{args.result_name}_{trainNum+1}_{phase}\n")
 
     result_df = pd.DataFrame(result)
     result_df["Average"] = result_df.mean(axis=1)

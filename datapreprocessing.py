@@ -25,7 +25,10 @@ parser.add_argument('--financial',type=bool,nargs='?',default=False)
 parser.add_argument('--public',type=bool,nargs='?',default=False)
 parser.add_argument('--macroeconomic',type=bool,nargs='?',default=False)
 parser.add_argument('--use_all',type=bool,nargs='?',default=False)
-parser.add_argument('--n_features_t',type=int,nargs='?',default=4)
+parser.add_argument('--n_features_t',type=int,nargs='?',default=6)
+
+
+parser.add_argument('--feature',type=str,nargs='?',default="False")
 args = parser.parse_args()
 
 ks200_price = pd.read_csv("./data_kr/price/KS200.csv")
@@ -460,11 +463,34 @@ if args.isall == "False":
             df_processing_data.to_csv(f"{save_folder}/cluster_{cluster_index}/after_DR.csv", index=False,
                                       encoding='utf-8-sig')
 
-            print("Using Backward Elimination for feature selection")
-            selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3],
-                                                     df_processing_data["Label"], n_features_t)
-            selected_features.to_csv(f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
-                                     encoding='utf-8-sig')
+            if args.feature == "rf":
+                print("Using Random Forest Regressor for feature selection")
+                selected_features = random_forest_feature_selection(df_processing_data.iloc[:, 5:-3],
+                                                                    df_processing_data["Label"],
+                                                                    n_features_t)
+                selected_features.to_csv(
+                    f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
+                    encoding='utf-8-sig')
+            elif args.feature == "be":
+                print("Using Backward Elimination for feature selection")
+                selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
+                                                         n_features_t)
+                selected_features.to_csv(
+                    f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
+                    encoding='utf-8-sig')
+            elif args.feature == "fs":
+                print("Using Feature Selection for feature selection")
+                selected_features = forward_selection(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
+                                                      n_features_t)
+                selected_features.to_csv(
+                    f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
+                    encoding='utf-8-sig')
+            else:
+                print("NO Feature Selection Selected")
+                exit()
+
+
+
 
             df_processed_data = pd.concat(
                 [df_processing_data.iloc[:, 1:5],
@@ -738,11 +764,28 @@ elif args.isall == "cluster":
 
             df_processing_data.to_csv(f"{save_folder}/{sector_list[0]}/after_DR.csv", index=False, encoding='utf-8-sig')
 
-            print("Using Backward Elimination for feature selection")
-            selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
-                                                     n_features_t)
-            selected_features.to_csv(f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
-                                     encoding='utf-8-sig')
+            if args.feature=="rf":
+                print("Using Random Forest Regressor for feature selection")
+                selected_features = random_forest_feature_selection(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
+                                                         n_features_t)
+                selected_features.to_csv(f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
+                                         encoding='utf-8-sig')
+            elif args.feature=="be":
+                print("Using Backward Elimination for feature selection")
+                selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
+                                                         n_features_t)
+                selected_features.to_csv(f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
+                                         encoding='utf-8-sig')
+            elif args.feature=="fs":
+                print("Using Feature Selection for feature selection")
+                selected_features = forward_selection(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
+                                                         n_features_t)
+                selected_features.to_csv(f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
+                                         encoding='utf-8-sig')
+            else:
+                print("NO Feature Selection Selected")
+                exit()
+
             df_processed_data = pd.concat(
                 [df_processing_data.iloc[:, 1:5],
                  df_processing_data.iloc[:, -3:-2],
@@ -1007,10 +1050,26 @@ elif args.isall == "True":
 
             df_processing_data.to_csv(f"{save_folder}/ALL/after_DR.csv", index=False, encoding='utf-8-sig')
 
-            print("Using Backward Elimination for feature selection")
-            selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3],
-                                                     df_processing_data["Label"], n_features_t)
-            selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
+            if args.feature == "rf":
+                print("Using Random Forest Regressor for feature selection")
+                selected_features = random_forest_feature_selection(df_processing_data.iloc[:, 5:-3],
+                                                                    df_processing_data["Label"],
+                                                                    n_features_t)
+                selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
+            elif args.feature == "be":
+                print("Using Backward Elimination for feature selection")
+                selected_features = backward_elimination(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
+                                                         n_features_t)
+                selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
+            elif args.feature == "fs":
+                print("Using Feature Selection for feature selection")
+                selected_features = forward_selection(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
+                                                      n_features_t)
+                selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
+            else:
+                print("NO Feature Selection Selected")
+                exit()
+
 
             df_processed_data = pd.concat(
                 [df_processing_data.iloc[:, 1:5],

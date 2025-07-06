@@ -16,7 +16,7 @@ sweep_config = {
 		"goal": "maximize"
 	},
 	"parameters": {
-		"n_features_t" : {"values" : [4,5,6,7,8]}
+		"feature" : {"values" : ["rf","be","fs"]}
 	}
 }
 
@@ -25,10 +25,10 @@ def sweep():
 		config = run.config
 		# 포멧에 맞게 파일들을 수정해야 함.
 		# 인자를 추가하기!
-		subprocess.run(f"python datapreprocessing.py --use_all True --isall True --n_features_t {config.n_features_t}", shell=True)
-		subprocess.run(f"python datapreprocessing.py --use_all True --isall cluster --n_features_t {config.n_features_t}", shell=True)
+		subprocess.run(f"python datapreprocessing.py --use_all True --isall True --feature {config.feature}", shell=True)
+		subprocess.run(f"python datapreprocessing.py --use_all True --isall cluster --feature {config.feature}", shell=True)
 		subprocess.run(f"python clustering.py", shell=True)
-		subprocess.run(f"python datapreprocessing.py --use_all True --isall False --n_features_t {config.n_features_t}", shell=True)
+		subprocess.run(f"python datapreprocessing.py --use_all True --isall False --feature {config.feature}", shell=True)
 		subprocess.run(f"python train.py --testNum 20", shell=True)
 		subprocess.run(f"python test.py --testNum 20", shell=True)
   

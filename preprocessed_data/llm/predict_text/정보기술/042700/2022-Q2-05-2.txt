@@ -1,5 +1,5 @@
 {
-	"sentiment": "중립",
-	"reasoning": "한미반도체가 NANYA PCB와 29.8억원 규모의 장비 수주 계약을 체결했으나, 이는 최근 매출액 대비 약 0.8% 수준으로 기업 가치나 주가에 직접적인 영향을 미치기에는 규모가 작아 보입니다.",
-	"score": 0
+	"sentiment": "긍정",
+	"reasoning": "한미반도체가 NANYA PCB와 29.8억원 규모의 micro SAW & Vision Placement 장비 수주 계약을 체결했다는 소식은 기업의 매출 증가에 긍정적인 영향을 미칠 수 있다.",
+	"score": 1
 }

@@ -25,7 +25,7 @@ parser.add_argument('--financial',type=bool,nargs='?',default=False)
 parser.add_argument('--public',type=bool,nargs='?',default=False)
 parser.add_argument('--macroeconomic',type=bool,nargs='?',default=False)
 parser.add_argument('--use_all',type=bool,nargs='?',default=False)
-parser.add_argument('--n_features_t',type=int,nargs='?',default=6)
+parser.add_argument('--n_features_t',type=int,nargs='?',default=4)
 args = parser.parse_args()
 
 ks200_price = pd.read_csv("./data_kr/price/KS200.csv")
@@ -452,8 +452,8 @@ if args.isall == "False":
                 axis=1)
         else:
             df_processing_data.to_csv(f"./analysis/df_data_cluster_{cluster_index}_now.csv", index=False, encoding='utf-8-sig')
-            #remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
-            remove_features, vif_data = preprocess_and_calculate_vif2(df=df_processing_data.iloc[:, 5:-3],n_features=n_features_t)
+
+            remove_features, vif_data = preprocess_and_calculate_vif(df=df_processing_data.iloc[:, 5:-3],n_features=n_features_t)
             df_processing_data.drop(columns=remove_features, inplace=True)
             vif_data.to_csv(f"{save_folder}/cluster_{cluster_index}/vif_data.csv", index=False, encoding='utf-8-sig')
 
@@ -731,8 +731,8 @@ elif args.isall == "cluster":
                 axis=1)
         else:
             df_processing_data.to_csv(f"./analysis/df_data_{sector_list[0]}_now.csv", index=False, encoding='utf-8-sig')
-            #remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
-            remove_features, vif_data = preprocess_and_calculate_vif2(df=df_processing_data.iloc[:, 5:-3],n_features=n_features_t)
+
+            remove_features, vif_data = preprocess_and_calculate_vif(df=df_processing_data.iloc[:, 5:-3],n_features=n_features_t)
             df_processing_data.drop(columns=remove_features, inplace=True)
             vif_data.to_csv(f"{save_folder}/{sector_list[0]}/vif_data.csv", index=False, encoding='utf-8-sig')
 
@@ -1000,8 +1000,8 @@ elif args.isall == "True":
 
         else:
             df_processing_data.to_csv(f"./analysis/df_data_All_now.csv", index=False, encoding='utf-8-sig')
-            #remove_features, vif_data = preprocess_and_calculate_vif(df_processing_data.iloc[:, 5:-2])
-            remove_features, vif_data = preprocess_and_calculate_vif2(df=df_processing_data.iloc[:, 5:-3],n_features=n_features_t)
+
+            remove_features, vif_data = preprocess_and_calculate_vif(df=df_processing_data.iloc[:, 5:-3],n_features=n_features_t)
             df_processing_data.drop(columns=remove_features, inplace=True)
             vif_data.to_csv(f"{save_folder}/ALL/vif_data.csv", index=False, encoding='utf-8-sig')
 

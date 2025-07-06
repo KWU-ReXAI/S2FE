@@ -50,7 +50,7 @@ def random_forest_feature_selection(X, y, n_features_t):
     return result
 
 def backward_elimination(x, y, n_features):
-    model = RandomForestRegressor(random_state=42)
+    model = RandomForestRegressor()
     model.fit(x, y)
     feature_importances = pd.Series(model.feature_importances_, index=x.columns).sort_values(ascending=False)
     x_with_features = x.copy()

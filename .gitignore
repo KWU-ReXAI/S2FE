@@ -6,5 +6,5 @@ __pycache__/
 .ipynb_checkpoints/
 data_kr/video/audio/
 .venv/
-preprocessed_data_Financial/
+preprocessed_data/
 wandb/

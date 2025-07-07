@@ -42,5 +42,5 @@ def sweep():
 
 # wandb api key 입력하기
 wandb.login(key=os.getenv("WANDB_API_KEY"))
-sweep_id = wandb.sweep(sweep_config, project="S3CE_feature_n_feature")
+sweep_id = wandb.sweep(sweep_config, project="S3CE_featureSelection_n_feature")
 wandb.agent(sweep_id, function=sweep, count=30)

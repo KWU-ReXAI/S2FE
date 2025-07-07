@@ -477,7 +477,7 @@ if args.isall == "False":
                     f"{save_folder}/cluster_{cluster_index}/cluster_{cluster_index}_feature_imp.csv",
                     encoding='utf-8-sig')
             elif args.feature == "fs":
-                print("Using Feature Selection for feature selection")
+                print("Using Forward Selection for feature selection")
                 selected_features = forward_selection(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
                                                       n_features_t)
                 selected_features.to_csv(
@@ -772,7 +772,7 @@ elif args.isall == "cluster":
                 selected_features.to_csv(f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
                                          encoding='utf-8-sig')
             elif args.feature=="fs":
-                print("Using Feature Selection for feature selection")
+                print("Using Forward Selection for feature selection")
                 selected_features = forward_selection(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
                                                          n_features_t)
                 selected_features.to_csv(f"{save_folder}/{sector_list[0]}/{sector_list[0]}_feature_imp.csv",
@@ -1053,7 +1053,7 @@ elif args.isall == "True":
                                                          n_features_t)
                 selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')
             elif args.feature == "fs":
-                print("Using Feature Selection for feature selection")
+                print("Using Forward Selection for feature selection")
                 selected_features = forward_selection(df_processing_data.iloc[:, 5:-3], df_processing_data["Label"],
                                                       n_features_t)
                 selected_features.to_csv(f"{save_folder}/ALL/ALL_feature_imp.csv", index=False, encoding='utf-8-sig')

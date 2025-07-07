@@ -454,8 +454,6 @@ if args.isall == "False":
                  ],
                 axis=1)
         else:
-            df_processing_data.to_csv(f"./analysis/df_data_cluster_{cluster_index}_now.csv", index=False, encoding='utf-8-sig')
-
             remove_features, vif_data = calculate_vif_iteratively(df=df_processing_data.iloc[:, 5:-3],n_features=n_features_t)
             df_processing_data.drop(columns=remove_features, inplace=True)
             vif_data.to_csv(f"{save_folder}/cluster_{cluster_index}/vif_data.csv", index=False, encoding='utf-8-sig')
@@ -500,8 +498,6 @@ if args.isall == "False":
                  ],
                 axis=1)
 
-        df_processed_data.to_csv(f"./analysis/df_data_cluster_{cluster_index}_now.csv", index=False,
-                                  encoding='utf-8-sig')
 
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|P_)', '', regex=True)
 
@@ -756,7 +752,6 @@ elif args.isall == "cluster":
                  ],
                 axis=1)
         else:
-            df_processing_data.to_csv(f"./analysis/df_data_{sector_list[0]}_now.csv", index=False, encoding='utf-8-sig')
 
             remove_features, vif_data = calculate_vif_iteratively(df=df_processing_data.iloc[:, 5:-3],n_features=n_features_t)
             df_processing_data.drop(columns=remove_features, inplace=True)
@@ -793,8 +788,6 @@ elif args.isall == "cluster":
                  df_processing_data.iloc[:, -2:]
                  ],
                 axis=1)
-
-        df_processed_data.to_csv(f"./analysis/df_data_{sector_list[0]}_now.csv", index=False, encoding='utf-8-sig')
         df_processed_data.columns = df_processed_data.columns.str.replace(r'^(F_|M_|P_)', '', regex=True)
 
         start_year = 2015
@@ -1042,8 +1035,6 @@ elif args.isall == "True":
                 axis=1)
 
         else:
-            df_processing_data.to_csv(f"./analysis/df_data_All_now.csv", index=False, encoding='utf-8-sig')
-
             remove_features, vif_data = calculate_vif_iteratively(df=df_processing_data.iloc[:, 5:-3],n_features=n_features_t)
             df_processing_data.drop(columns=remove_features, inplace=True)
             vif_data.to_csv(f"{save_folder}/ALL/vif_data.csv", index=False, encoding='utf-8-sig')

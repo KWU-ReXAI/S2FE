@@ -10,13 +10,14 @@ load_dotenv()
 
 # 1. Sweep 설정 (Python dict)
 sweep_config = {
-	"method": "grid",  # grid, random, bayes 중 택1
+	"method": "bayes",  # grid, random, bayes 중 택1
 	"metric": {
 		"name": "CAGR",
 		"goal": "maximize"
 	},
 	"parameters": {
-		"n_features_t" : {"values" : [3,4,5,6,7]}
+		"n_features_t" : {"values" : [3,4,5,6,7]},
+		"feature":{"values":["rf","be","fs"]}
 	}
 }
 
@@ -25,10 +26,10 @@ def sweep():
 		config = run.config
 		# 포멧에 맞게 파일들을 수정해야 함.
 		# 인자를 추가하기!
-		subprocess.run(f"python datapreprocessing.py --use_all True --isall True --n_features_t {config.n_features_t}", shell=True)
-		subprocess.run(f"python datapreprocessing.py --use_all True --isall cluster --n_features_t {config.n_features_t}", shell=True)
+		subprocess.run(f"python datapreprocessing.py --use_all True --isall True --n_features_t {config.n_features_t} --feature {config.n_features_t}", shell=True)
+		subprocess.run(f"python datapreprocessing.py --use_all True --isall cluster --n_features_t {config.n_features_t} --feature {config.n_features_t}", shell=True)
 		subprocess.run(f"python clustering.py", shell=True)
-		subprocess.run(f"python datapreprocessing.py --use_all True --isall False --n_features_t {config.n_features_t}", shell=True)
+		subprocess.run(f"python datapreprocessing.py --use_all True --isall False --n_features_t {config.n_features_t} --feature {config.n_features_t}", shell=True)
 		subprocess.run(f"python train.py --testNum 10", shell=True)
 		subprocess.run(f"python test.py --testNum 10", shell=True)
   
@@ -41,5 +42,5 @@ def sweep():
 
 # wandb api key 입력하기
 wandb.login(key=os.getenv("WANDB_API_KEY"))
-sweep_id = wandb.sweep(sweep_config, project="S3CE_vif_rf_n_feature_t")
+sweep_id = wandb.sweep(sweep_config, project="S3CE_feature_n_feature")
 wandb.agent(sweep_id, function=sweep, count=30)

@@ -28,7 +28,7 @@ parser.add_argument('--use_all',type=bool,nargs='?',default=False)
 parser.add_argument('--n_features_t',type=int,nargs='?',default=6)
 
 
-parser.add_argument('--feature',type=str,nargs='?',default="False")
+parser.add_argument('--feature',type=str,nargs='?',default="rf")
 args = parser.parse_args()
 
 ks200_price = pd.read_csv("./data_kr/price/KS200.csv")

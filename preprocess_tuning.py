@@ -16,7 +16,7 @@ sweep_config = {
 		"goal": "maximize"
 	},
 	"parameters": {
-		"feature" : {"values" : ["rf","be","fs"]}
+		"n_features_t" : {"values" : [3,4,5,6,7]}
 	}
 }
 
@@ -25,12 +25,12 @@ def sweep():
 		config = run.config
 		# 포멧에 맞게 파일들을 수정해야 함.
 		# 인자를 추가하기!
-		subprocess.run(f"python datapreprocessing.py --use_all True --isall True --feature {config.feature}", shell=True)
-		subprocess.run(f"python datapreprocessing.py --use_all True --isall cluster --feature {config.feature}", shell=True)
+		subprocess.run(f"python datapreprocessing.py --use_all True --isall True --n_features_t {config.n_features_t}", shell=True)
+		subprocess.run(f"python datapreprocessing.py --use_all True --isall cluster --n_features_t {config.n_features_t}", shell=True)
 		subprocess.run(f"python clustering.py", shell=True)
-		subprocess.run(f"python datapreprocessing.py --use_all True --isall False --feature {config.feature}", shell=True)
-		subprocess.run(f"python train.py --testNum 20", shell=True)
-		subprocess.run(f"python test.py --testNum 20", shell=True)
+		subprocess.run(f"python datapreprocessing.py --use_all True --isall False --n_features_t {config.n_features_t}", shell=True)
+		subprocess.run(f"python train.py --testNum 10", shell=True)
+		subprocess.run(f"python test.py --testNum 10", shell=True)
   
 		# testNum별로 결과가 각각 저장돼있어서 다 읽어오는 부분
 		dir = f"./result/result_S3CE_SectorAll/test_result_dir/test_result_file.csv" # 훈련 후 검증결과과 저장파일
@@ -41,5 +41,5 @@ def sweep():
 
 # wandb api key 입력하기
 wandb.login(key=os.getenv("WANDB_API_KEY"))
-sweep_id = wandb.sweep(sweep_config, project="S3CE_n_features_t_experiment")
+sweep_id = wandb.sweep(sweep_config, project="S3CE_vif_rf_n_feature_t")
 wandb.agent(sweep_id, function=sweep, count=30)

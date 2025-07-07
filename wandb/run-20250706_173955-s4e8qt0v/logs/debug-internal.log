@@ -1,0 +1,16 @@
+{"time":"2025-07-06T17:39:55.050045432+09:00","level":"INFO","msg":"stream: starting","core version":"0.19.9","symlink path":"/home/user/jaehyun/S3CE/wandb/run-20250706_173955-s4e8qt0v/logs/debug-core.log"}
+{"time":"2025-07-06T17:39:55.402784366+09:00","level":"INFO","msg":"created new stream","id":"s4e8qt0v"}
+{"time":"2025-07-06T17:39:55.402879779+09:00","level":"INFO","msg":"stream: started","id":"s4e8qt0v"}
+{"time":"2025-07-06T17:39:55.402954662+09:00","level":"INFO","msg":"writer: Do: started","stream_id":"s4e8qt0v"}
+{"time":"2025-07-06T17:39:55.403030002+09:00","level":"INFO","msg":"sender: started","stream_id":"s4e8qt0v"}
+{"time":"2025-07-06T17:39:55.403034175+09:00","level":"INFO","msg":"handler: started","stream_id":"s4e8qt0v"}
+{"time":"2025-07-06T17:39:55.657994076+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-07-06T18:47:05.078793548+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-07-06T18:47:05.078870573+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-07-06T18:47:05.98277237+09:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-07-06T18:47:06.090899928+09:00","level":"INFO","msg":"stream: closing","id":"s4e8qt0v"}
+{"time":"2025-07-06T18:47:06.090921378+09:00","level":"WARN","msg":"sender: received Exit record more than once, ignoring"}
+{"time":"2025-07-06T18:47:06.267268854+09:00","level":"INFO","msg":"handler: closed","stream_id":"s4e8qt0v"}
+{"time":"2025-07-06T18:47:06.267387139+09:00","level":"INFO","msg":"sender: closed","stream_id":"s4e8qt0v"}
+{"time":"2025-07-06T18:47:06.267375534+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":"s4e8qt0v"}
+{"time":"2025-07-06T18:47:06.267513368+09:00","level":"INFO","msg":"stream: closed","id":"s4e8qt0v"}

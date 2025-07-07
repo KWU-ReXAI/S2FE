@@ -1,0 +1,42 @@
+{
+  "os": "Linux-5.4.0-150-generic-x86_64-with-glibc2.27",
+  "python": "CPython 3.13.2",
+  "startedAt": "2025-07-06T08:39:55.044847Z",
+  "program": "/home/user/jaehyun/S3CE/preprocess_tuning.py",
+  "codePath": "preprocess_tuning.py",
+  "git": {
+    "remote": "https://jaehyonii:@github.com/KWU-ReXAI/S3CE.git",
+    "commit": "da3fa8fccd288996738042215e9dab7942db9d86"
+  },
+  "email": "kk2007pp@gmail.com",
+  "root": "/home/user/jaehyun/S3CE",
+  "host": "dsl-desktop5003",
+  "executable": "/home/user/anaconda3/envs/s3ce/bin/python",
+  "codePathLocal": "preprocess_tuning.py",
+  "cpu_count": 4,
+  "cpu_count_logical": 8,
+  "gpu": "NVIDIA GeForce GTX 1070 Ti",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "502395154432",
+      "used": "288529326080"
+    }
+  },
+  "memory": {
+    "total": "16747552768"
+  },
+  "cpu": {
+    "count": 4,
+    "countLogical": 8
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA GeForce GTX 1070 Ti",
+      "memoryTotal": "8589934592",
+      "cudaCores": 2432,
+      "architecture": "Pascal"
+    }
+  ],
+  "cudaVersion": "12.8"
+}

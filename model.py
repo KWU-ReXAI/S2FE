@@ -213,6 +213,10 @@ class MyModel(nn.Module):
                 a, b = train_data.shape[0], train_data.shape[1]
                 train_data = train_data.reshape(a * b, -1)
                 train_data = torch.Tensor(train_data, ).to(self.device)
+                if torch.isnan(train_data).any():
+                    print("입력 데이터에 NaN 값이 포함되어 있습니다!")
+                else:
+                    print("입력 데이터는 정상입니다.")
                 the_model = AggregationModel(train_data.shape[1] - 1, self.n_rules, self.hidden, self.device)
                 the_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, self.epochs_anfis, self.lr_MLP,
                               self.lr_anfis)
@@ -247,6 +251,10 @@ class MyModel(nn.Module):
         else:
             self.all_sector_model = AggregationModel(train_data.shape[1] - 1, self.n_rules, self.hidden, self.device)
             train_data = torch.Tensor(train_data).to(self.device)
+            if torch.isnan(train_data).any():
+                print("입력 데이터에 NaN 값이 포함되어 있습니다!")
+            else:
+                print("입력 데이터는 정상입니다.")
             self.all_sector_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, self.epochs_anfis,
                                       self.lr_MLP,
                                       self.lr_anfis)

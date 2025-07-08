@@ -3,6 +3,7 @@ import numpy as np
 import os
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import platform
@@ -94,9 +95,9 @@ def LLM_accuracy(code, start_date, end_date, data):
 
 		total_period_days = (upload_end - upload_start).days
 		# 'Series' 전체에 .days를 적용할 수 없으므로 .dt 접근자 사용
-		chunk["score"] *= ((chunk['upload_dt'] - upload_start).dt.days + 1) / total_period_days
+		chunk["score"] *= 1 + ((chunk['upload_dt'] - upload_start).dt.days / total_period_days)
 		score_sum = chunk["score"].sum()
-		threshold = 0.3
+		threshold = 1
 		score = 1 if score_sum >= threshold else -1
 		df_score.loc[len(df_score)] = [
 			trade_date, code, score, None
@@ -104,7 +105,7 @@ def LLM_accuracy(code, start_date, end_date, data):
 
 		###### 구매 코드 구현하기 ######
 		buy_dt = current
-		sell_dt = current + relativedelta(months=1)
+		sell_dt = current + relativedelta(weeks=1)
 		sell_dt = sell_dt if sell_dt <= end_dt else end_dt
 
 		df_price = pd.read_csv(f"data_kr/price/{str(int(code)).zfill(6)}.csv")
@@ -116,7 +117,42 @@ def LLM_accuracy(code, start_date, end_date, data):
 		current += relativedelta(months=1)
 	return df_score
 
+def return_score_graph(fpath:str, data:str, df:pd.DataFrame):
+	# 'date' 컬럼을 datetime 형식으로 변환해야 날짜 순으로 정확히 정렬 및 플로팅됩니다.
+	df['date'] = pd.to_datetime(df['date'])
+	df['code'] = df['code'].astype(str).str.zfill(6)
+	df = df.sort_values(by=['date', 'code'])
+	df.drop('code', axis=1, inplace=True)
+
+	score_map = {1: '구매한 종목', -1: '구매하지 않은 종목'}
+	df['score_label'] = df['score'].map(score_map)
+
+	# 3-2. 그래프 생성
+	plt.figure(figsize=(12, 7))
+	sns.scatterplot(data=df,
+				 x='date',
+				 y='return',
+				 hue='score_label',
+				 s=100)
+	plt.title(f'Return and Score Trend - {data}')
+	plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0)
+	plt.grid(True)
+	plt.tight_layout()
+
+	# 그래프 보여주기
+	plt.savefig(f"{fpath}/Return_and_Score_Trend.png")
+	plt.close()
+
 if __name__ == '__main__':
+	# 한글 폰트 설정 (Windows: Malgun Gothic, Mac: AppleGothic)
+	if platform.system() == 'Windows':
+		plt.rc('font', family='Malgun Gothic')
+	elif platform.system() == 'Darwin':
+		plt.rc('font', family='AppleGothic')
+	else:
+		plt.rc('font', family='NanumGothic')
+	plt.rcParams['axes.unicode_minus'] = False  # 마이너스 부호 깨짐 방지
+
 	for idx, data in enumerate(tqdm(['video', 'text', 'total'], desc="데이터 별 진행상황")):
 		fpath = f"./preprocessed_data/llm/confusion_matrix_0701/{data}"
 		os.makedirs(fpath, exist_ok=True)
@@ -124,18 +160,27 @@ if __name__ == '__main__':
 		df = pd.DataFrame(columns=[
 			"date", "code", "score", "return"
 		])
-		df_code = pd.read_csv(f"./preprocessed_data/llm/predict_total/predict_{data}.csv", encoding='utf-8-sig')
-		code_list = df_code['code'].unique().tolist()
-		for code in tqdm(code_list, desc="코드별 진행상황"):
-			dates = ['2020_Q4', '2021_Q1', '2021_Q2', '2021_Q3', '2021_Q4',
-					 '2022_Q1', '2022_Q2', '2022_Q3', '2022_Q4',
-					 '2023_Q1', '2023_Q2', '2023_Q3', '2023_Q4',
-					 '2024_Q1', '2024_Q2', '2024_Q3', '2024_Q4']
-			for index, _ in enumerate(dates):
-				if index == len(dates) - 1:
-					break
-				df = pd.concat([df, LLM_accuracy(code, dates[index], dates[index+1], idx)])
+		for testNum in tqdm(range(1, 11), desc='모델 별 진행상황'):
+			for phase in ['p1', 'p2', 'p3', 'p4']:
+				df_phase = pd.read_csv(f"./result/test_result_dir/test_selected_stocks_model_{phase}_{testNum}.csv")
+				df_dedup = df_phase.drop_duplicates(subset=['0'], keep='first')
+				selected = df_dedup.drop('1', axis=1)
+				result_list = selected.values.tolist()
+
+				for codes in result_list:
+					date = None
+					dates = ['2020_Q4', '2021_Q1', '2021_Q2', '2021_Q3', '2021_Q4',
+							 '2022_Q1', '2022_Q2', '2022_Q3', '2022_Q4',
+							 '2023_Q1', '2023_Q2', '2023_Q3', '2023_Q4',
+							 '2024_Q1', '2024_Q2', '2024_Q3', '2024_Q4']
+					for code in codes:
+						if code in dates:
+							date = dates.index(code)
+							continue
+						df = pd.concat([df, LLM_accuracy(code, dates[date], dates[date+1], idx)])
 		df.to_csv(f"{fpath}/score_and_return.csv", encoding='utf-8-sig', index=False)
+		groupby_df = df.groupby(['date', 'code']).mean().reset_index()
+		return_score_graph(fpath, data, df)
 		df = df[~(df['score'] == 0.0)]
 		# 1. 부호를 기준으로 예측(y_pred)과 정답(y_true) 생성
 		y_pred = np.sign(df['score'].tolist()).astype(int)
@@ -145,14 +190,6 @@ if __name__ == '__main__':
 		y_true = [-1 if x == 0 else x for x in y_true]
 
 		# 2. Confusion Matrix 생성 및 시각화
-		# 한글 폰트 설정 (Windows: Malgun Gothic, Mac: AppleGothic)
-		if platform.system() == 'Windows':
-			plt.rc('font', family='Malgun Gothic')
-		elif platform.system() == 'Darwin':
-			plt.rc('font', family='AppleGothic')
-		else:
-			plt.rc('font', family='NanumGothic')
-		plt.rcParams['axes.unicode_minus'] = False  # 마이너스 부호 깨짐 방지
 
 		# 라벨 순서를 [1 (양수), -1 (음수)]로 지정
 		cm = confusion_matrix(y_true, y_pred, labels=[1, -1])

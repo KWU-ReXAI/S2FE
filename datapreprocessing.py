@@ -533,7 +533,6 @@ if args.isall == "False":
     exit()
 elif args.isall == "cluster":
     cluster_list = [['건설'], ['경기소비재'],['산업재'],['생활소비재'],['에너지_화학'],['정보기술'],['중공업'],['철강_소재'],['커뮤니케이션서비스'],['헬스케어']]
-
     save_folder = './preprocessed_data/sectors/'
     for cluster_index in range(len(cluster_list)):
         sector_list = cluster_list[cluster_index]

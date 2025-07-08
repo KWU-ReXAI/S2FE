@@ -378,7 +378,10 @@ class AnfisNet(torch.nn.Module):
         '''
         self.fuzzified = self.layer['fuzzify'](x)
         self.raw_weights = self.layer['rules'](self.fuzzified)
-        self.weights = F.normalize(self.raw_weights, p=1, dim=1)
+        # F.normalize를 수동 계산으로 변경하고 분모에 작은 값(epsilon)을 더해 0으로 나누기 방지
+        sum_weights = torch.sum(self.raw_weights, dim=1, keepdim=True)
+        self.weights = self.raw_weights / (sum_weights + 1e-12)
+        #self.weights = F.normalize(self.raw_weights, p=1, dim=1)
         self.rule_tsk = self.layer['consequent'](x)
         # y_pred = self.layer['weighted_sum'](self.weights, self.rule_tsk)
         y_pred = torch.bmm(self.rule_tsk, self.weights.unsqueeze(2))

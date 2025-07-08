@@ -53,7 +53,7 @@ def forward_selection(X, y, n_features_to_select, n_runs=10):
     return result_df
 
 
-def random_forest_feature_selection(X, y, n_features, n_runs=10):
+def random_forest_feature_selection(X, y, n_features, n_runs=20):
     importances_df = pd.DataFrame(index=X.columns)
     seeds = [random.randint(1, 100) for _ in range(n_runs)]
     for i in tqdm(range(n_runs)):

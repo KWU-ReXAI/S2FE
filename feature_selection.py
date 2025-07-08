@@ -3,70 +3,62 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error
 from tqdm import tqdm # 진행상황 표시를 위해 추가
 import numpy as np
+import random
 
+def forward_selection(X, y, n_features_to_select, n_runs=10):
+    seeds = [random.randint(1, 100) for _ in range(n_runs)]
+    selected_features = []
+    remaining_features = list(X.columns)
 
-def forward_selection(X, y, n_features_t, n_runs=20):
-    """
-    Forward Selection을 여러 번 실행하여 각 특징의 평균 중요도와 선택 빈도를 집계합니다.
-    """
-    print(f"Running Stable Forward Selection for {n_runs} iterations...")
+    # n_features_to_select 만큼 특징을 선택할 때까지 반복
+    while len(selected_features) < n_features_to_select and remaining_features:
+        mse_with_candidates = []
 
-    all_runs_results = []
+        # 남아있는 특징들을 하나씩 후보로 테스트
+        for feature in remaining_features:
+            current_features = selected_features + [feature]
+            mses = []
 
-    for i in tqdm(range(n_runs)):
-        selected_features = []
-        remaining_features = list(X.columns)
-
-        while len(selected_features) < n_features_t and remaining_features:
-            mse_with_candidates = []
-
-            for feature in remaining_features:
-                current_features = selected_features + [feature]
-                # 각 run 내에서는 동일한 random_state를 사용해 일관성 유지
-                model = RandomForestRegressor()
+            # n_runs 만큼 반복하여 평균 MSE 계산
+            for i in range(n_runs):
+                model = RandomForestRegressor(random_state=seeds[i])
                 model.fit(X[current_features], y)
                 y_pred = model.predict(X[current_features])
                 mse = mean_squared_error(y, y_pred)
-                mse_with_candidates.append((feature, mse))
+                mses.append(mse)
 
-            mse_with_candidates.sort(key=lambda x: x[1])
-            best_feature, _ = mse_with_candidates[0]
+            avg_mse = np.mean(mses)
+            mse_with_candidates.append((feature, avg_mse))
 
-            selected_features.append(best_feature)
-            remaining_features.remove(best_feature)
+        # 평균 MSE가 가장 낮은 특징을 베스트 특징으로 선택
+        mse_with_candidates.sort(key=lambda x: x[1])
+        best_feature, best_mse_for_step = mse_with_candidates[0]
 
-        # 최종 선택된 특징들의 중요도 계산
-        final_model = RandomForestRegressor()
-        final_model.fit(X[selected_features], y)
+        # 베스트 특징을 선택된 특징 리스트에 추가하고, 남은 특징 리스트에서 제거
+        selected_features.append(best_feature)
+        remaining_features.remove(best_feature)
+        print(f"Step {len(selected_features)}: Added '{best_feature}' with avg_mse: {best_mse_for_step:.4f}")
 
-        importance_dict = {selected_features[j]: final_model.feature_importances_[j] for j in
-                           range(len(selected_features))}
-        run_df = pd.DataFrame(list(importance_dict.items()), columns=['Feature', 'Importance'])
-        all_runs_results.append(run_df)
+    # 최종 선택된 특징들로 마지막 모델을 훈련하여 중요도 계산
+    final_model = RandomForestRegressor()
+    final_model.fit(X[selected_features], y)
+    feature_importances = final_model.feature_importances_
 
-    # 모든 실행 결과 취합
-    combined_df = pd.concat(all_runs_results)
-
-    # 특징별 평균 중요도와 선택 횟수 계산
-    avg_importance = combined_df.groupby('Feature')['Importance'].mean()
-    selection_count = combined_df.groupby('Feature').size()
-
+    # 결과를 DataFrame으로 정리
     result_df = pd.DataFrame({
-        'Average_Importance': avg_importance
-    }).reset_index()
+        'Feature': selected_features,
+        'Importance': feature_importances
+    }).sort_values(by='Importance', ascending=False).reset_index(drop=True)
 
-    # 평균 중요도 기준으로 정렬
-    result_df = result_df.sort_values(by='Average_Importance', ascending=False)
-
-    return result_df.head(n_features_t)
+    return result_df
 
 
 def random_forest_feature_selection(X, y, n_features, n_runs=10):
     importances_df = pd.DataFrame(index=X.columns)
-
+    seeds = [random.randint(1, 100) for _ in range(n_runs)]
     for i in tqdm(range(n_runs)):
         # 매번 다른 random_state로 모델 생성 및 학습
-        rgr = RandomForestRegressor()
+        rgr = RandomForestRegressor(random_state=seeds[i])
         rgr.fit(X, y)
         importances_df[f'run_{i}'] = rgr.feature_importances_
 
@@ -83,44 +75,37 @@ def random_forest_feature_selection(X, y, n_features, n_runs=10):
 
     return result
 
-def backward_elimination(X, y, n_features,n_runs=5):
-    all_runs_results = []
 
-    for i in tqdm(range(n_runs)):
-        x_with_features = X.copy()
+def backward_elimination(X, y, n_features_to_keep, n_runs=10):
+    seeds = [random.randint(1, 100) for _ in range(n_runs)]
+    remaining_features = list(X.columns)
 
-        # 각 run 내에서는 동일한 random_state를 사용
-        model = RandomForestRegressor()
+    # 특징의 개수가 원하는 개수가 될 때까지 반복
+    while len(remaining_features) > n_features_to_keep:
+        # 현재 남은 특징들로 n_runs 만큼 훈련하여 평균 중요도 계산
+        total_importances = pd.Series(np.zeros(len(remaining_features)), index=remaining_features)
 
-        while len(x_with_features.columns) > n_features:
-            model.fit(x_with_features, y)
-            feature_importances = pd.Series(model.feature_importances_, index=x_with_features.columns)
-            # 가장 중요도가 낮은 특징 제거
-            remove = feature_importances.idxmin()
-            x_with_features = x_with_features.drop(columns=[remove])
+        for i in range(n_runs):
+            model = RandomForestRegressor(random_state=seeds[i])
+            model.fit(X[remaining_features], y)
+            total_importances += model.feature_importances_
 
-        # 최종 선택된 특징과 중요도 저장
-        model.fit(x_with_features, y)
-        final_importances = pd.Series(model.feature_importances_, index=x_with_features.columns)
+        avg_importances = total_importances / n_runs
 
-        run_df = pd.DataFrame({
-            'Feature': final_importances.index,
-            'Importance': final_importances.values
-        })
-        all_runs_results.append(run_df)
+        # 평균 중요도가 가장 낮은 특징을 찾아서 제거
+        feature_to_remove = avg_importances.idxmin()
+        remaining_features.remove(feature_to_remove)
+        print(f"Removed '{feature_to_remove}'. Remaining features: {len(remaining_features)}")
 
-    # 모든 실행 결과 취합
-    combined_df = pd.concat(all_runs_results)
+    # 최종 남은 특징들로 모델을 훈련하여 중요도 계산
+    final_model = RandomForestRegressor()
+    final_model.fit(X[remaining_features], y)
+    final_importances = final_model.feature_importances_
 
-    # 특징별 평균 중요도와 선택 횟수 계산
-    avg_importance = combined_df.groupby('Feature')['Importance'].mean()
-    selection_count = combined_df.groupby('Feature').size()
-
+    # 결과를 DataFrame으로 정리
     result_df = pd.DataFrame({
-        'Average_Importance': avg_importance
-    }).reset_index()
+        'Feature': remaining_features,
+        'Importance': final_importances
+    }).sort_values(by='Importance', ascending=False).reset_index(drop=True)
 
-    # 평균 중요도 기준으로 정렬
-    result_df = result_df.sort_values(by='Average_Importance', ascending=False)
-
-    return result_df.head(n_features)
+    return result_df

@@ -5,7 +5,7 @@ from tqdm import tqdm # 진행상황 표시를 위해 추가
 import numpy as np
 
 
-def forward_selection(X, y, n_features_t, n_runs=5):
+def forward_selection(X, y, n_features_t, n_runs=20):
     """
     Forward Selection을 여러 번 실행하여 각 특징의 평균 중요도와 선택 빈도를 집계합니다.
     """

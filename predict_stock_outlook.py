@@ -345,7 +345,7 @@ def predict_market_from_summary(summary: str, stock: str) -> str:
 **[출력 예시]**
 +1
 
-**[뉴스 기사]**
+**[기업 소식]**
 {summary}
 ---
 

@@ -54,6 +54,7 @@ class MultiLayerPerceptron(nn.Module):
                 pred = self(x)
                 loss = criterion(pred.squeeze(), y)
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.parameters(), 1.0)
                 optimizer.step()
 
 class AggregationModel:
@@ -215,8 +216,6 @@ class MyModel(nn.Module):
                 train_data = torch.Tensor(train_data, ).to(self.device)
                 if torch.isnan(train_data).any():
                     print("입력 데이터에 NaN 값이 포함되어 있습니다!")
-                else:
-                    print("입력 데이터는 정상입니다.")
                 the_model = AggregationModel(train_data.shape[1] - 1, self.n_rules, self.hidden, self.device)
                 the_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, self.epochs_anfis, self.lr_MLP,
                               self.lr_anfis)
@@ -253,8 +252,6 @@ class MyModel(nn.Module):
             train_data = torch.Tensor(train_data).to(self.device)
             if torch.isnan(train_data).any():
                 print("입력 데이터에 NaN 값이 포함되어 있습니다!")
-            else:
-                print("입력 데이터는 정상입니다.")
             self.all_sector_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, self.epochs_anfis,
                                       self.lr_MLP,
                                       self.lr_anfis)

@@ -140,6 +140,7 @@ def train_anfis_with(model, data, optimizer, criterion,
             # Zero gradients, perform a backward pass, and update the weights.
             optimizer.zero_grad()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
         # Epoch ending, so now fit the coefficients based on all data:
         x, y_actual = data.dataset.tensors

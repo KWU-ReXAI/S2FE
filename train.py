@@ -5,7 +5,7 @@ import warnings
 import matplotlib.pyplot as plt
 from datamanager import DataManager
 from model import MyModel
-from model_RF import RF_Model
+#from model_RF import RF_Model
 from tqdm import tqdm
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -31,10 +31,10 @@ parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 
 parser.add_argument('--Validation',action="store_true") # 클러스터링 여부
 
 
-parser.add_argument('--lr_MLP',type=float,nargs='?',default=0.0001) # 0.0001
-parser.add_argument('--lr_anfis',type=float,nargs='?',default=0.01) # 0.01
+parser.add_argument('--lr_MLP',type=float,nargs='?',default=0.01) # 0.0001
+parser.add_argument('--lr_anfis',type=float,nargs='?',default=0.0001) # 0.01
 parser.add_argument('--epochs_MLP',type=int,nargs='?',default=300) # 300
-parser.add_argument('--epochs_anfis',type=int,nargs='?',default=100) # 100
+parser.add_argument('--epochs_anfis',type=int,nargs='?',default=300) # 100
 parser.add_argument('--hidden',type=int,nargs='?',default=128) # 128
 
 
@@ -79,9 +79,9 @@ for trainNum in range(0, args.testNum):
         if args.ensemble == "S3CE" or args.ensemble == "agg3":
             mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
                           args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden)
-        elif args.ensemble == "RF":
+        """elif args.ensemble == "RF":
             mymodel = RF_Model(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
-                          args.final_stock_k, phase, args.ensemble,device)
+                          args.final_stock_k, phase, args.ensemble,device)"""
 
         if args.ensemble == "buyhold":
             cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest_BuyHold(verbose=True, withValidation=not args.Validation)

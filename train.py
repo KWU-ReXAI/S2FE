@@ -31,10 +31,10 @@ parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 
 parser.add_argument('--Validation',action="store_true") # 클러스터링 여부
 
 
-parser.add_argument('--lr_MLP',type=float,nargs='?',default=0.01) # 0.0001
-parser.add_argument('--lr_anfis',type=float,nargs='?',default=0.0001) # 0.01
+parser.add_argument('--lr_MLP',type=float,nargs='?',default=0.01) # 0.01
+parser.add_argument('--lr_anfis',type=float,nargs='?',default=0.0001) # 0.0001
 parser.add_argument('--epochs_MLP',type=int,nargs='?',default=300) # 300
-parser.add_argument('--epochs_anfis',type=int,nargs='?',default=300) # 100
+parser.add_argument('--epochs_anfis',type=int,nargs='?',default=300) # 300
 parser.add_argument('--hidden',type=int,nargs='?',default=128) # 128
 
 

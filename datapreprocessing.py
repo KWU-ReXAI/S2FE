@@ -25,7 +25,7 @@ parser.add_argument('--financial',type=bool,nargs='?',default=False)
 parser.add_argument('--public',type=bool,nargs='?',default=False)
 parser.add_argument('--macroeconomic',type=bool,nargs='?',default=False)
 parser.add_argument('--use_all',type=bool,nargs='?',default=False)
-parser.add_argument('--n_features_t',type=int,nargs='?',default=5)
+parser.add_argument('--n_features_t',type=int,nargs='?',default=6)
 
 
 parser.add_argument('--feature',type=str,nargs='?',default="rf")

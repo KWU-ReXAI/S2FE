@@ -3,11 +3,6 @@ import os
 from pathlib import Path
 from datetime import datetime, timedelta
 
-import torch
-from googleapiclient.discovery import build
-import yt_dlp
-import whisper
-import re
 from tqdm import tqdm
 
 import google.generativeai as genai

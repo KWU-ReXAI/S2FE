@@ -27,7 +27,7 @@ whisper_model = whisper.load_model("medium").to(device)
 
 # gemini 모델 로드
 genai.configure(api_key=GEMINI_API_KEY)
-gemini_model = genai.GenerativeModel("gemini-2.0-flash")
+gemini_model = genai.GenerativeModel("gemini-2.5-flash")
 
 # GPT 모델 로드
 gpt_model = ChatOpenAI(temperature=0, model="gpt-4o", openai_api_key=OPENAI_API_KEY)

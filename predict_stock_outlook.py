@@ -3,11 +3,6 @@ import os
 from pathlib import Path
 from datetime import datetime, timedelta
 
-import torch
-from googleapiclient.discovery import build
-import yt_dlp
-import whisper
-import re
 from tqdm import tqdm
 
 import google.generativeai as genai
@@ -19,339 +14,62 @@ import pandas as pd
 load_dotenv()  # .env 파일에서 환경변수 불러오기
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
-
-# whisper 모델 로드 (base, small, medium, large 중 선택 가능)
-device = "cuda" if torch.cuda.is_available() else "cpu"
-whisper_model = whisper.load_model("medium").to(device)
 
 # gemini 모델 로드
 genai.configure(api_key=GEMINI_API_KEY)
-gemini_model = genai.GenerativeModel("gemini-2.0-flash")
+gemini_model = genai.GenerativeModel("gemini-2.5-flash")
 
 # GPT 모델 로드
 gpt_model = ChatOpenAI(temperature=0, model="gpt-4o", openai_api_key=OPENAI_API_KEY)
-
-# YOUTUBE 빌드
-youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
-
-# -----------------------------
-# 유튜브 채널명으로 채널ID 추출
-# 입력 예: "한국경제TV" 또는 "@wowtv"
-# 출력: 채널 ID
-# -----------------------------
-def get_channel_id(channel_name):
-	res = youtube.search().list(
-		q=channel_name,
-		type="channel",
-		part="snippet",
-		maxResults=1
-	).execute()
-
-	# 결과에서 채널 ID 추출
-	if res.get("items"):
-		channel_id = res["items"][0]["snippet"]["channelId"]
-		print("📺 채널 ID:", channel_id)
-	else:
-		print("채널을 찾을 수 없습니다.")
-
-	return channel_id
-
-# -----------------------------
-# 채널 ID로 업로드 playlist ID 얻기
-# 입력: channel id
-# 출력: playlist id
-# -----------------------------
-def get_uploads_playlist_id(channel_id):
-    res = youtube.channels().list(
-        part="contentDetails",
-        id=channel_id
-    ).execute()
-    return res["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
-
-# -----------------------------
-# playlist ID로 플레이리스트 내 모든 video ID와 업로드 날짜 얻기
-# 입력: playlist id
-# 출력: type: 튜플 리스트  ex) [(id1, date1, 조회수1), (id2, date2, 조회수2) ...]
-# -----------------------------
-def get_video_datas_from_playlist(playlist_id):
-    video_list = []
-    next_page_token = None
-    video_id_date_pairs = []
-
-    # 1. playlistItems API로 video ID + 업로드 날짜 가져오기
-    while True:
-        res = youtube.playlistItems().list(
-            part="snippet",
-            playlistId=playlist_id,
-            maxResults=50,
-            pageToken=next_page_token
-        ).execute()
-
-        for item in res["items"]:
-            snippet = item["snippet"]
-            video_id = snippet["resourceId"]["videoId"]
-            published_at = snippet["publishedAt"]
-            video_id_date_pairs.append((video_id, published_at))
-
-        next_page_token = res.get("nextPageToken")
-        if not next_page_token:
-            break
-
-    # 2. video ID로 조회수 가져오기
-    for i in range(0, len(video_id_date_pairs), 50):
-        batch = video_id_date_pairs[i:i+50]
-        ids_only = [vid for vid, _ in batch]
-
-        res = youtube.videos().list(
-            part="statistics",
-            id=",".join(ids_only)
-        ).execute()
-
-        stats = {item["id"]: int(item["statistics"].get("viewCount", 0)) for item in res["items"]}
-
-        # 3. 튜플로 저장: (video_id, published_at, view_count)
-        for video_id, published_at in batch:
-            view_count = stats.get(video_id, 0)
-            video_list.append((video_id, published_at, view_count))
-
-    return video_list
-
-# -----------------------------
-# video ids로 업로드 날짜 필터링하기
-# 입력: video_datas(type 튜플 리스트), 시작날짜, 끝날짜 ("2001-04-30" 형식으로 입력)
-# 출력: 필터링 된 video_datas(type 튜플 리스트)
-# -----------------------------
-def filter_by_date(video_datas, start_date, end_date):
-    # 문자열 → datetime 객체로 변환
-    start_dt = datetime.strptime(start_date + "T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ")
-    end_dt = datetime.strptime(end_date + "T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ")
-
-    filtered = []
-    for video_id, published_at, view_count in video_datas:
-        pub_date = datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%SZ")
-        if start_dt <= pub_date < end_dt:
-            filtered.append((video_id, published_at, view_count))
-
-    return filtered
-    
-# -----------------------------
-# 조회수 기준 필터링
-# 입력: video_datas(type 튜플 리스트), 최소조회수
-# 출력: video_datas(type 튜플 리스트)
-# -----------------------------
-def filter_videos_by_view_count(video_tuples, min_views=0, max_views=float("inf")):
-    return [
-        (video_id, published_at, view_count)
-        for video_id, published_at, view_count in video_tuples
-        if min_views <= view_count <= max_views
-    ]
-    
-# -----------------------------
-# 채널영상을 날짜, 조회수 기준 필터링
-# 입력: channel_id, 기간, 최소조회수
-# 출력: video_datas(type 튜플 리스트)
-# -----------------------------
-def get_filtered_videos_by_channel(channel_id, start_date, end_date, min_views=0):
-    video_results = []
-    next_page_token = None
-
-    # 날짜 문자열 → datetime 객체 → ISO 형식으로 변환
-    start_iso = (datetime.strptime(start_date, "%Y-%m-%d") - timedelta(days=7)).isoformat("T") + "Z"
-    end_iso = datetime.strptime(end_date, "%Y-%m-%d").isoformat("T") + "Z"
-
-    # 1. search().list() → video ID + publishedAt
-    temp_videos = []
-    while True:
-        res = youtube.search().list(
-            part="snippet",
-            channelId=channel_id,
-            publishedAfter=start_iso,
-            publishedBefore=end_iso,
-            maxResults=50,
-            pageToken=next_page_token,
-            type="video",
-            order="date"
-        ).execute()
-
-        for item in res["items"]:
-            video_id = item["id"]["videoId"]
-            published_at = item["snippet"]["publishedAt"]
-            temp_videos.append((video_id, published_at))
-
-        next_page_token = res.get("nextPageToken")
-        if not next_page_token:
-            break
-
-    # 2. videos().list() → 조회수 붙이기
-    for i in range(0, len(temp_videos), 50):
-        batch = temp_videos[i:i+50]
-        ids = [vid for vid, _ in batch]
-
-        res = youtube.videos().list(
-            part="statistics",
-            id=",".join(ids)
-        ).execute()
-
-        stats = {
-            item["id"]: int(item["statistics"].get("viewCount", 0))
-            for item in res["items"]
-        }
-
-        for video_id, published_at in batch:
-            view_count = stats.get(video_id, 0)
-            if view_count >= min_views:
-                video_results.append((video_id, published_at, view_count))
-
-    return video_results
-
-# -----------------------------
-# 유튜브 영상 검색
-# date 이전의 query 검색 결과들만 보여줌 
-# date는 '2025-04-11' 형식으로 입력
-# -----------------------------
-def search_videos(query, date):
-	date += 'T00:00:00Z' # ISO 8601 형식으로 변경
-
-	# Step 1: 검색
-	search_res = youtube.search().list(
-		q=query,
-		part='snippet',
-		type='video',
-		maxResults=50,
-		order='date',
-		publishedBefore=date
-	).execute()
-	
-	# Step 2: videoId 수집
-	video_ids = [item['id']['videoId'] for item in search_res['items']]
-	if not video_ids:
-		print("조건에 맞는 영상 없음")
-
-	return video_ids
-
-# -----------------------------
-# 유튜브 링크 or id에서 음성파일 추출
-# INPUT: method(link or id), youtube id or link, 오디오 다운로드 경로
-# -----------------------------
-def extract_video_audio(method, video_id, audio_dir):
-	os.makedirs('./audio', exist_ok=True)
-	
-	if method == "link":
-		url = video_id
-	elif method == "id":
-		url = "https://www.youtube.com/watch?v=" + video_id
-	else:
-		print('method인자로 link or id를 입력하세요')
-		return False
-
-	ydl_opts = {
-		'format': 'bestaudio/best',
-		'outtmpl': f'{audio_dir}.%(ext)s',
-		'postprocessors': [{
-			'key': 'FFmpegExtractAudio',
-			'preferredcodec': 'mp3',
-		}]
-	}
-
-	try:
-		with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-			ydl.download([url])
-		print("음성파일 다운로드 성공")
-		return True
-	except:
-		print("음성파일 다운로드 실패")
-		return False
-
-# -----------------------------
-# 음성파일을 텍스트로 변환
-# INPUT: youtube id, 오디오 다운로드 경로
-# -----------------------------
-def audio2text(audio_dir):
-	# 음성 파일 STT 수행
-	result = whisper_model.transcribe(f'{audio_dir}.mp3', language="ko")  # wav, mp4 등도 OK
-
-	# 텍스트 출력
-	print(result["text"])
-
-	return result["text"]
-
-# -----------------------------
-# 자막 전처리 함수
-# -----------------------------
-def clean_srt(srt_text: str) -> str:
-	srt_text = re.sub(r"(좀|그냥|뭐랄까|그러니까|아니|약간|뭔가|뭐냐면요)", "", srt_text)
-	return srt_text
-
-
-# ------------------------
-# GPT-4o 요약
-# ------------------------
-def summarize_text(text: str, stock: str) -> str:
-	system_prompt = """
-너는 경제 전문 뉴스 분석 AI야. 사용자가 지정한 종목(회사명)과 직접적으로 관련된 정보만 선택해 핵심적으로 요약해.
-사실 기반으로 요약하고, 감성이나 추론이 필요한 경우에는 중립적으로 표현해.
-"""
-
-	user_prompt = f"""
-다음은 경제 뉴스 기사입니다.
-
-이 기사에서 **한국 상장 기업 "{stock}"**과 관련된 내용만 골라 요약해 주세요.
-
-요약 기준:
-- "{stock}"이 언급된 부분 중심
-- 관련 사업, 실적, 주가, 시장 반응, 경쟁사와의 연관성
-- 정부 정책, 산업 트렌드 등 외부 요인 중 관련 있는 부분
-- 부정적/긍정적 논조도 간단히 언급 (있는 경우)
-
-형식은 간결한 문장 또는 Bullet Point 형식으로 작성해 주세요.
-
-기사 전문:
-{text}
-"""
-
-	response = gpt_model([
-		SystemMessage(content=system_prompt.strip()),
-		HumanMessage(content=user_prompt.strip())
-	])
-	return response.content.strip()
-
-
 
 # ------------------------
 # GPT-4o 등락 예측
 # ------------------------
 def predict_market_from_summary(summary: str, stock: str) -> str:
 	system_prompt = """
-당신은 주어진 뉴스 기사와 경제 영상 스크립트를 종합적으로 분석하여, 특정 주식 종목의 단기 등락 가능성을 판단하는 다중 정보 분석 전문가입니다.
+당신은 주어진 기업 소식을 종합적으로 분석하여, 특정 주식 종목의 단기 등락 가능성을 판단하는 정보 분석 전문가입니다. 제시되는 분석 단계를 따라 논리적으로 추론한 후, 최종 판단을 단 하나의 정수로만 내려야 합니다.
 """
 
 	user_prompt = f"""
-한국 상장 기업 "{stock}"과 관련된 **소식**이 제공됩니다.
+한국 상장 기업 "{stock}"과 관련된 소식이 제공됩니다.
 
-**제공된 두 가지 콘텐츠의 내용을 종합적으로 분석**하여 "{stock}"의 단기 주가 등락 전망을 판단하세요.
+[분석 작업]
+아래 **[분석 단계]**에 따라 머릿속으로 단계별로 생각한 후, "{stock}"의 단기 주가 등락에 대한 최종 판단을 **[출력 지시사항]**에 맞춰 출력하세요.
 
-**[중요 규칙]**
-1. ❗️**제공된 두 가지 콘텐츠(뉴스 기사, 영상 스크립트)에 나타난 정보만을 근거로 판단하세요.**
-2. 출력은 반드시 정수형이어야 합니다.
-3. 주가가 상승할 것으로 추측되면 +1, 주가가 하락할 것으로 추측되면 -1, 주가 변동이 미미할 거으로 추측되거나 주가 예측이 불가능하면 0을 출력하세요.
---
+[분석 단계 (Chain of Thought)]
+1단계: 핵심 정보 식별
+- 제공된 소식의 가장 중요한 사실(Fact)은 무엇인가?
+- 이 소식의 주체와 대상은 누구인가? (예: 정부 정책, 기업 발표, 시장 루머 등)
 
-**[출력 형식 설명]**
-- '+1': 상승
-- '0': 횡보
-- '-1': 하락
+2단계: 정보의 성격 및 강도 분석
+- 이 정보는 기업에 긍정적인가(호재), 부정적인가(악재), 혹은 중립적인가?
+- 정보의 영향력은 어느 정도인가? (예: 1회성 해프닝, 지속적인 성장 동력, 구조적 리스크 등)
 
-**[출력 예시]**
+3단계: 주가 영향력 평가
+- 이 정보가 단기 주가에 즉각적으로 영향을 미칠 가능성이 있는가?
+- 시장에서 이미 예상하고 있던 내용인가(선반영)? 혹은 예상치 못한 새로운 정보(서프라이즈)인가?
+- 시장의 전반적인 투자 심리(투심)와 "{stock}"이 속한 산업의 현재 상황을 고려할 때, 이 정보의 파급력은 어떠할 것인가?
+
+4단계: 종합 결론 도출
+- 위 1, 2, 3단계를 종합했을 때, "{stock}"의 주가는 단기적으로 상승, 하락, 보합(변동 미미) 중 어느 방향으로 움직일 가능성이 가장 높은가?
+
+[출력 지시사항]
+1. ❗️오직 '+1', '0', '-1' 중 하나의 정수만 출력해야 합니다.
+2. 어떠한 경우에도 위 [분석 단계]에 대한 설명, 자신의 생각 과정, 근거, 부가적인 텍스트, 줄바꿈 등 다른 어떤 문자도 포함해서는 안 됩니다.
+3. 최종 판단 결과인 정수 값 외에 다른 모든 출력은 금지됩니다.
+- 주가 상승 예상: +1
+- 주가 변동 미미 또는 예측 불가 예상: 0
+- 주가 하락 예상: -1
+
+[출력 예시]
 +1
 
-**[뉴스 기사]**
+[기업 소식]
 {summary}
----
 
 """
 
-	response = gpt_model([
+	response = gemini_model([
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt)
     ])
@@ -362,38 +80,53 @@ def predict_market_from_summary(summary: str, stock: str) -> str:
 # ------------------------
 def predict_market_from_mix(news_article: str, video_script:str, stock: str) -> str:
 	system_prompt = """
-당신은 주어진 뉴스 기사와 경제 영상 스크립트를 종합적으로 분석하여, 특정 주식 종목의 단기 등락 가능성을 판단하는 다중 정보 분석 전문가입니다.
+당신은 주어진 뉴스 기사와 경제 영상 스크립트를 종합적으로 분석하여, 특정 주식 종목의 단기 등락 가능성을 판단하는 정보 분석 전문가입니다. 제시되는 분석 단계를 따라 논리적으로 추론한 후, 최종 판단을 단 하나의 정수로만 내려야 합니다.
 """
 
 	user_prompt = f"""
 한국 상장 기업 "{stock}"과 관련된 **뉴스 기사와 경제 영상 스크립트**가 제공됩니다.
 
-**제공된 두 가지 콘텐츠의 내용을 종합적으로 분석**하여 "{stock}"의 단기 주가 등락 전망을 판단하세요.
+[분석 작업]
+아래 **[분석 단계]**에 따라 머릿속으로 단계별로 생각한 후, "{stock}"의 단기 주가 등락에 대한 최종 판단을 **[출력 지시사항]**에 맞춰 출력하세요.
 
-**[중요 규칙]**
-1. ❗️**제공된 두 가지 콘텐츠(뉴스 기사, 영상 스크립트)에 나타난 정보만을 근거로 판단하세요.**
-2. 출력은 반드시 정수형이어야 합니다.
-3. 주가가 상승할 것으로 추측되면 +1, 주가가 하락할 것으로 추측되면 -1, 주가 변동이 미미할 거으로 추측되거나 주가 예측이 불가능하면 0을 출력하세요.
---
+[분석 단계 (Chain of Thought)]
+1단계: 핵심 정보 식별
+- 제공된 소식의 가장 중요한 사실(Fact)은 무엇인가?
+- 이 소식의 주체와 대상은 누구인가? (예: 정부 정책, 기업 발표, 시장 루머 등)
 
-**[출력 형식 설명]**
-- '+1': 상승
-- '0': 횡보
-- '-1': 하락
+2단계: 정보의 성격 및 강도 분석
+- 이 정보는 기업에 긍정적인가(호재), 부정적인가(악재), 혹은 중립적인가?
+- 정보의 영향력은 어느 정도인가? (예: 1회성 해프닝, 지속적인 성장 동력, 구조적 리스크 등)
 
-**[출력 예시]**
+3단계: 주가 영향력 평가
+- 이 정보가 단기 주가에 즉각적으로 영향을 미칠 가능성이 있는가?
+- 시장에서 이미 예상하고 있던 내용인가(선반영)? 혹은 예상치 못한 새로운 정보(서프라이즈)인가?
+- 시장의 전반적인 투자 심리(투심)와 "{stock}"이 속한 산업의 현재 상황을 고려할 때, 이 정보의 파급력은 어떠할 것인가?
+
+4단계: 종합 결론 도출
+- 위 1, 2, 3단계를 종합했을 때, "{stock}"의 주가는 단기적으로 상승, 하락, 보합(변동 미미) 중 어느 방향으로 움직일 가능성이 가장 높은가?
+
+[출력 지시사항]
+1. ❗️오직 '+1', '0', '-1' 중 하나의 정수만 출력해야 합니다.
+2. 어떠한 경우에도 위 [분석 단계]에 대한 설명, 자신의 생각 과정, 근거, 부가적인 텍스트, 줄바꿈 등 다른 어떤 문자도 포함해서는 안 됩니다.
+3. 최종 판단 결과인 정수 값 외에 다른 모든 출력은 금지됩니다.
+- 주가 상승 예상: +1
+- 주가 변동 미미 또는 예측 불가 예상: 0
+- 주가 하락 예상: -1
+
+[출력 예시]
 +1
 
-**[뉴스 기사]**
+[뉴스 기사]
 {news_article}
 ---
-**[경제 영상]**
+[경제 영상]
 {video_script}
 ---
 
 """
 
-	response = gpt_model([
+	response = gemini_model([
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt)
     ])

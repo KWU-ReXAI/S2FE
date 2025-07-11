@@ -5,9 +5,10 @@ from datetime import datetime, timedelta
 
 from tqdm import tqdm
 
-import google.generativeai as genai
-from langchain.chat_models import ChatOpenAI
+from google import genai
+from google.genai import types
 from langchain.schema import SystemMessage, HumanMessage
+
 
 import pandas as pd
 
@@ -16,11 +17,11 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # gemini 모델 로드
-genai.configure(api_key=GEMINI_API_KEY)
-gemini_model = genai.GenerativeModel("gemini-2.5-flash")
+#genai.configure(api_key=GEMINI_API_KEY)
+client=genai.Client(api_key=GEMINI_API_KEY)
 
 # GPT 모델 로드
-gpt_model = ChatOpenAI(temperature=0, model="gpt-4o", openai_api_key=OPENAI_API_KEY)
+#gpt_model = ChatOpenAI(temperature=0, model="gpt-4o", openai_api_key=OPENAI_API_KEY)
 
 # ------------------------
 # GPT-4o 등락 예측
@@ -69,11 +70,14 @@ def predict_market_from_summary(summary: str, stock: str) -> str:
 
 """
 
-	response = gemini_model([
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=user_prompt)
-    ])
-	return response.content.strip()
+	response = client.models.generate_content(
+		model="gemini-2.5-flash",
+		config=types.GenerateContentConfig(
+			system_instruction=system_prompt),
+		contents=user_prompt
+	)
+
+	return response.text
 
 # ------------------------
 # GPT-4o 등락 예측
@@ -126,11 +130,14 @@ def predict_market_from_mix(news_article: str, video_script:str, stock: str) -> 
 
 """
 
-	response = gemini_model([
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=user_prompt)
-    ])
-	return response.content.strip()
+	response = client.models.generate_content(
+		model="gemini-2.5-flash",
+		config=types.GenerateContentConfig(
+			system_instruction=system_prompt),
+		contents=user_prompt
+	)
+
+	return response.text
 
 # ------------------------
 # 앞의 모든 함수를 이용한 최종 함수

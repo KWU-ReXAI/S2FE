@@ -71,6 +71,7 @@ def calculate_vif_iteratively(df, n_features, threshold=10.0):
 
     # 원본 데이터프레임 복사
     df_filtered = df.copy()
+    vif_data = pd.DataFrame()
 
     # 0값이 50% 이상인 열은 미리 제거
     excluded_cols_for_vif = []

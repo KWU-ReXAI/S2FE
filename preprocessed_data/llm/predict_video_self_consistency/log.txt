@@ -1,0 +1,2 @@
+[2025-07-12 16:55:14] predict completed: preprocessed_data/llm/predict_video_self_consistency/산업재/000120/2021-Q1-01-1.txt
+[2025-07-12 16:55:32] predict completed: preprocessed_data/llm/predict_video_self_consistency/산업재/000120/2021-Q1-01-3.txt

@@ -2,12 +2,9 @@ from dotenv import load_dotenv
 import os
 from pathlib import Path
 from datetime import datetime, timedelta
-
-from tqdm import tqdm
-
+from collections import Counter
 from google import genai
 from google.genai import types
-from langchain.schema import SystemMessage, HumanMessage
 
 
 import pandas as pd
@@ -77,7 +74,117 @@ def predict_market_from_summary(summary: str, stock: str) -> str:
 		contents=user_prompt
 	)
 
-	return response.text
+	return response.text.strip()
+
+def predict_market_from_summary_self_consistency(summary: str, stock: str, n_samples:int=3) -> str:
+	system_prompt = """
+당신은 주어진 기업 소식을 종합적으로 분석하여, 특정 주식 종목의 단기 등락 가능성을 판단하는 정보 분석 전문가입니다. 제시되는 분석 단계를 따라 논리적으로 추론한 후, 최종 판단을 단 하나의 정수로만 내려야 합니다.
+"""
+
+	user_prompt = f"""
+한국 상장 기업 "{stock}"과 관련된 소식이 제공됩니다.
+
+[분석 작업]
+아래 **[분석 단계]**에 따라 머릿속으로 단계별로 생각한 후, "{stock}"의 단기 주가 등락에 대한 최종 판단을 **[출력 지시사항]**에 맞춰 출력하세요.
+
+[분석 단계 (Chain of Thought)]
+1단계: 핵심 정보 식별
+- 제공된 소식의 가장 중요한 사실(Fact)은 무엇인가?
+- 이 소식의 주체와 대상은 누구인가? (예: 정부 정책, 기업 발표, 시장 루머 등)
+
+2단계: 정보의 성격 및 강도 분석
+- 이 정보는 기업에 긍정적인가(호재), 부정적인가(악재), 혹은 중립적인가?
+- 정보의 영향력은 어느 정도인가? (예: 1회성 해프닝, 지속적인 성장 동력, 구조적 리스크 등)
+
+3단계: 주가 영향력 평가
+- 이 정보가 단기 주가에 즉각적으로 영향을 미칠 가능성이 있는가?
+- 시장에서 이미 예상하고 있던 내용인가(선반영)? 혹은 예상치 못한 새로운 정보(서프라이즈)인가?
+- 시장의 전반적인 투자 심리(투심)와 "{stock}"이 속한 산업의 현재 상황을 고려할 때, 이 정보의 파급력은 어떠할 것인가?
+
+4단계: 종합 결론 도출
+- 위 1, 2, 3단계를 종합했을 때, "{stock}"의 주가는 단기적으로 상승, 하락, 보합(변동 미미) 중 어느 방향으로 움직일 가능성이 가장 높은가?
+
+[출력 지시사항]
+1. ❗️오직 '+1', '0', '-1' 중 하나의 정수만 출력해야 합니다.
+2. 어떠한 경우에도 위 [분석 단계]에 대한 설명, 자신의 생각 과정, 근거, 부가적인 텍스트, 줄바꿈 등 다른 어떤 문자도 포함해서는 안 됩니다.
+3. 최종 판단 결과인 정수 값 외에 다른 모든 출력은 금지됩니다.
+- 주가 상승 예상: +1
+- 주가 변동 미미 또는 예측 불가 예상: 0
+- 주가 하락 예상: -1
+
+[출력 예시]
++1
+
+[기업 소식]
+{summary}
+
+"""
+
+	predictions = []
+	# n_samples 만큼 예측을 반복하여 결과를 리스트에 저장
+	for _ in range(n_samples):
+		try:
+			response = client.models.generate_content(
+				model="gemini-2.5-flash",
+				config=types.GenerateContentConfig(
+					system_instruction=system_prompt,
+				temperature=0.7),
+				contents=user_prompt
+			)
+			# 응답 텍스트의 공백을 제거하고 predictions 리스트에 추가
+			predictions.append(response.text.strip())
+		except Exception as e:
+			print(f"API 호출 중 오류 발생: {e}")
+			# 오류 발생 시 해당 샘플은 건너뜀
+			continue
+
+	if not predictions:
+		return '0'
+
+	# 다수결 투표 로직 (새로운 버전)
+	# Counter를 사용하여 각 예측 값의 빈도를 계산
+	counts = Counter(predictions)
+	# 빈도수가 높은 순으로 정렬
+	most_common = counts.most_common()
+
+	# 1. 예측된 값이 하나뿐이거나, 최빈값이 명확히 하나일 경우 (동률이 아님)
+	# most_common 리스트의 길이가 1이거나, 첫 번째 값의 빈도수가 두 번째 값의 빈도수보다 클 때
+	if len(most_common) == 1 or most_common[0][1] > most_common[1][1]:
+		# 가장 많이 나온 값을 그대로 반환
+		return most_common[0][0]
+
+	# 2. 최빈값이 동률일 경우
+	else:
+		# 동률인 값들을 저장할 리스트
+		tied_values = []
+		# 가장 높은 빈도수를 저장
+		top_count = most_common[0][1]
+
+		# most_common 리스트를 순회하며 가장 높은 빈도수와 같은 값을 모두 찾음
+		for value, count in most_common:
+			if count == top_count:
+				# 계산을 위해 정수(int)로 변환하여 추가
+				tied_values.append(int(value))
+			else:
+				# 정렬되어 있으므로, 더 낮은 빈도수가 나오면 중단
+				break
+
+		# 동률인 값들의 평균을 계산
+		average = sum(tied_values) / len(tied_values)
+
+		# 평균을 반올림 (0.5는 올림 처리)
+		# Python의 round()는 0.5를 짝수에 가깝게 반올림하므로, 직접 구현합니다.
+		# 예: 0.5 -> 1, -0.5 -> 0
+		if average >= 0:
+			rounded_average = int(average + 0.5)
+		else:
+			rounded_average = int(average - 0.5)
+
+		# 최종 결과를 '+1', '0', '-1' 형식에 맞춰 문자열로 반환
+		if rounded_average > 0:
+			return f"+{rounded_average}"
+		else:
+			return str(rounded_average)
 
 # ------------------------
 # GPT-4o 등락 예측
@@ -138,6 +245,124 @@ def predict_market_from_mix(news_article: str, video_script:str, stock: str) -> 
 	)
 
 	return response.text
+
+
+# ------------------------
+# GPT-4o 등락 예측
+# ------------------------
+def predict_market_from_mix_self_consistency(news_article: str, video_script:str, stock: str,n_samples:int=3) -> str:
+	system_prompt = """
+당신은 주어진 뉴스 기사와 경제 영상 스크립트를 종합적으로 분석하여, 특정 주식 종목의 단기 등락 가능성을 판단하는 정보 분석 전문가입니다. 제시되는 분석 단계를 따라 논리적으로 추론한 후, 최종 판단을 단 하나의 정수로만 내려야 합니다.
+"""
+
+	user_prompt = f"""
+한국 상장 기업 "{stock}"과 관련된 **뉴스 기사와 경제 영상 스크립트**가 제공됩니다.
+
+[분석 작업]
+아래 **[분석 단계]**에 따라 머릿속으로 단계별로 생각한 후, "{stock}"의 단기 주가 등락에 대한 최종 판단을 **[출력 지시사항]**에 맞춰 출력하세요.
+
+[분석 단계 (Chain of Thought)]
+1단계: 핵심 정보 식별
+- 제공된 소식의 가장 중요한 사실(Fact)은 무엇인가?
+- 이 소식의 주체와 대상은 누구인가? (예: 정부 정책, 기업 발표, 시장 루머 등)
+
+2단계: 정보의 성격 및 강도 분석
+- 이 정보는 기업에 긍정적인가(호재), 부정적인가(악재), 혹은 중립적인가?
+- 정보의 영향력은 어느 정도인가? (예: 1회성 해프닝, 지속적인 성장 동력, 구조적 리스크 등)
+
+3단계: 주가 영향력 평가
+- 이 정보가 단기 주가에 즉각적으로 영향을 미칠 가능성이 있는가?
+- 시장에서 이미 예상하고 있던 내용인가(선반영)? 혹은 예상치 못한 새로운 정보(서프라이즈)인가?
+- 시장의 전반적인 투자 심리(투심)와 "{stock}"이 속한 산업의 현재 상황을 고려할 때, 이 정보의 파급력은 어떠할 것인가?
+
+4단계: 종합 결론 도출
+- 위 1, 2, 3단계를 종합했을 때, "{stock}"의 주가는 단기적으로 상승, 하락, 보합(변동 미미) 중 어느 방향으로 움직일 가능성이 가장 높은가?
+
+[출력 지시사항]
+1. ❗️오직 '+1', '0', '-1' 중 하나의 정수만 출력해야 합니다.
+2. 어떠한 경우에도 위 [분석 단계]에 대한 설명, 자신의 생각 과정, 근거, 부가적인 텍스트, 줄바꿈 등 다른 어떤 문자도 포함해서는 안 됩니다.
+3. 최종 판단 결과인 정수 값 외에 다른 모든 출력은 금지됩니다.
+- 주가 상승 예상: +1
+- 주가 변동 미미 또는 예측 불가 예상: 0
+- 주가 하락 예상: -1
+
+[출력 예시]
++1
+
+[뉴스 기사]
+{news_article}
+---
+[경제 영상]
+{video_script}
+---
+
+"""
+
+	predictions = []
+	# n_samples 만큼 예측을 반복하여 결과를 리스트에 저장
+	for _ in range(n_samples):
+		try:
+			response = client.models.generate_content(
+				model="gemini-2.5-flash",
+				config=types.GenerateContentConfig(
+					system_instruction=system_prompt,
+					temperature=0.7),
+				contents=user_prompt
+			)
+			# 응답 텍스트의 공백을 제거하고 predictions 리스트에 추가
+			predictions.append(response.text.strip())
+		except Exception as e:
+			print(f"API 호출 중 오류 발생: {e}")
+			# 오류 발생 시 해당 샘플은 건너뜀
+			continue
+
+	if not predictions:
+		return '0'
+
+	# 다수결 투표 로직 (새로운 버전)
+	# Counter를 사용하여 각 예측 값의 빈도를 계산
+	counts = Counter(predictions)
+	# 빈도수가 높은 순으로 정렬
+	most_common = counts.most_common()
+
+	# 1. 예측된 값이 하나뿐이거나, 최빈값이 명확히 하나일 경우 (동률이 아님)
+	# most_common 리스트의 길이가 1이거나, 첫 번째 값의 빈도수가 두 번째 값의 빈도수보다 클 때
+	if len(most_common) == 1 or most_common[0][1] > most_common[1][1]:
+		# 가장 많이 나온 값을 그대로 반환
+		return most_common[0][0]
+
+	# 2. 최빈값이 동률일 경우
+	else:
+		# 동률인 값들을 저장할 리스트
+		tied_values = []
+		# 가장 높은 빈도수를 저장
+		top_count = most_common[0][1]
+
+		# most_common 리스트를 순회하며 가장 높은 빈도수와 같은 값을 모두 찾음
+		for value, count in most_common:
+			if count == top_count:
+				# 계산을 위해 정수(int)로 변환하여 추가
+				tied_values.append(int(value))
+			else:
+				# 정렬되어 있으므로, 더 낮은 빈도수가 나오면 중단
+				break
+
+		# 동률인 값들의 평균을 계산
+		average = sum(tied_values) / len(tied_values)
+
+		# 평균을 반올림 (0.5는 올림 처리)
+		# Python의 round()는 0.5를 짝수에 가깝게 반올림하므로, 직접 구현합니다.
+		# 예: 0.5 -> 1, -0.5 -> 0
+		if average >= 0:
+			rounded_average = int(average + 0.5)
+		else:
+			rounded_average = int(average - 0.5)
+
+		# 최종 결과를 '+1', '0', '-1' 형식에 맞춰 문자열로 반환
+		if rounded_average > 0:
+			return f"+{rounded_average}"
+		else:
+			return str(rounded_average)
 
 # ------------------------
 # 앞의 모든 함수를 이용한 최종 함수

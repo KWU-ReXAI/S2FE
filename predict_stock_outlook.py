@@ -2,12 +2,9 @@ from dotenv import load_dotenv
 import os
 from pathlib import Path
 from datetime import datetime, timedelta
-
-from tqdm import tqdm
-
+from collections import Counter
 from google import genai
 from google.genai import types
-from langchain.schema import SystemMessage, HumanMessage
 
 
 import pandas as pd
@@ -77,7 +74,243 @@ def predict_market_from_summary(summary: str, stock: str) -> str:
 		contents=user_prompt
 	)
 
+	return response.text.strip()
+
+def predict_market_from_summary_with_ta(summary: str,ta:str, stock: str) -> str:
+	system_prompt = """
+당신은 주어진 기업 소식 및 기술적 지표를 종합적으로 분석하여, 특정 주식 종목의 단기 등락 가능성을 판단하는 정보 분석 전문가입니다. 제시되는 분석 단계를 따라 논리적으로 추론한 후, 최종 판단을 단 하나의 정수로만 내려야 합니다.
+"""
+
+	user_prompt = f"""
+한국 상장 기업 "{stock}"과 관련된 소식이 제공됩니다.
+
+기업 관련 소식은 {summary}입니다.
+
+기업의 기술적 지표는 {ta}입니다.
+각 열은 순서대로 날짜, 시가, 고가, 저가, 종가, 거래량, 등락률, SMA_20, SMA_60, EMA_20, RSI, BB_UPPER, BB_MIDDLE, BB_LOWER, MACD, MACD_SIGNAL, MACD_HIST, STOCH_SLOWK, STOCH_SLOWD, OBV입니다.
+
+[분석 작업]
+아래 **[분석 단계]**에 따라 머릿속으로 단계별로 생각한 후, "{stock}"의 단기 주가 등락에 대한 최종 판단을 **[출력 지시사항]**에 맞춰 출력하세요.
+
+[분석 단계 (Chain of Thought)]
+1단계: 핵심 정보 식별
+- 제공된 소식의 가장 중요한 사실(Fact)은 무엇인가?
+- 이 소식의 주체와 대상은 누구인가? (예: 정부 정책, 기업 발표, 시장 루머 등)
+
+2단계: 정보의 성격 및 강도 분석
+- 이 정보는 기업에 긍정적인가(호재), 부정적인가(악재), 혹은 중립적인가?
+- 정보의 영향력은 어느 정도인가? (예: 1회성 해프닝, 지속적인 성장 동력, 구조적 리스크 등)
+- 기술적 지표를 분석했을 때, 긍정적인가, 부정적인가, 혹은 중립적인가?
+
+3단계: 주가 영향력 평가
+- 이 정보가 단기 주가에 즉각적으로 영향을 미칠 가능성이 있는가?
+- 시장에서 이미 예상하고 있던 내용인가(선반영)? 혹은 예상치 못한 새로운 정보(서프라이즈)인가?
+- 시장의 전반적인 투자 심리(투심)와 "{stock}"이 속한 산업의 현재 상황을 고려할 때, 이 정보의 파급력은 어떠할 것인가?
+- 기술적 지표를 고려했을 때, 앞으로의 단기 주가에 어떠한 영향을 미칠 것인가?
+
+4단계: 종합 결론 도출
+- 위 1, 2, 3단계를 종합했을 때, "{stock}"의 주가는 단기적으로 상승, 하락, 보합(변동 미미) 중 어느 방향으로 움직일 가능성이 가장 높은가?
+
+[출력 지시사항]
+1. ❗️오직 '+1', '0', '-1' 중 하나의 정수만 출력해야 합니다.
+2. 어떠한 경우에도 위 [분석 단계]에 대한 설명, 자신의 생각 과정, 근거, 부가적인 텍스트, 줄바꿈 등 다른 어떤 문자도 포함해서는 안 됩니다.
+3. 최종 판단 결과인 정수 값 외에 다른 모든 출력은 금지됩니다.
+- 주가 상승 예상: +1
+- 주가 변동 미미 또는 예측 불가 예상: 0
+- 주가 하락 예상: -1
+
+[출력 예시]
++1
+
+[기업 기술적 지표]
+{ta}
+---
+[기업 소식]
+{summary}
+
+"""
+
+	response = client.models.generate_content(
+		model="gemini-2.5-flash",
+		config=types.GenerateContentConfig(
+			system_instruction=system_prompt),
+		contents=user_prompt
+	)
+
+	return response.text.strip()
+
+def predict_market_from_mix_with_ta(news_article: str, video_script:str,ta:str, stock: str) -> str:
+	system_prompt = """
+당신은 주어진 뉴스 기사와 경제 영상 스크립트를 종합적으로 분석하여, 특정 주식 종목의 단기 등락 가능성을 판단하는 정보 분석 전문가입니다. 제시되는 분석 단계를 따라 논리적으로 추론한 후, 최종 판단을 단 하나의 정수로만 내려야 합니다.
+"""
+
+	user_prompt = f"""
+한국 상장 기업 "{stock}"과 관련된 **뉴스 기사와 경제 영상 스크립트, 그리고 기술적 지표**가 제공됩니다.
+기업의 기술적 지표는 {ta}입니다.
+각 열은 순서대로 날짜, 시가, 고가, 저가, 종가, 거래량, 등락률, SMA_20, SMA_60, EMA_20, RSI, BB_UPPER, BB_MIDDLE, BB_LOWER, MACD, MACD_SIGNAL, MACD_HIST, STOCH_SLOWK, STOCH_SLOWD, OBV입니다.
+
+[분석 작업]
+아래 **[분석 단계]**에 따라 머릿속으로 단계별로 생각한 후, "{stock}"의 단기 주가 등락에 대한 최종 판단을 **[출력 지시사항]**에 맞춰 출력하세요.
+
+[분석 단계 (Chain of Thought)]
+1단계: 핵심 정보 식별
+- 제공된 소식의 가장 중요한 사실(Fact)은 무엇인가?
+- 이 소식의 주체와 대상은 누구인가? (예: 정부 정책, 기업 발표, 시장 루머 등)
+
+2단계: 정보의 성격 및 강도 분석
+- 이 정보는 기업에 긍정적인가(호재), 부정적인가(악재), 혹은 중립적인가?
+- 정보의 영향력은 어느 정도인가? (예: 1회성 해프닝, 지속적인 성장 동력, 구조적 리스크 등)
+- 기술적 지표를 분석했을 때, 긍정적인가, 부정적인가, 혹은 중립적인가?
+
+3단계: 주가 영향력 평가
+- 이 정보가 단기 주가에 즉각적으로 영향을 미칠 가능성이 있는가?
+- 시장에서 이미 예상하고 있던 내용인가(선반영)? 혹은 예상치 못한 새로운 정보(서프라이즈)인가?
+- 시장의 전반적인 투자 심리(투심)와 "{stock}"이 속한 산업의 현재 상황을 고려할 때, 이 정보의 파급력은 어떠할 것인가?
+- 기술적 지표를 고려했을 때, 앞으로의 단기 주가에 어떠한 영향을 미칠 것인가?
+
+4단계: 종합 결론 도출
+- 위 1, 2, 3단계를 종합했을 때, "{stock}"의 주가는 단기적으로 상승, 하락, 보합(변동 미미) 중 어느 방향으로 움직일 가능성이 가장 높은가?
+
+[출력 지시사항]
+1. ❗️오직 '+1', '0', '-1' 중 하나의 정수만 출력해야 합니다.
+2. 어떠한 경우에도 위 [분석 단계]에 대한 설명, 자신의 생각 과정, 근거, 부가적인 텍스트, 줄바꿈 등 다른 어떤 문자도 포함해서는 안 됩니다.
+3. 최종 판단 결과인 정수 값 외에 다른 모든 출력은 금지됩니다.
+- 주가 상승 예상: +1
+- 주가 변동 미미 또는 예측 불가 예상: 0
+- 주가 하락 예상: -1
+
+[출력 예시]
++1
+
+[뉴스 기사]
+{news_article}
+---
+[경제 영상]
+{video_script}
+---
+[기업 기술적 지표]
+{ta}
+"""
+
+	response = client.models.generate_content(
+		model="gemini-2.5-flash",
+		config=types.GenerateContentConfig(
+			system_instruction=system_prompt),
+		contents=user_prompt
+	)
+
 	return response.text
+
+def predict_market_from_summary_self_consistency(summary: str, stock: str, n_samples:int=3) -> str:
+	system_prompt = """
+당신은 주어진 기업 소식을 종합적으로 분석하여, 특정 주식 종목의 단기 등락 가능성을 판단하는 정보 분석 전문가입니다. 제시되는 분석 단계를 따라 논리적으로 추론한 후, 최종 판단을 단 하나의 정수로만 내려야 합니다.
+"""
+
+	user_prompt = f"""
+한국 상장 기업 "{stock}"과 관련된 소식이 제공됩니다.
+
+[분석 작업]
+아래 **[분석 단계]**에 따라 머릿속으로 단계별로 생각한 후, "{stock}"의 단기 주가 등락에 대한 최종 판단을 **[출력 지시사항]**에 맞춰 출력하세요.
+
+[분석 단계 (Chain of Thought)]
+1단계: 핵심 정보 식별
+- 제공된 소식의 가장 중요한 사실(Fact)은 무엇인가?
+- 이 소식의 주체와 대상은 누구인가? (예: 정부 정책, 기업 발표, 시장 루머 등)
+
+2단계: 정보의 성격 및 강도 분석
+- 이 정보는 기업에 긍정적인가(호재), 부정적인가(악재), 혹은 중립적인가?
+- 정보의 영향력은 어느 정도인가? (예: 1회성 해프닝, 지속적인 성장 동력, 구조적 리스크 등)
+
+3단계: 주가 영향력 평가
+- 이 정보가 단기 주가에 즉각적으로 영향을 미칠 가능성이 있는가?
+- 시장에서 이미 예상하고 있던 내용인가(선반영)? 혹은 예상치 못한 새로운 정보(서프라이즈)인가?
+- 시장의 전반적인 투자 심리(투심)와 "{stock}"이 속한 산업의 현재 상황을 고려할 때, 이 정보의 파급력은 어떠할 것인가?
+
+4단계: 종합 결론 도출
+- 위 1, 2, 3단계를 종합했을 때, "{stock}"의 주가는 단기적으로 상승, 하락, 보합(변동 미미) 중 어느 방향으로 움직일 가능성이 가장 높은가?
+
+[출력 지시사항]
+1. ❗️오직 '+1', '0', '-1' 중 하나의 정수만 출력해야 합니다.
+2. 어떠한 경우에도 위 [분석 단계]에 대한 설명, 자신의 생각 과정, 근거, 부가적인 텍스트, 줄바꿈 등 다른 어떤 문자도 포함해서는 안 됩니다.
+3. 최종 판단 결과인 정수 값 외에 다른 모든 출력은 금지됩니다.
+- 주가 상승 예상: +1
+- 주가 변동 미미 또는 예측 불가 예상: 0
+- 주가 하락 예상: -1
+
+[출력 예시]
++1
+
+[기업 소식]
+{summary}
+
+"""
+
+	predictions = []
+	# n_samples 만큼 예측을 반복하여 결과를 리스트에 저장
+	for _ in range(n_samples):
+		try:
+			response = client.models.generate_content(
+				model="gemini-2.5-flash",
+				config=types.GenerateContentConfig(
+					system_instruction=system_prompt,
+				temperature=0.7),
+				contents=user_prompt
+			)
+			# 응답 텍스트의 공백을 제거하고 predictions 리스트에 추가
+			predictions.append(response.text.strip())
+		except Exception as e:
+			print(f"API 호출 중 오류 발생: {e}")
+			# 오류 발생 시 해당 샘플은 건너뜀
+			continue
+
+	if not predictions:
+		return '0'
+
+	# 다수결 투표 로직 (새로운 버전)
+	# Counter를 사용하여 각 예측 값의 빈도를 계산
+	counts = Counter(predictions)
+	# 빈도수가 높은 순으로 정렬
+	most_common = counts.most_common()
+
+	# 1. 예측된 값이 하나뿐이거나, 최빈값이 명확히 하나일 경우 (동률이 아님)
+	# most_common 리스트의 길이가 1이거나, 첫 번째 값의 빈도수가 두 번째 값의 빈도수보다 클 때
+
+	if len(most_common) == 1 or most_common[0][1] > most_common[1][1]:
+		# 가장 많이 나온 값을 그대로 반환
+		return most_common[0][0]
+
+	# 2. 최빈값이 동률일 경우
+	else:
+		# 동률인 값들을 저장할 리스트
+		tied_values = []
+		# 가장 높은 빈도수를 저장
+		top_count = most_common[0][1]
+
+		# most_common 리스트를 순회하며 가장 높은 빈도수와 같은 값을 모두 찾음
+		for value, count in most_common:
+			if count == top_count:
+				# 계산을 위해 정수(int)로 변환하여 추가
+				tied_values.append(int(value))
+			else:
+				# 정렬되어 있으므로, 더 낮은 빈도수가 나오면 중단
+				break
+
+		# 동률인 값들의 평균을 계산
+		average = sum(tied_values) / len(tied_values)
+
+		# 평균을 반올림 (0.5는 올림 처리)
+		# Python의 round()는 0.5를 짝수에 가깝게 반올림하므로, 직접 구현합니다.
+		# 예: 0.5 -> 1, -0.5 -> 0
+		if average >= 0:
+			rounded_average = int(average + 0.5)
+		else:
+			rounded_average = int(average - 0.5)
+
+		# 최종 결과를 '+1', '0', '-1' 형식에 맞춰 문자열로 반환
+		if rounded_average > 0:
+			return f"+{rounded_average}"
+		else:
+			return str(rounded_average)
 
 # ------------------------
 # GPT-4o 등락 예측
@@ -138,6 +371,234 @@ def predict_market_from_mix(news_article: str, video_script:str, stock: str) -> 
 	)
 
 	return response.text
+
+
+# ------------------------
+# GPT-4o 등락 예측
+# ------------------------
+def predict_market_from_mix_self_consistency(news_article: str, video_script:str, stock: str,n_samples:int=3) -> str:
+	system_prompt = """
+당신은 주어진 뉴스 기사와 경제 영상 스크립트를 종합적으로 분석하여, 특정 주식 종목의 단기 등락 가능성을 판단하는 정보 분석 전문가입니다. 제시되는 분석 단계를 따라 논리적으로 추론한 후, 최종 판단을 단 하나의 정수로만 내려야 합니다.
+"""
+
+	user_prompt = f"""
+한국 상장 기업 "{stock}"과 관련된 **뉴스 기사와 경제 영상 스크립트**가 제공됩니다.
+
+[분석 작업]
+아래 **[분석 단계]**에 따라 머릿속으로 단계별로 생각한 후, "{stock}"의 단기 주가 등락에 대한 최종 판단을 **[출력 지시사항]**에 맞춰 출력하세요.
+
+[분석 단계 (Chain of Thought)]
+1단계: 핵심 정보 식별
+- 제공된 소식의 가장 중요한 사실(Fact)은 무엇인가?
+- 이 소식의 주체와 대상은 누구인가? (예: 정부 정책, 기업 발표, 시장 루머 등)
+
+2단계: 정보의 성격 및 강도 분석
+- 이 정보는 기업에 긍정적인가(호재), 부정적인가(악재), 혹은 중립적인가?
+- 정보의 영향력은 어느 정도인가? (예: 1회성 해프닝, 지속적인 성장 동력, 구조적 리스크 등)
+
+3단계: 주가 영향력 평가
+- 이 정보가 단기 주가에 즉각적으로 영향을 미칠 가능성이 있는가?
+- 시장에서 이미 예상하고 있던 내용인가(선반영)? 혹은 예상치 못한 새로운 정보(서프라이즈)인가?
+- 시장의 전반적인 투자 심리(투심)와 "{stock}"이 속한 산업의 현재 상황을 고려할 때, 이 정보의 파급력은 어떠할 것인가?
+
+4단계: 종합 결론 도출
+- 위 1, 2, 3단계를 종합했을 때, "{stock}"의 주가는 단기적으로 상승, 하락, 보합(변동 미미) 중 어느 방향으로 움직일 가능성이 가장 높은가?
+
+[출력 지시사항]
+1. ❗️오직 '+1', '0', '-1' 중 하나의 정수만 출력해야 합니다.
+2. 어떠한 경우에도 위 [분석 단계]에 대한 설명, 자신의 생각 과정, 근거, 부가적인 텍스트, 줄바꿈 등 다른 어떤 문자도 포함해서는 안 됩니다.
+3. 최종 판단 결과인 정수 값 외에 다른 모든 출력은 금지됩니다.
+- 주가 상승 예상: +1
+- 주가 변동 미미 또는 예측 불가 예상: 0
+- 주가 하락 예상: -1
+
+[출력 예시]
++1
+
+[뉴스 기사]
+{news_article}
+---
+[경제 영상]
+{video_script}
+---
+
+"""
+
+	predictions = []
+	# n_samples 만큼 예측을 반복하여 결과를 리스트에 저장
+	for _ in range(n_samples):
+		try:
+			response = client.models.generate_content(
+				model="gemini-2.5-flash",
+				config=types.GenerateContentConfig(
+					system_instruction=system_prompt,
+					temperature=0.7),
+				contents=user_prompt
+			)
+			# 응답 텍스트의 공백을 제거하고 predictions 리스트에 추가
+			predictions.append(response.text.strip())
+		except Exception as e:
+			print(f"API 호출 중 오류 발생: {e}")
+			# 오류 발생 시 해당 샘플은 건너뜀
+			continue
+
+	if not predictions:
+		return '0'
+
+	# 다수결 투표 로직 (새로운 버전)
+	# Counter를 사용하여 각 예측 값의 빈도를 계산
+	counts = Counter(predictions)
+	# 빈도수가 높은 순으로 정렬
+	most_common = counts.most_common()
+
+	# 1. 예측된 값이 하나뿐이거나, 최빈값이 명확히 하나일 경우 (동률이 아님)
+	# most_common 리스트의 길이가 1이거나, 첫 번째 값의 빈도수가 두 번째 값의 빈도수보다 클 때
+	if len(most_common) == 1 or most_common[0][1] > most_common[1][1]:
+		# 가장 많이 나온 값을 그대로 반환
+		return most_common[0][0]
+
+	# 2. 최빈값이 동률일 경우
+	else:
+		# 동률인 값들을 저장할 리스트
+		tied_values = []
+		# 가장 높은 빈도수를 저장
+		top_count = most_common[0][1]
+
+		# most_common 리스트를 순회하며 가장 높은 빈도수와 같은 값을 모두 찾음
+		for value, count in most_common:
+			if count == top_count:
+				# 계산을 위해 정수(int)로 변환하여 추가
+				tied_values.append(int(value))
+			else:
+				# 정렬되어 있으므로, 더 낮은 빈도수가 나오면 중단
+				break
+
+		# 동률인 값들의 평균을 계산
+		average = sum(tied_values) / len(tied_values)
+
+		# 평균을 반올림 (0.5는 올림 처리)
+		# Python의 round()는 0.5를 짝수에 가깝게 반올림하므로, 직접 구현합니다.
+		# 예: 0.5 -> 1, -0.5 -> 0
+		if average >= 0:
+			rounded_average = int(average + 0.5)
+		else:
+			rounded_average = int(average - 0.5)
+
+		# 최종 결과를 '+1', '0', '-1' 형식에 맞춰 문자열로 반환
+		if rounded_average > 0:
+			return f"+{rounded_average}"
+		else:
+			return str(rounded_average)
+
+
+# ------------------------
+# ToT(Tree of Thoughts) 기법을 적용한 주가 등락 예측 함수
+# ------------------------
+def predict_market_from_tot(summary: str, stock: str) -> str:
+	"""
+    ToT(Tree of Thoughts) 기법을 사용하여 주가 등락을 예측합니다.
+    1. 여러 분석적 '생각(Thought)'을 생성합니다.
+    2. 생성된 생각들을 '평가'하여 최고의 생각을 선택합니다.
+    3. 선택된 생각을 바탕으로 최종 결정을 내립니다.
+    """
+
+	# --- 1. Thought Generation Step ---
+	# 여러 관점의 분석을 생성하도록 요청
+	generator_prompt = f"""
+당신은 주어진 뉴스 기사와 경제 영상 스크립트를 종합적으로 분석하여, 특정 주식 종목의 단기 등락 가능성을 판단하는 정보 분석 전문가입니다.
+한국 상장 기업 "{stock}"에 대한 다음 소식을 읽고, 이 소식이 주가에 미칠 영향에 대해 3가지의 서로 다른 관점의 분석을 제시하세요.
+각 분석은 잠재적인 호재, 악재, 또는 시장의 반응을 중심으로 작성해 주세요.
+
+[분석 지시사항]
+- 각 분석은 '분석 1:', '분석 2:', '분석 3:'으로 시작해야 합니다.
+- 간결하지만 핵심적인 논리를 담아 설명해 주세요.
+
+[기업 소식]
+{summary}
+"""
+
+	try:
+		generated_thoughts_response = client.models.generate_content(
+			model="gemini-2.5-flash",
+			contents=generator_prompt
+		)
+		generated_thoughts = generated_thoughts_response.text
+	except Exception as e:
+		print(f"ToT - Thought Generation 단계에서 오류 발생: {e}")
+		return '0'  # 오류 발생 시 중립으로 반환
+
+	# --- 2. State Evaluation Step ---
+	# 생성된 분석들 중 가장 논리적인 것을 선택하도록 요청
+	evaluator_prompt = f"""
+당신은 분석가들의 분석을 평가하는 수석 분석가입니다. 아래는 "{stock}"에 대한 기업 소식과 그에 대한 3가지 분석입니다.
+
+[평가 지시사항]
+- 3가지 분석을 모두 검토하고, 단기 주가 예측의 근거로서 가장 논리적이고 설득력 있는 분석이 무엇인지 판단하세요.
+- 당신의 최종 선택을 "가장 유망한 분석: [번호]" 형식으로만 출력해야 합니다. 예: "가장 유망한 분석: 2"
+
+[기업 소식]
+{summary}
+
+[생성된 분석들]
+{generated_thoughts}
+"""
+
+	try:
+		evaluation_response = client.models.generate_content(
+			model="gemini-2.5-flash",
+			contents=evaluator_prompt
+		)
+		# "가장 유망한 분석: 2" 에서 숫자 '2'를 파싱
+		best_thought_index_str = ''.join(filter(str.isdigit, evaluation_response.text))
+		if not best_thought_index_str:
+			best_thought_index = 1  # 파싱 실패 시 기본값으로 첫 번째 분석 선택
+		else:
+			best_thought_index = int(best_thought_index_str)
+
+		# 선택된 분석 내용 추출
+		# "분석 1:", "분석 2:" 등으로 분리
+		thoughts_list = generated_thoughts.split(f'분석 {best_thought_index}:')
+		if len(thoughts_list) > 1:
+			# 선택된 분석은 해당 인덱스 뒤, 그리고 다음 분석 인덱스 앞의 내용
+			next_split = thoughts_list[1].split(f'분석 {best_thought_index + 1}:')
+			best_thought = f"분석 {best_thought_index}:" + next_split[0].strip()
+		else:
+			# 파싱 실패 시 전체를 그냥 사용
+			best_thought = generated_thoughts
+
+	except Exception as e:
+		print(f"ToT - State Evaluation 단계에서 오류 발생: {e}")
+		# 이 단계에서 오류 발생 시, 생성된 생각 전체를 다음 단계로 넘김
+		best_thought = generated_thoughts
+
+	# --- 3. Final Decision Step ---
+	# 선택된 최고의 분석을 기반으로 최종 결론을 도출하도록 요청
+	finalizer_prompt = f"""
+당신은 최종 투자 결정을 내리는 포트폴리오 매니저입니다.
+주어진 기업 소식과 가장 설득력 있는 분석 내용을 바탕으로 "{stock}"의 단기 주가 등락을 최종 판단하세요.
+
+[출력 지시사항]
+- 오직 '+1'(상승), '0'(보합), '-1'(하락) 중 하나의 정수만 출력해야 합니다.
+- 다른 어떤 부가적인 설명도 포함하지 마세요.
+
+[기업 소식]
+{summary}
+
+[핵심 분석]
+{best_thought}
+"""
+
+	try:
+		final_prediction_response = client.models.generate_content(
+			model="gemini-2.5-flash",
+			contents=finalizer_prompt
+		)
+		return final_prediction_response.text.strip()
+	except Exception as e:
+		print(f"ToT - Final Decision 단계에서 오류 발생: {e}")
+		return '0'  # 오류 발생 시 중립으로 반환
+
+
 
 # ------------------------
 # 앞의 모든 함수를 이용한 최종 함수

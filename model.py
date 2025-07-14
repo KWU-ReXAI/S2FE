@@ -215,7 +215,8 @@ class MyModel(nn.Module):
         file_path = None
         if data == 0: file_path = "./preprocessed_data/llm/predict_total_CoT/predict_video_CoT.csv"
         elif data == 1: file_path = "./preprocessed_data/llm/predict_total_CoT/predict_text_CoT.csv"
-        elif data == 2: file_path = "./preprocessed_data/llm/predict_total_CoT/predict_total_CoT.csv"
+        elif data == 2: file_path = "./preprocessed_data/llm/predict_total_CoT/predict_mix_CoT.csv"
+        elif data == 3: file_path = "./preprocessed_data/llm/predict_total_CoT/predict_total_CoT.csv"
         else: raise ValueError('data 파라미터가 범위를 벗어남.')
         
         # CSV 읽기
@@ -247,7 +248,7 @@ class MyModel(nn.Module):
         
         # 3) 개별 코드별로 DataFrame 모아두기
         df_list = []
-        if data != 3:
+        if data != 4:
             for code in model_list:
                 print(f"{code} of {start_date}~{end_date} : {start_datetime}~{end_datetime}")
                 df = self.get_rows_by_date_range(code, start_datetime, end_datetime, data)
@@ -270,7 +271,7 @@ class MyModel(nn.Module):
 
             month_trade_dates.append(current.strftime("%Y-%m-%d"))
 
-            if data == 3:
+            if data == 4:
                 # 데이터프레임 생성을 위한 딕셔너리 구성
                 tmp = {
                     'code': model_list,
@@ -307,7 +308,7 @@ class MyModel(nn.Module):
             ### threshold는 상의 후 결정하기
             threshold = 0.3
 
-            if data != 3:
+            if data != 4:
                 # 종목 거르기 및 걸러진 종목 저장
                 df_select = df_select[df_select['score'] >= threshold]
             month_stock_list.append(df_select['code'].tolist())
@@ -368,7 +369,7 @@ class MyModel(nn.Module):
         test_data = {}  # 섹터별 테스트 데이터를 저장할 딕셔너리
         symbols = {}  # 각 섹터별 종목(Symbol) 정보를 저장할 딕셔너리
 
-        clustered_stocks_list = [[] for x in range(4)]
+        clustered_stocks_list = [[] for x in range(5)]
 
         if use_all == "SectorAll" or use_all == "All":  # 전체 데이터를 불러옴
             _, _, all_data = self.DM.data_phase("ALL", self.phase)
@@ -385,15 +386,15 @@ class MyModel(nn.Module):
         pf_mem_ks = []
         num_of_stock = []  # 매일 선택된 주식 개수 저장
 
-        pf_mem = [[] for x in range(4)]
-        pf_mem_daily = [[] for x in range(4)] # 일 단위 MDD를 위한 메모리
+        pf_mem = [[] for x in range(5)]
+        pf_mem_daily = [[] for x in range(5)] # 일 단위 MDD를 위한 메모리
         pf_mem_dates = []
 
         if verbose: print(f"\n------[{self.phase}]------",flush=True)
 
         print(f"Test Period: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end-1)}")
 
-        balance = [100000000.0 for i in range(4)]  # 1억 -> 분기별로 초기화되는 잔액을 위와 같이 수정
+        balance = [100000000.0 for i in range(5)]  # 1억 -> 분기별로 초기화되는 잔액을 위와 같이 수정
 
         for pno in range(test_start, test_end):  # test_start ~ end 기간동안 매일 반복 실행
             print(f"Test in {self.DM.pno2date(pno)}:")
@@ -426,8 +427,8 @@ class MyModel(nn.Module):
                 real_last_topK_stock.extend(selected)
 
             ### real_last_topK_stock: 섹터별 상위 20% 종목들
-            ### 0: video, 1: article, 2: mix, 3: model(without LLM)
-            for idx, data in enumerate(['video', 'article', 'mix', 'model']):
+            ### 0: video, 1: article, 2: mix, 3: total, 4: model(without LLM)
+            for idx, data in enumerate(['video', 'article', 'mix', 'total', 'model']):
                 month_return, month_stock_lists, month_trade_dates, balance[idx], daily_pv = \
                     self.LLM_task(real_last_topK_stock, strdate, next_strdate, idx, balance[idx])
 
@@ -459,8 +460,8 @@ class MyModel(nn.Module):
                 pf_mem_ks.extend(daily_change_KOSPI)
 
         if isTest:
-            ### 0: video, 1: article, 2: mix, 3: model(without LLM)
-            for idx, data in enumerate(['video', 'article', 'mix', 'model']):
+            ### 0: video, 1: article, 2: mix, 3: total, 4: model(without LLM)
+            for idx, data in enumerate(['video', 'article', 'mix', 'total', 'model']):
                 return_dict = {
                     'date': pf_mem_dates,
                     'return': pf_mem[idx]
@@ -471,9 +472,9 @@ class MyModel(nn.Module):
 
 
         # LLM 필터링 안 한 모델의 평가지표
-        return_ratio = np.prod(np.array(pf_mem[3]) + 1) - 1
-        mdd = self.Utils.get_MDD(np.array(pf_mem_daily[3]) + 1)
-        sharpe = self.Utils.get_sharpe_ratio(pf_mem[3])
+        return_ratio = np.prod(np.array(pf_mem[4]) + 1) - 1
+        mdd = self.Utils.get_MDD(np.array(pf_mem_daily[4]) + 1)
+        sharpe = self.Utils.get_sharpe_ratio(pf_mem[4])
 
         # 영상 평가지표
         return_ratio_video = np.prod(np.array(pf_mem[0]) + 1) - 1
@@ -489,6 +490,11 @@ class MyModel(nn.Module):
         return_ratio_mix = np.prod(np.array(pf_mem[2]) + 1) - 1
         mdd_mix = self.Utils.get_MDD(np.array(pf_mem_daily[2]) + 1)
         sharpe_mix = self.Utils.get_sharpe_ratio(pf_mem[2])
+        
+        # 영상+기사 평가지표
+        return_ratio_total = np.prod(np.array(pf_mem[3]) + 1) - 1
+        mdd_total = self.Utils.get_MDD(np.array(pf_mem_daily[3]) + 1)
+        sharpe_total = self.Utils.get_sharpe_ratio(pf_mem[3])
 
         # KOSPI (출력 X, Train에서 에러 없기 위함)
         return_ratio_ks = np.prod(np.array(pf_mem_ks) + 1) - 1
@@ -501,10 +507,12 @@ class MyModel(nn.Module):
             print(f"Video MDD: {mdd_video}\tVideo Sharpe: {sharpe_video}\tVideo CAGR: {return_ratio_video}",flush=True)
             print(f"Article MDD: {mdd_article}\tArticle Sharpe: {sharpe_article}\tArticle CAGR: {return_ratio_article}", flush=True)
             print(f"Mix MDD: {mdd_mix}\tMix Sharpe: {sharpe_mix}\tMix CAGR: {return_ratio_mix}", flush=True)
+            print(f"Total MDD: {mdd_total}\tMix Sharpe: {sharpe_total}\tMix CAGR: {return_ratio_total}", flush=True)
             print("----------------------",flush=True)
         if isTest:
-            return return_ratio, sharpe, mdd,num_of_stock, return_ratio_video, sharpe_video, mdd_video, \
-                return_ratio_article, sharpe_article, mdd_article, return_ratio_mix, sharpe_mix, mdd_mix
+            return return_ratio, sharpe, mdd, num_of_stock, return_ratio_video, sharpe_video, mdd_video, \
+                return_ratio_article, sharpe_article, mdd_article, return_ratio_mix, sharpe_mix, mdd_mix, \
+                    return_ratio_total, sharpe_total, mdd_total
         else:
             return return_ratio, sharpe, mdd, num_of_stock, return_ratio_ks, sharpe_ks, mdd_ks
 
@@ -526,6 +534,7 @@ if __name__ == '__main__':
     for K in range(1, testNum + 1):
         for phase in phase_list:
             model = joblib.load(f"./result/train_result_dir_{K}/train_result_model_{K}_{phase}/model.joblib")  # 저장된 모델 불러옴
-            cagr, sharpe, mdd, num_stock_tmp, cagr_video, sharpe_video, mdd_video, cagr_article, sharpe_article, mdd_article, cagr_mix, sharpe_mix, mdd_mix \
+            cagr, sharpe, mdd, num_stock_tmp, cagr_video, sharpe_video, mdd_video, cagr_article, sharpe_article, mdd_article, \
+                cagr_mix, sharpe_mix, mdd_mix, cagr_total, sharpe_total, mdd_total \
                 = model.backtest(verbose=True, agg="inter", use_all="Sector", inter_n=0.2, withValidation=True,
                                  isTest=True, testNum=K, dir="test_result_dir", withLLM=False)

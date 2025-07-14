@@ -58,6 +58,7 @@ all_results={}
 all_results_video={}
 all_results_article={}
 all_results_mix={}
+all_results_total={}
 for K in range(1,args.testNum+1): # 한번만 실행
     print(f"\nTest for Train_Model_{K}")
     list_num_stocks = [] # 각 실험에서 선택된 주식 개수를 저장할 리스트
@@ -67,10 +68,12 @@ for K in range(1,args.testNum+1): # 한번만 실행
         result_video = {}
         result_article = {}
         result_mix = {}
+        result_total = {}
         num_stocks = [] # 각 phase에서 선택된 주식 개수를 저장하는 리스트
         for phase in tqdm(phase_list): # 각 phase 별 진행상태를 시각적으로 출력
             model = joblib.load(f"{dir}/{args.train_dir}_{K}/train_result_model_{K}_{phase}/model.joblib")  # 저장된 모델 불러옴
-            cagr, sharpe, mdd, num_stock_tmp, cagr_video, sharpe_video, mdd_video, cagr_article, sharpe_article, mdd_article,cagr_mix, sharpe_mix, mdd_mix \
+            cagr, sharpe, mdd, num_stock_tmp, cagr_video, sharpe_video, mdd_video, cagr_article, sharpe_article, mdd_article, \
+                cagr_mix, sharpe_mix, mdd_mix, cagr_total, sharpe_total, mdd_total \
                 = model.backtest(verbose=True,agg=args.agg,use_all="Sector",inter_n=args.inter_n,withValidation= True,
                                  isTest=True, testNum=K, dir=args.test_dir, withLLM=args.LLM) # 백테스팅 실행
                 
@@ -81,16 +84,19 @@ for K in range(1,args.testNum+1): # 한번만 실행
             result_video[phase] = {"CAGR": cagr_video, "Sharpe Ratio": sharpe_video, "MDD": mdd_video}  # 백테스팅 결과 저장
             result_article[phase] = {"CAGR": cagr_article, "Sharpe Ratio": sharpe_article, "MDD": mdd_article}  # 백테스팅 결과 저장
             result_mix[phase] = {"CAGR": cagr_mix, "Sharpe Ratio": sharpe_mix, "MDD": mdd_mix}  # 백테스팅 결과 저장
+            result_total[phase] = {"CAGR": cagr_total, "Sharpe Ratio": sharpe_total, "MDD": mdd_total}  # 백테스팅 결과 저장
 
         result_df = pd.DataFrame(result)
         # result_df_ks = pd.DataFrame(result_ks)
         result_df_video = pd.DataFrame(result_video)
         result_df_article = pd.DataFrame(result_article)
         result_df_mix = pd.DataFrame(result_mix)
+        result_df_total = pd.DataFrame(result_total)
         all_results[f"Test {K}"] = result_df
         all_results_video[f"Test {K}"] = result_df_video
         all_results_article[f"Test {K}"] = result_df_article
         all_results_mix[f"Test {K}"] = result_df_mix
+        all_results_total[f"Test {K}"] = result_df_total
         list_num_stocks.append(num_stocks) # 각 실험에서 선택된 주식 개수 저장
 
 final_df = pd.concat(all_results, axis=1)
@@ -123,6 +129,14 @@ avg_df_mix.columns = pd.MultiIndex.from_product([["Average"], avg_df_mix.columns
 avg_df_mix.to_csv(f"{dir}/test_result_dir/mix_test_result_average.csv", encoding='utf-8-sig')
 final_df_mix_combined = pd.concat([final_df_mix, avg_df_mix], axis=1)
 final_df_mix_combined.to_csv(f"{dir}/test_result_dir/mix_test_result_file.csv", encoding='utf-8-sig')
+
+# LLM 모델에 대한 테스트별 평균
+final_df_total = pd.concat(all_results_total, axis=1)
+avg_df_total = final_df_total.groupby(level=1, axis=1).mean()
+avg_df_total.columns = pd.MultiIndex.from_product([["Average"], avg_df_total.columns])
+avg_df_total.to_csv(f"{dir}/test_result_dir/total_test_result_average.csv", encoding='utf-8-sig')
+final_df_total_combined = pd.concat([final_df_total, avg_df_total], axis=1)
+final_df_total_combined.to_csv(f"{dir}/test_result_dir/total_test_result_file.csv", encoding='utf-8-sig')
 
 # 평가지표 리스트
 metrics = ["CAGR", "Sharpe Ratio", "MDD"]
@@ -169,6 +183,7 @@ for i, metric in enumerate(metrics):
     ax.plot(phases, avg_df_video["Average"].loc[metric], 'r-', marker='o', label='Average with Video')
     ax.plot(phases, avg_df_article["Average"].loc[metric], 'g-', marker='o', label='Average with Article')
     ax.plot(phases, avg_df_mix["Average"].loc[metric], 'b-', marker='o', label='Average with Mix')
+    ax.plot(phases, avg_df_total["Average"].loc[metric], color='orange', linestyle='-', marker='o', label='Average with Total')
     ax.plot(phases, avg_df["Average"].loc[metric], 'y--', marker='o', label='Average without LLM')
     # ax.plot(phases, result_df_ks.loc[metric], 'y--', marker='o', label='KOSPI200')
     # ax.plot(phases, avg_df_llm["Average"].loc[metric], 'b-', marker='o', label='Average with LLM')
@@ -183,6 +198,7 @@ for i, metric in enumerate(metrics):
     avg_values_video = [f"{val:.4f}" for val in avg_df_video["Average"].loc[metric]]
     avg_values_article = [f"{val:.4f}" for val in avg_df_article["Average"].loc[metric]]
     avg_values_mix = [f"{val:.4f}" for val in avg_df_mix["Average"].loc[metric]]
+    avg_values_total = [f"{val:.4f}" for val in avg_df_total["Average"].loc[metric]]
 
     # Phase별 실수 배열
     phase_vals = avg_df["Average"].loc[metric].values
@@ -190,6 +206,7 @@ for i, metric in enumerate(metrics):
     phase_vals_video = avg_df_video["Average"].loc[metric].values
     phase_vals_article = avg_df_article["Average"].loc[metric].values
     phase_vals_mix = avg_df_mix["Average"].loc[metric].values
+    phase_vals_total = avg_df_total["Average"].loc[metric].values
 
     """if metric == "CAGR":
         # 1) 산술평균
@@ -213,23 +230,28 @@ for i, metric in enumerate(metrics):
         avg_values_video = [f"{val * 100:.2f}%" for val in phase_vals_video]
         avg_values_article = [f"{val * 100:.2f}%" for val in phase_vals_article]
         avg_values_mix = [f"{val * 100:.2f}%" for val in phase_vals_mix]
+        avg_values_total = [f"{val * 100:.2f}%" for val in phase_vals_total]
+
 
         # 1) 산술평균
         arith_avg = phase_vals.mean()
         arith_avg_video = phase_vals_video.mean()
         arith_avg_article = phase_vals_article.mean()
         arith_avg_mix = phase_vals_mix.mean()
+        arith_avg_total = phase_vals_total.mean()
         # 2) 기하평균
         geo_avg = np.prod(1 + phase_vals) ** (1.0 / len(phases)) - 1
         geo_avg_video = np.prod(1 + phase_vals_video) ** (1.0 / len(phases)) - 1
         geo_avg_article = np.prod(1 + phase_vals_article) ** (1.0 / len(phases)) - 1
         geo_avg_mix = np.prod(1 + phase_vals_mix) ** (1.0 / len(phases)) - 1
+        geo_avg_total = np.prod(1 + phase_vals_total) ** (1.0 / len(phases)) - 1
 
         # 평균값들도 퍼센트(%) 형식으로 변환하여 리스트에 추가
         avg_values.extend([f"{arith_avg * 100:.2f}%", f"{geo_avg * 100:.2f}%"])
         avg_values_video.extend([f"{arith_avg_video * 100:.2f}%", f"{geo_avg_video * 100:.2f}%"])
         avg_values_article.extend([f"{arith_avg_article * 100:.2f}%", f"{geo_avg_article * 100:.2f}%"])
         avg_values_mix.extend([f"{arith_avg_mix * 100:.2f}%", f"{geo_avg_mix * 100:.2f}%"])
+        avg_values_total.extend([f"{arith_avg_total * 100:.2f}%", f"{geo_avg_total * 100:.2f}%"])
         col_labels = list(phases) + ["Average", "Total"]
     else:
         # Sharpe, MDD는 기존 산술평균만
@@ -238,17 +260,19 @@ for i, metric in enumerate(metrics):
         overall_avg_video = phase_vals_video.mean()
         overall_avg_article = phase_vals_article.mean()
         overall_avg_mix = phase_vals_mix.mean()
+        overall_avg_total = phase_vals_total.mean()
         avg_values.append(f"{overall_avg:.4f}")
         # ks_values.append(f"{overall_ks:.4f}")
         avg_values_video.append(f"{overall_avg_video:.4f}")
         avg_values_article.append(f"{overall_avg_article:.4f}")
         avg_values_mix.append(f"{overall_avg_mix:.4f}")
+        avg_values_total.append(f"{overall_avg_total:.4f}")
         col_labels = list(phases) + ["Average"]
 
     # 테이블 생성
     table = ax.table(
-        cellText=[avg_values_video, avg_values_article, avg_values_mix, avg_values],
-        rowLabels=["Average with Video", "Average with Article", "Average with Mix", "Average without LLM"],
+        cellText=[avg_values_video, avg_values_article, avg_values_mix, avg_values_total, avg_values],
+        rowLabels=["Average with Video", "Average with Article", "Average with Mix", "Average with Total", "Average without LLM"],
         # cellText=[avg_values, ks_values, avg_values_llm],
         # rowLabels=["Model without LLM", "KOSPI200", "Model with LLM"],
         colLabels=col_labels,

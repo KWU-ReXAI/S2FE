@@ -1,5 +1,0 @@
-{
-	"sentiment": "중립",
-	"reasoning": "뉴스는 CJ CheilJedang과 T'Way Air 간의 기내식 개발 협력에 관한 내용으로, CJ대한통운과는 직접적인 관련이 없어 주가에 미치는 영향이 없다고 판단됨.",
-	"score": 0
-}

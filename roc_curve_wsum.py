@@ -7,7 +7,8 @@ import matplotlib.lines as mlines
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import platform
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import roc_curve, auc
+from sklearn.linear_model import LinearRegression
 from tqdm import tqdm
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -98,9 +99,10 @@ def LLM_accuracy(code, start_date, end_date, data):
 		total_period_days = (upload_end - upload_start).days
 		# 'Series' 전체에 .days를 적용할 수 없으므로 .dt 접근자 사용
 		chunk["score"] *= 1 + ((chunk['upload_dt'] - upload_start).dt.days / total_period_days)
+		model = LinearRegression()
 		score_sum = chunk["score"].sum()
-		threshold = 3
-		score = 1 if score_sum >= threshold else -1
+		threshold = 0.3
+		score = score_sum
 		df_score.loc[len(df_score)] = [
 			trade_date, code, score, None
 		]
@@ -119,31 +121,6 @@ def LLM_accuracy(code, start_date, end_date, data):
 		current += relativedelta(months=1)
 	return df_score
 
-def return_score_graph(fpath:str, data:str, df:pd.DataFrame):
-	# 'date' 컬럼을 datetime 형식으로 변환해야 날짜 순으로 정확히 정렬 및 플로팅됩니다.
-	df['date'] = pd.to_datetime(df['date'])
-	df['code'] = df['code'].astype(str).str.zfill(6)
-	df = df.sort_values(by=['date', 'code'])
-	df.drop('code', axis=1, inplace=True)
-
-	score_map = {1: '구매한 종목', -1: '구매하지 않은 종목'}
-	df['score_label'] = df['score'].map(score_map)
-
-	# 3-2. 그래프 생성
-	plt.figure(figsize=(12, 7))
-	sns.scatterplot(data=df,
-				 x='date',
-				 y='return',
-				 hue='score_label',
-				 s=100)
-	plt.title(f'Return and Score Trend - {data}')
-	plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0)
-	plt.grid(True)
-	plt.tight_layout()
-
-	# 그래프 보여주기
-	plt.savefig(f"{fpath}/Return_and_Score_Trend.png")
-	plt.close()
 
 if __name__ == '__main__':
 	# 한글 폰트 설정 (Windows: Malgun Gothic, Mac: AppleGothic)
@@ -154,12 +131,8 @@ if __name__ == '__main__':
 	else:
 		plt.rc('font', family='NanumGothic')
 	plt.rcParams['axes.unicode_minus'] = False  # 마이너스 부호 깨짐 방지
-	scores = dict()
-	plt.figure(figsize=(24, 5))
 	fpath = f"./preprocessed_data/llm/confusion_matrix_0701"
 	for idx, data in enumerate(tqdm(['video', 'text', 'mix', 'total'], desc="데이터 별 진행상황")):
-		dpath = f"{fpath}/{data}"
-		os.makedirs(dpath, exist_ok=True)
 
 		df = pd.DataFrame(columns=[
 			"date", "code", "score", "return"
@@ -182,53 +155,45 @@ if __name__ == '__main__':
 							date = dates.index(code)
 							continue
 						df = pd.concat([df, LLM_accuracy(code, dates[date], dates[date+1], idx)])
-		df.to_csv(f"{dpath}/score_and_return.csv", encoding='utf-8-sig', index=False)
-		groupby_df = df.groupby(['date', 'code']).mean().reset_index()
-		return_score_graph(dpath, data, df)
 		df = df[~(df['score'] == 0.0)]
 		# 1. 부호를 기준으로 예측(y_pred)과 정답(y_true) 생성
-		y_pred = np.sign(df['score'].tolist()).astype(int)
-		y_true = np.sign(df['return'].tolist()).astype(int)
+		y_pred = df['score'].tolist()
+		y_true = [1 if x > 0.005 else 0 for x in df['return'].tolist()]
 
-		# 실제 가격이 변화가 없을 때(y_true가 0)는 안 사는 게 이득이므로(수수료), -1로 수정
-		y_true = [-1 if x == 0 else x for x in y_true]
+		# ROC 곡선 계산
+		fpr, tpr, thresholds = roc_curve(y_true, y_pred)
 
-		# 2. Confusion Matrix 생성 및 시각화
+		# AUC 계산
+		roc_auc = auc(fpr, tpr)
 
-		# 라벨 순서를 [1 (양수), -1 (음수)]로 지정
-		cm = confusion_matrix(y_true, y_pred, labels=[1, -1])
+		# ROC 곡선 그리기
+		plt.figure()
+		plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+		plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+		plt.xlim([0.0, 1.0])
+		plt.ylim([0.0, 1.0])
+		plt.xlabel('False Positive Rate')
+		plt.ylabel('True Positive Rate')
+		plt.title('Receiver Operating Characteristic')
+		plt.legend(loc='lower right')
 
-		# 시각화
-		labels = ['상승', '하락']
-		plt.subplot(1, 4, idx + 1)
-		sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels)
-		plt.title(f'{data} Accuracy Confusion Matrix')
-		plt.xlabel('Predicted')
-		plt.ylabel('Label')
+		num_thresholds_to_show = 20
+		indices_to_show = np.linspace(0, len(thresholds) - 1, num_thresholds_to_show).astype(int)
 
-		# 3. 결과 분석 및 DataFrame 생성
-		# PP, PN, NP, NN 값 추출 (PP: P예측-P정답, PN: N예측-P정답 ...)
-		# cm[0,0] = TP (실제 Positive, 예측 Positive) -> PP
-		# cm[0,1] = FN (실제 Positive, 예측 Negative) -> PN
-		# cm[1,0] = FP (실제 Negative, 예측 Positive) -> NP
-		# cm[1,1] = TN (실제 Negative, 예측 Negative) -> NN
-		pp_count = cm[0, 0]
-		pn_count = cm[0, 1]
-		np_count = cm[1, 0]
-		nn_count = cm[1, 1]
-		total = pp_count + pn_count + np_count + nn_count
+		for i in indices_to_show:
+			threshold_value = thresholds[i]
+			fpr_point = fpr[i]
+			tpr_point = tpr[i]
 
-		# 성능 지표 계산
-		# zero_division=0: 분모가 0일 경우 0으로 처리하여 경고 방지
-		accuracy = accuracy_score(y_true, y_pred)
-		precision = precision_score(y_true, y_pred, pos_label=1, zero_division=0)
-		recall = recall_score(y_true, y_pred, pos_label=1, zero_division=0)
-		f1 = f1_score(y_true, y_pred, pos_label=1, zero_division=0)
+			# 임계값을 그래프 위에 텍스트로 표시
+			# text() 함수의 x, y 좌표는 데이터 좌표계입니다.
+			# ha='center', va='bottom'은 텍스트 정렬을 지정합니다.
+			# round() 함수를 사용하여 소수점 자릿수를 조정합니다.
+			plt.text(fpr_point, tpr_point,
+					 f'{threshold_value:.2f}',
+					 color='red', fontsize=9, ha='right', va='bottom')
+			# 선택된 임계값 지점에 작은 마커를 추가하여 시각적으로 강조
+			plt.plot(fpr_point, tpr_point, 'o', color='red', markersize=5)
 
-		score_dict = {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1}
-		scores[data] = score_dict
-
-	plt.tight_layout()
-	plt.savefig(f"{fpath}/confusion_matrix.png")
-	plt.close()
-	pd.DataFrame(scores).to_csv(f"{fpath}/scores.csv", encoding='utf-8')
+		plt.savefig(f'{fpath}/roc_curve_{data}.png')
+		plt.close()

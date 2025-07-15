@@ -306,7 +306,7 @@ class MyModel(nn.Module):
                     code_val, score_sum
                 ]
             ### threshold는 상의 후 결정하기
-            threshold = 1
+            threshold = 3
 
             if data != 4:
                 # 종목 거르기 및 걸러진 종목 저장

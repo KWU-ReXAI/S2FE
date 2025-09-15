@@ -67,6 +67,29 @@ class DataManager:
         except IndexError:
             raise ValueError(f"pno {pno}은 date_list의 범위를 벗어났습니다. date_list 길이: {len(self.date_list)}")
 
+    def get_disclosure_date(self, strdate, folder_path="./data_kr/date_regression/"):
+        """
+        strdate 예: "2020_Q4"
+        isStart: True면 가장 빠른 날짜, False면 가장 늦은 날짜
+        """
+        try:
+            file_path = os.path.join(folder_path, f"{strdate}.csv")
+            df = pd.read_csv(file_path)
+
+            if "disclosure_date" not in df.columns:
+                return f"{strdate}.csv 파일에 'disclosure_date' 열이 없습니다."
+
+            # 날짜 컬럼을 datetime 형식으로 변환
+            df["disclosure_date"] = pd.to_datetime(df["disclosure_date"], errors='coerce')
+            df = df.dropna(subset=["disclosure_date"])
+
+            if df.empty:
+                return f"{strdate}.csv 파일에 유효한 disclosure_date가 없습니다."
+
+            return df["disclosure_date"].max().strftime("%Y-%m-%d")
+
+        except Exception as e:
+            return f"오류 발생: {e}"
 
     def data_phase(self, sector: str, phase: str, pandas_format=False, cluster=False, isall=False, model="S3CE"):
         train_start = self.phase_list[phase][0]

@@ -372,8 +372,9 @@ class MyModel(nn.Module):
 
 
 
-
-            clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)
+            trade_date = self.DM.get_disclosure_date(strdate)
+            next_trade_date = self.DM.get_disclosure_date(next_strdate)
+            clustered_stocks_list.append([f"{idx}"] + [strdate, trade_date, next_trade_date] + real_last_topK_stock)
             idx += 1
 
             if verbose: print(real_last_topK_stock,flush=True)  # 선택된 최종 종목을 출력

@@ -50,13 +50,21 @@ class Utils:
         """
         # 1. disclosure_date 가져오기
         try:
-            reg_path = f"./data_kr/date_regression/{year}_{quarter}.csv"
-            reg_df = pd.read_csv(reg_path)
-            reg_row = reg_df[reg_df['code'].astype(str).str.zfill(6) == ticker]
-            if reg_row.empty:
-                print(f"{ticker}: {year}_{quarter} 공시일 정보를 찾을 수 없습니다.")
-                return 0
-            current_date = pd.to_datetime(reg_row.iloc[0]['disclosure_date'])
+            file_path = os.path.join("./data_kr/date_regression", f"{year}_{quarter}.csv")
+            df = pd.read_csv(file_path)
+
+            if "disclosure_date" not in df.columns:
+                return f"{year}_{quarter}.csv 파일에 'disclosure_date' 열이 없습니다."
+
+            # 날짜 컬럼을 datetime 형식으로 변환
+            df["disclosure_date"] = pd.to_datetime(df["disclosure_date"], errors='coerce')
+            df = df.dropna(subset=["disclosure_date"])
+
+            if df.empty:
+                return f"{year}_{quarter}.csv 파일에 유효한 disclosure_date가 없습니다."
+
+            current_date = df["disclosure_date"].max()
+
         except Exception as e:
             print(f"{ticker}: 공시일 파일 로드 실패 - {e}")
             return 0
@@ -92,13 +100,21 @@ class Utils:
         """
         # 1. disclosure_date 가져오기
         try:
-            reg_path = f"./data_kr/date_regression/{year}_{quarter}.csv"
-            reg_df = pd.read_csv(reg_path)
-            reg_row = reg_df[reg_df['code'].astype(str).str.zfill(6) == ticker]
-            if reg_row.empty:
-                print(f"{ticker}: {year}_{quarter} 공시일 정보를 찾을 수 없습니다.")
-                return 0
-            current_date = pd.to_datetime(reg_row.iloc[0]['disclosure_date']) - timedelta(days=1)
+            file_path = os.path.join("./data_kr/date_regression", f"{year}_{quarter}.csv")
+            df = pd.read_csv(file_path)
+
+            if "disclosure_date" not in df.columns:
+                return f"{year}_{quarter}.csv 파일에 'disclosure_date' 열이 없습니다."
+
+            # 날짜 컬럼을 datetime 형식으로 변환
+            df["disclosure_date"] = pd.to_datetime(df["disclosure_date"], errors='coerce')
+            df = df.dropna(subset=["disclosure_date"])
+
+            if df.empty:
+                return f"{year}_{quarter}.csv 파일에 유효한 disclosure_date가 없습니다."
+
+            current_date = df["disclosure_date"].max() - timedelta(days=1)
+
         except Exception as e:
             print(f"{ticker}: 공시일 파일 로드 실패 - {e}")
             return 0
@@ -135,19 +151,21 @@ class Utils:
         """
         # 1. disclosure_date 가져오기
         try:
-            reg_path = f"./data_kr/merged/KS200.csv"
-            reg_df = pd.read_csv(reg_path)
+            file_path = os.path.join("./data_kr/date_regression", f"{year}_{quarter}.csv")
+            df = pd.read_csv(file_path)
 
-            # 자료형 정리
-            reg_df['quarter'] = reg_df['quarter'].astype(str).str.strip()
-            reg_df['year'] = reg_df['year'].astype(int)
+            if "disclosure_date" not in df.columns:
+                return f"{year}_{quarter}.csv 파일에 'disclosure_date' 열이 없습니다."
 
-            # 조건 필터링
-            reg_row = reg_df[(reg_df['year'] == int(year)) & (reg_df['quarter'] == str(quarter))]
-            if reg_row.empty:
-                print(f"{ticker}: {year}_{quarter} 공시일 정보를 찾을 수 없습니다.")
-                return 0
-            current_date = pd.to_datetime(reg_row.iloc[0]['disclosure_date'])
+            # 날짜 컬럼을 datetime 형식으로 변환
+            df["disclosure_date"] = pd.to_datetime(df["disclosure_date"], errors='coerce')
+            df = df.dropna(subset=["disclosure_date"])
+
+            if df.empty:
+                return f"{year}_{quarter}.csv 파일에 유효한 disclosure_date가 없습니다."
+
+            current_date = df["disclosure_date"].max()
+
         except Exception as e:
             print(f"{ticker}: 공시일 파일 로드 실패 - {e}")
             return 0
@@ -183,18 +201,21 @@ class Utils:
         """
         # 1. disclosure_date 가져오기
         try:
-            reg_path = f"./data_kr/merged/KS200.csv"
-            reg_df = pd.read_csv(reg_path)
-            reg_df['quarter'] = reg_df['quarter'].astype(str).str.strip()
-            reg_df['year'] = reg_df['year'].astype(int)
+            file_path = os.path.join("./data_kr/date_regression", f"{year}_{quarter}.csv")
+            df = pd.read_csv(file_path)
 
-            # 조건 필터링
-            reg_row = reg_df[(reg_df['year'] == int(year)) & (reg_df['quarter'] == str(quarter))]
+            if "disclosure_date" not in df.columns:
+                return f"{year}_{quarter}.csv 파일에 'disclosure_date' 열이 없습니다."
 
-            if reg_row.empty:
-                print(f"{ticker}: {year}_{quarter} 공시일 정보를 찾을 수 없습니다.")
-                return 0
-            current_date = pd.to_datetime(reg_row.iloc[0]['disclosure_date']) - timedelta(days=1)
+            # 날짜 컬럼을 datetime 형식으로 변환
+            df["disclosure_date"] = pd.to_datetime(df["disclosure_date"], errors='coerce')
+            df = df.dropna(subset=["disclosure_date"])
+
+            if df.empty:
+                return f"{year}_{quarter}.csv 파일에 유효한 disclosure_date가 없습니다."
+
+            current_date = df["disclosure_date"].max() - timedelta(days=1)
+
         except Exception as e:
             print(f"{ticker}: 공시일 파일 로드 실패 - {e}")
             return 0

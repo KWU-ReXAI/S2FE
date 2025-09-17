@@ -81,13 +81,13 @@ def merge_year_quarter_from_csv(csv_path, drop_cols=None, total_option=False):
 
     # 2015_Q4부터 2024_Q3까지 모든 연도-분기 조합 생성
     all_pairs = []
-    for year in range(2015, 2025):  # 2015 ~ 2024년 반복
+    for year in range(2015, 2026):  # 2015 ~ 2024년 반복
         if year == 2015:
             quarters = ['Q4']
-        elif year == 2024:
-            quarters = ['Q1', 'Q2', 'Q3']
+        elif year == 2025:
+            quarters = ['Q1','Q2']
         else:
-            quarters = ['Q1', 'Q2', 'Q3', 'Q4']
+            quarters = ['Q1', 'Q2','Q3','Q4']
         for q in quarters:
             all_pairs.append((year, q))
 
@@ -522,8 +522,8 @@ if args.isall == "False":
 
         start_year = 2015
         start_quarter = 4
-        end_year = 2024
-        end_quarter = 3
+        end_year = 2025
+        end_quarter = 2
 
         year = start_year
         quarter = start_quarter
@@ -813,8 +813,8 @@ elif args.isall == "cluster":
 
         start_year = 2015
         start_quarter = 4
-        end_year = 2024
-        end_quarter = 3
+        end_year = 2025
+        end_quarter = 2
 
         year = start_year
         quarter = start_quarter
@@ -1098,8 +1098,8 @@ elif args.isall == "True":
 
         start_year = 2015
         start_quarter = 4
-        end_year = 2024
-        end_quarter = 3
+        end_year = 2025
+        end_quarter = 2
 
         year = start_year
         quarter = start_quarter

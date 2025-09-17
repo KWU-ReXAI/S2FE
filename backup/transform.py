@@ -88,7 +88,7 @@ for code in data.stock_list.keys():
     # 기업 정보(이름, 섹터)를 symbol 파일에서 가져옵니다.
     info = stock_info.get(code, {"name": None, "sector": None})
 
-    for year in range(2015, 2025):
+    for year in range(2015, 2026):
         for quarter in quarter_list:
             df_fs = data.get_statement(code, year, quarter)
             if df_fs.empty:

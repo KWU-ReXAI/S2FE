@@ -694,7 +694,7 @@ def plot_kospi200_chart(csv_path: str):
             raise ValueError(f"차트를 그릴 가격 데이터 컬럼('{price_column}')을 찾을 수 없습니다.")
 
         # 2. 그래프 생성
-        fig, ax = plt.subplots(figsize=(17, 8))  # 세로 길이를 조금 늘려 공간 확보
+        fig, ax = plt.subplots(figsize=(17, 4))  # 세로 길이를 조금 늘려 공간 확보
         ax.plot(df_filtered.index, df_filtered[price_column], color='royalblue',linewidth=2.5)
 
         # 3. x축 눈금 및 레이블 설정
@@ -702,7 +702,7 @@ def plot_kospi200_chart(csv_path: str):
         xticks = [pd.Timestamp(f'{year}-10-01') for year in years]
         xtick_labels = [f'{year-2000}/10' for year in years]
         ax.set_xticks(xticks)
-        ax.set_xticklabels(xtick_labels, ha='center',fontsize=8)
+        ax.set_xticklabels(xtick_labels, ha='center',fontsize=6)
 
         # 4. x축 범위 명시적 설정
         ax.set_xlim(pd.Timestamp(start_date), pd.Timestamp(end_date))
@@ -710,13 +710,13 @@ def plot_kospi200_chart(csv_path: str):
 
         # 5. 그래프 스타일 및 정보 추가
         #ax.set_title('KOSPI 200 지수 (2015_Q4 - 2024_Q4)', fontsize=18, fontweight='bold', pad=20)
-        ax.set_ylabel('KOSPI200 Index', fontsize=25, fontweight='bold')
-        ax.set_xlabel('Date', fontsize=25, fontweight='bold')
+        ax.set_ylabel('KOSPI200 Index', fontsize=20, fontweight='bold')
+        ax.set_xlabel('Date', fontsize=20, fontweight='bold')
 
         # 6. x축과 y축 눈금 값 스타일 변경 (수정된 부분)
         # 글씨 크기를 12로, 굵게(bold) 설정
-        plt.setp(ax.get_xticklabels(), fontsize=20, fontweight='bold')
-        plt.setp(ax.get_yticklabels(), fontsize=20, fontweight='bold')
+        plt.setp(ax.get_xticklabels(), fontsize=17, fontweight='bold')
+        plt.setp(ax.get_yticklabels(), fontsize=17, fontweight='bold')
 
 
         for spine in ax.spines.values():
@@ -734,13 +734,20 @@ def plot_kospi200_chart(csv_path: str):
                         zorder=-3.5)
         ax.fill_between([pd.to_datetime('2016-10-01'), pd.to_datetime('2021-10-01')], 350, 400, color='lightgray', alpha=1,
                         zorder=-2.5)
+        ax.fill_between([pd.to_datetime('2017-10-01'), pd.to_datetime('2022-10-01')], 300, 350, color='lightgray',
+                        alpha=1,
+                        zorder=-1.5)
+        ax.fill_between([pd.to_datetime('2018-10-01'), pd.to_datetime('2023-10-01')], 250, 300, color='lightgray',
+                        alpha=1,
+                        zorder=-0.5)
+
         #ax.fill_between([pd.to_datetime('2018-10-01'), pd.to_datetime('2022-10-01')], 300, 350, color='lightgray', alpha=1,zorder=-1.5)
         #ax.fill_between([pd.to_datetime('2019-10-01'), pd.to_datetime('2023-10-01')], 250, 300, color='lightgray', alpha=1,zorder=-0.5)
         ax.grid(True, linestyle='-', alpha=0.6)
 
         # 레이아웃을 조정하여 라벨이 잘리지 않도록 합니다.
         plt.tight_layout()
-        plt.show();
+        plt.show()
 
     except FileNotFoundError:
         print(f"오류: '{csv_path}' 파일을 찾을 수 없습니다. 파일 경로를 확인해주세요.")
@@ -817,9 +824,8 @@ def analyze_merged_csv(folder_path):
         print("결측치가 50% 이상인 열이 없습니다. ✨")
 
 
-# --- 함수 실행 ---
-# 아래 변수에 분석하고 싶은 CSV 파일들이 있는 폴더 경로를 지정해주세요.
-TARGET_FOLDER_PATH = './data_kr/merged/'
-
-# 함수를 호출하여 분석을 시작합니다.
-analyze_merged_csv(TARGET_FOLDER_PATH)
+if __name__ == "__main__":
+    merge_date_regression()
+    save_by_sector()
+    filter_all_files_by_sector()
+    save_sector_codes()

@@ -26,7 +26,7 @@ quarters = {
 	'Q4': '11011'
 }
 
-years = list(range(2015, 2025))
+years = list(range(2015, 2026))
 save_valid_stock = []
 
 for corp_code, corp_name in kospi_200.items():
@@ -96,10 +96,36 @@ for corp_code, corp_name in kospi_200.items():
 
 			##### 분기보고서 최초제출일 구하기 #####
 			# 정정 보고서 제외 (각 분기 보고서들 중 제출일자가 가장 빠른 것 고르기)
-			clousure_q1 = df_closure[df_closure['report_nm'].str.contains(f'({year}.03)', regex=False)].iloc[-1]["rcept_dt"]
+			"""clousure_q1 = df_closure[df_closure['report_nm'].str.contains(f'({year}.03)', regex=False)].iloc[-1]["rcept_dt"]
 			clousure_q2 = df_closure[df_closure['report_nm'].str.contains(f'({year}.06)', regex=False)].iloc[-1]["rcept_dt"]
 			clousure_q3 = df_closure[df_closure['report_nm'].str.contains(f'({year}.09)', regex=False)].iloc[-1]["rcept_dt"]
-			clousure_q4 = df_closure[df_closure['report_nm'].str.contains(f'({year}.12)', regex=False)].iloc[-1]["rcept_dt"]
+			clousure_q4 = df_closure[df_closure['report_nm'].str.contains(f'({year}.12)', regex=False)].iloc[-1]["rcept_dt"]"""
+
+			##### 분기보고서 최초제출일 구하기 #####
+			# 정정 보고서 제외 (각 분기 보고서들 중 제출일자가 가장 빠른 것 고르기)
+			try:
+				clousure_q1 = df_closure[df_closure['report_nm'].str.contains(f'({year}.03)', regex=False)].iloc[-1][
+					"rcept_dt"]
+			except IndexError:
+				clousure_q1 = None
+
+			try:
+				clousure_q2 = df_closure[df_closure['report_nm'].str.contains(f'({year}.06)', regex=False)].iloc[-1][
+					"rcept_dt"]
+			except IndexError:
+				clousure_q2 = None
+
+			try:
+				clousure_q3 = df_closure[df_closure['report_nm'].str.contains(f'({year}.09)', regex=False)].iloc[-1][
+					"rcept_dt"]
+			except IndexError:
+				clousure_q3 = None
+
+			try:
+				clousure_q4 = df_closure[df_closure['report_nm'].str.contains(f'({year}.12)', regex=False)].iloc[-1][
+					"rcept_dt"]
+			except IndexError:
+				clousure_q4 = None
 
 			annual_df["공시일"] = None
 			if (annual_df["Quarter"] == "Q1").any(): annual_df.loc[annual_df["Quarter"] == "Q1", "공시일"] = clousure_q1

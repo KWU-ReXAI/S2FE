@@ -1,4 +1,4 @@
-"""from pykrx import stock
+from pykrx import stock
 from pykrx import bond
 import pykrx
 import FinanceDataReader as fdr
@@ -12,7 +12,7 @@ ticker_list = symbol_df['code'].astype(str).str.zfill(6)
 os.makedirs('./data_kr/price', exist_ok=True)
 
 start_date = '2015-01-01'
-end_date = '2025-01-31'
+end_date = '2025-09-17'
 for ticker in ticker_list:
     try:
         df_price = stock.get_market_ohlcv_by_date(fromdate=start_date,
@@ -21,13 +21,8 @@ for ticker in ticker_list:
         df_price.to_csv(f'./data_kr/price/{ticker}.csv', index=True, encoding='utf-8-sig')
         print(f"{ticker}의 가격 데이터를 저장했습니다.")
     except Exception as e:
-        print(f"{ticker}의 가격 데이터를 가져오는 중 오류 발생: {e}")"""
-from pykrx import stock
-import pandas as pd
+        print(f"{ticker}의 가격 데이터를 가져오는 중 오류 발생: {e}")
 
-# 날짜 범위 설정
-start_date = '2015-01-01'
-end_date = '2025-01-31'
 
 # KOSPI200 지수(코드: 1028)의 일별 가격 데이터 가져오기
 df_ks200 = stock.get_index_ohlcv_by_date(fromdate=start_date,
@@ -40,7 +35,7 @@ print("KS200 지수 데이터를 저장했습니다.")
 
 '''
 
-
+"""
 import pandas as pd
 import os
 
@@ -62,5 +57,5 @@ for ticker in ticker_list:
         else:
             print(f"{ticker} 파일에 'Change' 컬럼이 없습니다.")
     else:
-        print(f"{file_path} 파일이 존재하지 않습니다.")
+        print(f"{file_path} 파일이 존재하지 않습니다.")"""
 '''

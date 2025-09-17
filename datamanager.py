@@ -12,13 +12,16 @@ class DataManager:
         self.sector_list = sorted(pd.read_csv("./data_kr/symbol.csv")["sector"].unique().tolist())
         self.cluster_list = ["cluster_" + str(i) for i in range(cluster_n)]  # 클러스터 번호 부여
 
-        self.phase_list = {"p1": [1, 16, 20, 24], "p2": [5, 20, 24, 28], "p3": [9, 24, 28, 32], "p4": [13, 28, 32, 36]}
+        #self.phase_list = {"p1": [1, 16, 20, 24], "p2": [5, 20, 24, 28], "p3": [9, 24, 28, 32], "p4": [13, 28, 32, 36]}
+        self.phase_list = {"p1": [1, 19, 23, 27], "p2": [5, 23, 27, 31], "p3": [9, 27, 31, 35], "p4": [13, 31, 35, 39]}
+        #self.phase_list = {"p4": [13, 31, 35, 39]}
 
     def create_date_list(self):
         # 예시: merged 폴더의 파일 이름이 "2015_Q1.csv", "2015_Q2.csv" 등이라면
         files = os.listdir("./data_kr/date_regression")
         dates = [f.replace(".csv", "") for f in files if f.endswith(".csv")]
         dates = sorted(dates)  # 날짜 순으로 정렬 (적절한 정렬 기준을 적용)
+        dates.append("2025_Q3")  # 이 줄이 추가되었습니다.
         self.date_list = dates
         return dates
 
@@ -68,25 +71,24 @@ class DataManager:
             raise ValueError(f"pno {pno}은 date_list의 범위를 벗어났습니다. date_list 길이: {len(self.date_list)}")
 
     def get_disclosure_date(self, strdate, folder_path="./data_kr/date_regression/"):
-        """
-        strdate 예: "2020_Q4"
-        isStart: True면 가장 빠른 날짜, False면 가장 늦은 날짜
-        """
         try:
-            file_path = os.path.join(folder_path, f"{strdate}.csv")
-            df = pd.read_csv(file_path)
+            if strdate == "2025_Q3":
+                return pd.to_datetime("2025-09-17").date()
+            else:
+                file_path = os.path.join(folder_path, f"{strdate}.csv")
+                df = pd.read_csv(file_path)
 
-            if "disclosure_date" not in df.columns:
-                return f"{strdate}.csv 파일에 'disclosure_date' 열이 없습니다."
+                if "disclosure_date" not in df.columns:
+                    return f"{strdate}.csv 파일에 'disclosure_date' 열이 없습니다."
 
-            # 날짜 컬럼을 datetime 형식으로 변환
-            df["disclosure_date"] = pd.to_datetime(df["disclosure_date"], errors='coerce')
-            df = df.dropna(subset=["disclosure_date"])
+                # 날짜 컬럼을 datetime 형식으로 변환
+                df["disclosure_date"] = pd.to_datetime(df["disclosure_date"], errors='coerce')
+                df = df.dropna(subset=["disclosure_date"])
 
-            if df.empty:
-                return f"{strdate}.csv 파일에 유효한 disclosure_date가 없습니다."
+                if df.empty:
+                    return f"{strdate}.csv 파일에 유효한 disclosure_date가 없습니다."
 
-            return df["disclosure_date"].max().strftime("%Y-%m-%d")
+                return df["disclosure_date"].max().strftime("%Y-%m-%d")
 
         except Exception as e:
             return f"오류 발생: {e}"

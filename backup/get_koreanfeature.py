@@ -1,16 +1,16 @@
 import OpenDartReader
 import pandas as pd
 import os
-import time
+import datetime
 
 s_date = "2015-10-01"
-e_date = "2024-12-31"
-
+#e_date = "2024-12-31"
+e_date = "2025-06-30" # Q1: 1 2 3 / Q2: 4 5 6
 # 현재 스크립트의 경로를 기준으로 작업 디렉토리 변경
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-#api_key = 'a4ccf72e53bf597911d0ff504d58c5f09f2029a3'
-api_key = '84b324165b031bd4d24fc337519ac7ebf126e87e'
+api_key = 'a4ccf72e53bf597911d0ff504d58c5f09f2029a3'
+#api_key = '84b324165b031bd4d24fc337519ac7ebf126e87e'
 dart = OpenDartReader(api_key)
 
 # CSV 파일 읽기 (code 컬럼을 문자열로 읽기)
@@ -18,12 +18,12 @@ df_kospi = pd.read_csv("./data_kr/symbol.csv", dtype={'code': str})
 codes = df_kospi['code']
 
 # 저장할 디렉토리 지정 및 없으면 생성
-output_dir = "./data_kr/k_features"
+output_dir = "./data_kr/public_info"
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
 start_year = 2015
-end_year = 2024
+end_year = 2025
 
 # date_str 형식이 "YYYY-MM-DD"일 때, 분기 문자열을 반환하는 함수
 def date2quarter(date_str):
@@ -71,17 +71,29 @@ def merge_year_quarter_from_csv(csv_path, drop_cols=None, total_option=False):
     # '연도'와 '분기'별로 그룹화하여 평균 계산
     grouped = df.groupby(['연도', '분기'], as_index=False).agg(agg_dict)
 
-    # 2015_Q4부터 2024_Q3까지 모든 연도-분기 조합 생성
+    """# 2015_Q4부터 2024_Q3까지 모든 연도-분기 조합 생성
     all_pairs = []
-    for year in range(2015, 2025):  # 2015 ~ 2024년 반복
+    for year in range(2015, 2026):  # 2015 ~ 2024년 반복
         if year == 2015:
             quarters = ['Q4']  # 2015년은 Q4만 포함
-        elif year == 2024:
-            quarters = ['Q1', 'Q2', 'Q3']  # 2024년은 Q1~Q3만 포함
+        elif year == 2025:
+            quarters = ['Q1']  # 2024년은 Q1~Q3만 포함
         else:
             quarters = ['Q1', 'Q2', 'Q3', 'Q4']
         for q in quarters:
-            all_pairs.append((year, q))
+            all_pairs.append((year, q))"""
+    today = datetime.date.today()
+    current_year = today.year
+    current_quarter = (today.month - 1) // 3 + 1
+
+    # 2015_Q4부터 현재 분기까지 모든 연도-분기 조합을 동적으로 생성
+    all_pairs = []
+    for year in range(2015, current_year + 1):  # 2015년부터 현재 연도까지 반복
+        start_q = 4 if year == 2015 else 1
+        end_q = current_quarter if year == current_year else 4
+
+        for q_num in range(start_q, end_q + 1):
+            all_pairs.append((year, f"Q{q_num}"))
 
     # 모든 연도-분기 조합 DataFrame 생성
     full_index_df = pd.DataFrame(all_pairs, columns=['연도', '분기'])
@@ -158,7 +170,7 @@ def jeung_ja():
                 )
 
             # 저장할 서브 디렉토리 생성 (없으면 생성)
-            output_subdir = "./data_kr/k_features/증자"
+            output_subdir = "./data_kr/public_info/증자"
             os.makedirs(output_subdir, exist_ok=True)
 
             output_file = os.path.join(output_subdir, f"{company_code}.csv")
@@ -230,13 +242,13 @@ def maximun_juju():
                 )
 
             # 저장할 서브 디렉토리 생성 (없으면 생성)
-            output_subdir = "./data_kr/k_features/최대주주"
+            output_subdir = "./data_kr/public_info/최대주주"
             os.makedirs(output_subdir, exist_ok=True)
 
             output_file = os.path.join(output_subdir, f"{company_code}.csv")
             final_df.to_csv(output_file, index=False, encoding='utf-8-sig')
 
-            merged_df = merge_year_quarter_from_csv(f"./data_kr/k_features/최대주주/{company_code}.csv",['접수번호','회사코드','법인구분','회사명','주식종류','이름','관계','비고','결제일시'],total_option=True)
+            merged_df = merge_year_quarter_from_csv(f"./data_kr/public_info/최대주주/{company_code}.csv",['접수번호','회사코드','법인구분','회사명','주식종류','이름','관계','비고','결제일시'],total_option=True)
             print(f"모든 연도의 데이터를 합쳐 {output_file}에 저장했습니다.")
         else:
             print("조회 결과가 없습니다.")
@@ -300,7 +312,7 @@ def maximun_juju_change():
                 )
 
             # 저장할 서브 디렉토리 생성 (없으면 생성)
-            output_subdir = "./data_kr/k_features/최대주주변동"
+            output_subdir = "./data_kr/public_info/최대주주변동"
             os.makedirs(output_subdir, exist_ok=True)
 
             output_file = os.path.join(output_subdir, f"{company_code}.csv")
@@ -370,7 +382,7 @@ def employee():
                 )
 
             # 저장할 서브 디렉토리 생성 (없으면 생성)
-            output_subdir = "./data_kr/k_features/직원현황"
+            output_subdir = "./data_kr/public_info/직원현황"
             os.makedirs(output_subdir, exist_ok=True)
 
             output_file = os.path.join(output_subdir, f"{company_code}.csv")
@@ -437,7 +449,7 @@ def prime_juju():
             final_df.fillna(0, inplace=True)
 
         # 저장할 서브 디렉토리 생성 (없으면 생성)
-        output_subdir = "./data_kr/k_features/주요주주_소유보고"
+        output_subdir = "./data_kr/public_info/주요주주_소유보고"
         os.makedirs(output_subdir, exist_ok=True)
 
         output_file = os.path.join(output_subdir, f"{company_code}.csv")
@@ -506,7 +518,7 @@ def small_juju():
                 )
 
             # 저장할 서브 디렉토리 생성 (없으면 생성)
-            output_subdir = "./data_kr/k_features/소액주주"
+            output_subdir = "./data_kr/public_info/소액주주"
             os.makedirs(output_subdir, exist_ok=True)
 
             output_file = os.path.join(output_subdir, f"{company_code}.csv")
@@ -525,7 +537,7 @@ def small_juju():
             final_df['연도'] = 2015
             final_df['분기'] = 'Q4'
 
-            output_subdir = "./data_kr/k_features/소액주주"
+            output_subdir = "./data_kr/public_info/소액주주"
             os.makedirs(output_subdir, exist_ok=True)
 
             output_file = os.path.join(output_subdir, f"{company_code}.csv")
@@ -596,7 +608,7 @@ def total_jusik():
                 )
 
             # 저장할 서브 디렉토리 생성 (없으면 생성)
-            output_subdir = "./data_kr/k_features/주식총수"
+            output_subdir = "./data_kr/public_info/주식총수"
             os.makedirs(output_subdir, exist_ok=True)
 
             output_file = os.path.join(output_subdir, f"{company_code}.csv")
@@ -617,21 +629,21 @@ def total_jusik():
             final_df['연도'] = 2015
             final_df['분기'] = 'Q4'
 
-            output_subdir = "./data_kr/k_features/주식총수"
+            output_subdir = "./data_kr/public_info/주식총수"
             os.makedirs(output_subdir, exist_ok=True)
 
             output_file = os.path.join(output_subdir, f"{company_code}.csv")
             final_df.to_csv(output_file, index=False, encoding='utf-8-sig')
 
-def concat_k_features():
+def concat_public_info():
     code = "000080"
-    df_small = merge_year_quarter_from_csv(f"./data_kr/k_features/소액주주/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시'],False)
-    df_total = merge_year_quarter_from_csv(f"./data_kr/k_features/주식총수/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시'],False)
-    df_prime = merge_year_quarter_from_csv(f"./data_kr/k_features/주요주주_소유보고/{code}.csv",['접수번호','법인구분','회사코드','회사명','대표보고자','발행 회사 관계 임원(등기여부)','발행 회사 관계 임원 직위','발행 회사 관계 주요 주주','결제일시'],False)
-    df_jeungja = merge_year_quarter_from_csv(f"./data_kr/k_features/증자/{code}.csv",['접수번호','법인구분','회사코드','회사명','증자일자','증자방식','증자주식종류','구분','결제일시'],False)
-    df_employee = merge_year_quarter_from_csv(f"./data_kr/k_features/직원현황/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명', '직원 수','총 급여액','비고', '결제일시'],False)
-    df_maximum = merge_year_quarter_from_csv(f"./data_kr/k_features/최대주주/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명','주식종류','이름','관계', '비고', '결제일시'],True)
-    df_maximum_change = merge_year_quarter_from_csv(f"./data_kr/k_features/최대주주변동/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명','변동일','최대주주명','보유 주식 수','변동원인', '비고', '결제일시'],False)
+    df_small = merge_year_quarter_from_csv(f"./data_kr/public_info/소액주주/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시'],False)
+    df_total = merge_year_quarter_from_csv(f"./data_kr/public_info/주식총수/{code}.csv",['접수번호','법인구분','회사코드','회사명','구분','결제일시'],False)
+    df_prime = merge_year_quarter_from_csv(f"./data_kr/public_info/주요주주_소유보고/{code}.csv",['접수번호','법인구분','회사코드','회사명','대표보고자','발행 회사 관계 임원(등기여부)','발행 회사 관계 임원 직위','발행 회사 관계 주요 주주','결제일시'],False)
+    df_jeungja = merge_year_quarter_from_csv(f"./data_kr/public_info/증자/{code}.csv",['접수번호','법인구분','회사코드','회사명','증자일자','증자방식','증자주식종류','구분','결제일시'],False)
+    df_employee = merge_year_quarter_from_csv(f"./data_kr/public_info/직원현황/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명', '직원 수','총 급여액','비고', '결제일시'],False)
+    df_maximum = merge_year_quarter_from_csv(f"./data_kr/public_info/최대주주/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명','주식종류','이름','관계', '비고', '결제일시'],True)
+    df_maximum_change = merge_year_quarter_from_csv(f"./data_kr/public_info/최대주주변동/{code}.csv", ['접수번호', '법인구분', '회사코드', '회사명','변동일','최대주주명','보유 주식 수','변동원인', '비고', '결제일시'],False)
 
     dfs = [df_small,df_total,df_prime,df_jeungja,df_employee,df_maximum,df_maximum_change]
     df_concated = pd.concat(dfs,axis=1)
@@ -639,5 +651,10 @@ def concat_k_features():
     return df_concated
 
 if __name__ == "__main__":
-    df = concat_k_features()
-    print('hello')
+    jeung_ja()
+    maximun_juju()
+    maximun_juju_change()
+    employee()
+    prime_juju()
+    small_juju()
+    total_jusik()

@@ -146,5 +146,3 @@ plt.legend()
 plt.grid(True)
 plt.savefig(f"./result/{folder_name}/result_KOSPI_graph.png", dpi=300, bbox_inches="tight", pad_inches=0.1)
 result_df_ks.to_csv(f"./result/{folder_name}/result_KOSPI_file.csv", encoding='utf-8-sig')
-
-

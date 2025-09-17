@@ -13,7 +13,7 @@ class DataManager:
         self.cluster_list = ["cluster_" + str(i) for i in range(cluster_n)]  # 클러스터 번호 부여
 
         #self.phase_list = {"p1": [1, 16, 20, 24], "p2": [5, 20, 24, 28], "p3": [9, 24, 28, 32], "p4": [13, 28, 32, 36]}
-        self.phase_list = {"p1": [1, 19, 23, 27], "p2": [5, 23, 27, 31], "p3": [9, 27, 31, 35], "p4": [13, 31, 35, 39]}
+        self.phase_list = {"p1": [3, 19, 23, 27], "p2": [7, 23, 27, 31], "p3": [11, 27, 31, 35], "p4": [15, 31, 35, 39]}
         #self.phase_list = {"p4": [13, 31, 35, 39]}
 
     def create_date_list(self):

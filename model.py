@@ -20,9 +20,29 @@ from functools import reduce
 from membership import make_anfis
 from experimental import train_anfis
 from datamanager import DataManager
+import random
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+
+def set_seed(seed):
+    """
+    모든 라이브러리의 랜덤 시드를 고정하는 함수
+    """
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+
+SEED = 42
+set_seed(SEED)
 
 class MultiLayerPerceptron(nn.Module):
     def __init__(self, input_size, hidden_size, device):
@@ -60,7 +80,7 @@ class MultiLayerPerceptron(nn.Module):
 class AggregationModel:
     def __init__(self, n_input, n_rules, hidden_layer, device, aggregate = ""):
         self.mlp = MultiLayerPerceptron(n_input, hidden_layer, device)
-        self.rf = RandomForestRegressor()
+        self.rf = RandomForestRegressor(random_state=SEED)
         self.device = device
 
     def fit(self, X, y, epochs_mlp, epochs_anfis, lr_mlp, lr_anfis):

@@ -39,23 +39,24 @@ home_df = add_year_quarter(home_df)
 def quarterly_avg(df, value_col):
     return df.groupby(["연도", "분기"])[value_col].mean().reset_index()
 
-cpi_q = quarterly_avg(cpi_df, "KORCPALTT01CTGYM").rename(columns={"KORCPALTT01CTGYM": "소비자물가지수"})
+
 exchange_q = quarterly_avg(exchange_df, "EXKOUS").rename(columns={"EXKOUS": "환율"})
-unemployment_q = quarterly_avg(unemployment_df, "LRUNTTTTKRM156S").rename(columns={"LRUNTTTTKRM156S": "실업률"})
+unemployment_q = quarterly_avg(unemployment_df, "LRUNTTTTKRM156N").rename(columns={"LRUNTTTTKRM156N": "실업률"})
 oil_q = quarterly_avg(oil_df,"MCOILBRENTEU").rename(columns={"MCOILBRENTEU":"국제유가"})
 
 # 분기별 데이터는 그대로
-gdp_q = gdp_df[["연도", "분기", "NGDPRSAXDCKRQ"]].rename(columns={"NGDPRSAXDCKRQ": "GDP"})
+gdp_q = gdp_df[["연도", "분기", "NGDPRNSAXDCKRQ"]].rename(columns={"NGDPRNSAXDCKRQ": "GDP"})
 interest_q = interest_df[["연도", "분기", "IRLTLT01KRQ156N"]].rename(columns={"IRLTLT01KRQ156N": "금리"})
 export_q = export_df[["연도", "분기", "XTEXVA01KRQ664S"]].rename(columns={"XTEXVA01KRQ664S": "수출액"})
-home_q = home_df[["연도", "분기", "QKRR628BIS"]].rename(columns={"QKRR628BIS": "주택가격"})
+home_q = home_df[["연도", "분기", "QKRR368BIS"]].rename(columns={"QKRR368BIS": "주택가격"})
+cpi_q =cpi_df[["연도", "분기", "KORCPIENGQINMEI"]].rename(columns={"KORCPIENGQINMEI": "소비자물가지수"})
 
 # 연도/분기 틀 생성 (2015 Q4 ~ 2024 Q3)
 quarters = ["Q1", "Q2", "Q3", "Q4"]
-timeline = [(year, q) for year in range(2015, 2025) for q in quarters]
+timeline = [(year, q) for year in range(2015, 2026) for q in quarters]
 timeline_df = pd.DataFrame(timeline, columns=["연도", "분기"])
 timeline_df = timeline_df[~((timeline_df["연도"] == 2015) & (timeline_df["분기"].isin(["Q1", "Q2", "Q3"])))]
-timeline_df = timeline_df[~((timeline_df["연도"] == 2024) & (timeline_df["분기"] == "Q4"))]
+timeline_df = timeline_df[~((timeline_df["연도"] == 2025) & (timeline_df["분기"].isin(["Q3", "Q4"])))]
 
 # 데이터 병합
 merged = timeline_df.copy()

@@ -20,9 +20,29 @@ from functools import reduce
 from membership import make_anfis
 from experimental import train_anfis
 from datamanager import DataManager
+import random
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+
+def set_seed(seed):
+    """
+    모든 라이브러리의 랜덤 시드를 고정하는 함수
+    """
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+
+SEED = 42
+set_seed(SEED)
 
 class MultiLayerPerceptron(nn.Module):
     def __init__(self, input_size, hidden_size, device):
@@ -54,12 +74,13 @@ class MultiLayerPerceptron(nn.Module):
                 pred = self(x)
                 loss = criterion(pred.squeeze(), y)
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.parameters(), 1.0)
                 optimizer.step()
 
 class AggregationModel:
     def __init__(self, n_input, n_rules, hidden_layer, device, aggregate = ""):
         self.mlp = MultiLayerPerceptron(n_input, hidden_layer, device)
-        self.rf = RandomForestRegressor()
+        self.rf = RandomForestRegressor(random_state=SEED)
         self.device = device
 
     def fit(self, X, y, epochs_mlp, epochs_anfis, lr_mlp, lr_anfis):
@@ -81,6 +102,25 @@ class AggregationModel:
         sorted_rank = pd.Series(sum_prediction.squeeze(), index=symbol_index).sort_values(ascending=False)
 
         return sorted_rank
+
+    def predict_agg3(self, X, symbol_index):
+        pred_anfis = self.anfis(X).cpu().detach().numpy().squeeze()
+        pred_mlp = self.mlp(X).cpu().detach().numpy().squeeze()
+        pred_rf = self.rf.predict(X.cpu().numpy()).squeeze()
+
+        top_anfis = pd.Series(pred_anfis, index=symbol_index).sort_values(ascending=False)
+        top_mlp = pd.Series(pred_mlp, index=symbol_index).sort_values(ascending=False)
+        top_rf = pd.Series(pred_rf, index=symbol_index).sort_values(ascending=False)
+
+        top_n_count = 20
+
+        # 4. 세 모델이 공통으로 추천하는 종목(교집합)을 찾음
+        set_anfis = set(top_anfis.index[:top_n_count])
+        set_mlp = set(top_mlp.index[:top_n_count])
+        set_rf = set(top_rf.index[:top_n_count])
+
+        inter_stocks = list(set_anfis.intersection(set_mlp).intersection(set_rf))
+        return inter_stocks
 
     def loss(self, X, y, agg2 = False):
         if agg2 != True: pred_anfis = self.anfis(X).cpu().detach().numpy().squeeze()
@@ -130,8 +170,8 @@ class MyModel(nn.Module):
         self.sector_models = {}
         self.cluster_list = self.DM.cluster_list
 
-    def recordParameter(self):
-        file_path = "./result/train_parameter.csv"
+    def recordParameter(self,path):
+        file_path = path
         new_data = [
             {"Parameter": "feature_n", "Value": self.feature_n},
             {"Parameter": "valid_stock_k", "Value": self.valid_stock_k},
@@ -154,8 +194,8 @@ class MyModel(nn.Module):
         df = pd.concat([df, pd.DataFrame(new_data)], ignore_index=True)
         df.to_csv(file_path, index=False)
 
-    def trainClusterModels(self, withValidation=False):
-        print(f"trainClusterModels ({self.phase}), with validation {withValidation}: ")
+    def trainClusterModels(self, withValidation=False,model="S3CE"):
+        print(f"trainClusterModels ({self.phase}), with validation {withValidation}, Model {self.ensemble}:")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
         test_start = self.DM.phase_list[self.phase][2]
@@ -164,21 +204,46 @@ class MyModel(nn.Module):
         print(
             f"train: {self.DM.pno2date(train_start)} ~ {self.DM.pno2date(valid_start - 1)} / valid: {self.DM.pno2date(valid_start)} ~ {self.DM.pno2date(test_start - 1)}"
             f" / test: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end - 1)}")
-        for sector in self.cluster_list:
-            train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
-            if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
-            a, b = train_data.shape[0], train_data.shape[1]
-            train_data = train_data.reshape(a * b, -1)
-            train_data = torch.Tensor(train_data, ).to(self.device)
-            the_model = AggregationModel(train_data.shape[1] - 1, self.n_rules, self.hidden, self.device)
-            the_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, self.epochs_anfis, self.lr_MLP,
-                          self.lr_anfis)
 
-            self.sector_models[sector] = the_model
+        if self.ensemble == "RF":
+            for sector in self.cluster_list:
+                train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering,model=model)
+                if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
+                a,b = train_data.shape[0], train_data.shape[1]
+                train_data = train_data.reshape(a*b,-1)
+                the_model = RandomForestRegressor()
+                the_model.fit(train_data[:,:-1], train_data[:,-1])
+                self.sector_models[sector] = the_model
 
-    def trainALLSectorModels(self, withValidation = False): # 전체 섹터를 하나의 모델로 학습
+
+        elif self.ensemble == "MLP":
+            for sector in self.cluster_list:
+                train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering,model=model)
+                if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
+                a,b = train_data.shape[0], train_data.shape[1]
+                train_data = train_data.reshape(a*b,-1)
+                train_data = torch.Tensor(train_data).to(self.device)
+                the_model = MultiLayerPerceptron(train_data.shape[1]-1,self.hidden,self.device)
+                data = DataLoader(TensorDataset(train_data[:,:-1], train_data[:,-1]), batch_size=64, shuffle=True)
+                the_model.fit(data,self.lr_MLP,self.epochs_MLP)
+                self.sector_models[sector] = the_model
+        else: #S3CE
+            for sector in self.cluster_list:
+                train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering,model=model)
+                if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
+                a, b = train_data.shape[0], train_data.shape[1]
+                train_data = train_data.reshape(a * b, -1)
+                train_data = torch.Tensor(train_data, ).to(self.device)
+                if torch.isnan(train_data).any():
+                    print("입력 데이터에 NaN 값이 포함되어 있습니다!")
+                the_model = AggregationModel(train_data.shape[1] - 1, self.n_rules, self.hidden, self.device)
+                the_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, self.epochs_anfis, self.lr_MLP,
+                              self.lr_anfis)
+                self.sector_models[sector] = the_model
+
+    def trainALLSectorModels(self, withValidation = False,model="S3CE"): # 전체 섹터를 하나의 모델로 학습
         # 전체 섹터 학습 모델
-        print(f"trainALLSectorModels ({self.phase}), with validation {withValidation}: ")
+        print(f"trainALLSectorModels ({self.phase}), with validation {withValidation}, Model {self.ensemble}:")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
         test_start = self.DM.phase_list[self.phase][2]
@@ -187,17 +252,30 @@ class MyModel(nn.Module):
         print(
             f"train: {self.DM.pno2date(train_start)} ~ {self.DM.pno2date(valid_start - 1)} / valid: {self.DM.pno2date(valid_start)} ~ {self.DM.pno2date(test_start - 1)}"
             f" / test: {self.DM.pno2date(test_start)} ~ {self.DM.pno2date(test_end - 1)}")
-        train_data = np.ndarray([0])
-        train_tmp, valid_tmp, _ = self.DM.data_phase("ALL",self.phase)
-        if withValidation: train_tmp = np.concatenate((train_tmp, valid_tmp))
-        train_data = train_tmp.reshape(train_tmp.shape[0]*train_tmp.shape[1],-1)
-        # 전체 데이터를 가져와 train_data로 변환
 
-        self.all_sector_model = AggregationModel(train_data.shape[1] - 1, self.n_rules, self.hidden, self.device)
-        train_data = torch.Tensor(train_data).to(self.device)
-        self.all_sector_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, self.epochs_anfis, self.lr_MLP,
-                                  self.lr_anfis)
-        # 개별 섹터 모델과 비교하기 위해 전체 시장을 학습한 모델을 실험
+        train_tmp, valid_tmp, _ = self.DM.data_phase("ALL", self.phase,model=model)
+        if withValidation: train_tmp = np.concatenate((train_tmp, valid_tmp))
+        train_data = train_tmp.reshape(train_tmp.shape[0] * train_tmp.shape[1], -1)
+
+
+        if self.ensemble == "MLP":
+            train_data = torch.Tensor(train_data).to(self.device)
+            self.all_sector_model = MultiLayerPerceptron(train_data.shape[1] - 1, self.hidden, self.device)
+            data = DataLoader(TensorDataset(train_data[:, :-1], train_data[:, -1]), batch_size=64, shuffle=True)
+            self.all_sector_model.fit(data, self.lr_MLP, self.epochs_MLP)
+
+        elif self.ensemble == "RF":
+            self.all_sector_model = RandomForestRegressor()
+            self.all_sector_model.fit(train_data[:, :-1], train_data[:, -1])
+        else:
+            self.all_sector_model = AggregationModel(train_data.shape[1] - 1, self.n_rules, self.hidden, self.device)
+            train_data = torch.Tensor(train_data).to(self.device)
+            if torch.isnan(train_data).any():
+                print("입력 데이터에 NaN 값이 포함되어 있습니다!")
+            self.all_sector_model.fit(train_data[:, :-1], train_data[:, -1], self.epochs_MLP, self.epochs_anfis,
+                                      self.lr_MLP,
+                                      self.lr_anfis)
+
 
     def copymodels(self):
         for sector in self.DM.sector_list:
@@ -206,7 +284,7 @@ class MyModel(nn.Module):
     def save_models(self,dir):
         joblib.dump(self,f"{dir}/model.joblib")
 
-    def backtest(self, verbose=True, use_all='SectorAll', agg='inter', inter_n=0.1,withValidation = False, isTest=True, testNum=0, dir=""):  # 백테스팅 수행
+    def backtest(self, verbose=True, use_all='SectorAll', agg='inter', inter_n=0.1,withValidation = False, isTest=True, testNum=0, dir="",model="S3CE"):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
         # 과거 데이터를 사용하여 모델의 예측이 실제 시장에서 얼마나 잘 맞았는지를 검증하는 과정
         test_start = self.DM.phase_list[self.phase][2 if withValidation else 1]
@@ -219,14 +297,15 @@ class MyModel(nn.Module):
         clustered_stocks_list = []
 
         if use_all == "SectorAll" or use_all == "All":  # 전체 데이터를 불러옴
-            _, _, all_data = self.DM.data_phase("ALL", self.phase)
+            _, _, all_data = self.DM.data_phase("ALL", self.phase,model=model)
             all_symbol = pd.read_csv(f"./data_kr/symbol.csv")  # 전체 섹터 데이터 가져옴
 
         for sector in self.cluster_list:  # 저장된 상위 섹터별 데이터를 로드
-            _, _, data_tmp = self.DM.data_phase(sector, self.phase, cluster=self.clustering)
+            _, _, data_tmp = self.DM.data_phase(sector, self.phase, cluster=self.clustering,model=model)
             test_data[sector] = data_tmp
 
-            symbol_index = pd.read_csv(f"./preprocessed_data/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
+            if model == "S3CE": symbol_index = pd.read_csv(f"./preprocessed_data/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
+            else: symbol_index = pd.read_csv(f"./preprocessed_data_{model}/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
             symbols[sector] = symbol_index["Code"]
 
         ## 백테스팅 진행
@@ -257,12 +336,13 @@ class MyModel(nn.Module):
                     topK = model.predict(torch.Tensor(test_data[sector]).to(self.device)[i, :, :-1],
                                          symbols[sector])
 
-                    if use_all == "SectorAll":  # SectorAll 모드: 전체 섹터 모델 활용, 전체 섹터 데이터를 기반으로 종목을 추천
+                    if use_all == "SectorAll":
                         self.all_sector_model.anfis = self.all_sector_model.anfis.type(torch.float64)
                         model = self.all_sector_model
                         if not isinstance(all_data, torch.Tensor):
                             all_data = torch.Tensor(all_data).to(self.device)
                         top_all = model.predict(all_data[i, :, :-1], all_symbol["code"])
+
 
                         inter_symbol = top_all.index.intersection(topK.index)  # 각 섹터의 모델 예측값과 전체 섹터 모델의 예측값을 조합
 
@@ -281,26 +361,45 @@ class MyModel(nn.Module):
                             real_last_topK_stock.extend(inter_stocks)
 
                     elif use_all == "Sector":  # Sector인 경우
-                        real_last_topK_stock.extend(topK.index[:2].to_list())  # 상위 2개의 종목을 선택
+                        cnt = len(topK)
+                        real_last_topK_stock.extend(topK.index[:int(cnt * inter_n)].to_list())  # 상위 2개의 종목을 선택
 
-            elif use_all == "All":  # 전체 데이터 기반 종목 선택
-                model = self.all_sector_model
-                if not isinstance(all_data, torch.Tensor):
-                    all_data = torch.Tensor(all_data).to(self.device)
-                top_all = model.predict(all_data[i, :, :-1], all_symbol["code"])
+            elif use_all == "All":
+                if self.ensemble == "MLP":
+                    if not isinstance(all_data, torch.Tensor):
+                        all_data = torch.Tensor(all_data).to(self.device)
+                    top_all = pd.Series(self.all_sector_model(all_data[i, :, :-1]).cpu().detach().numpy().squeeze(),
+                                        all_symbol["code"]).sort_values(ascending=False)
+                elif self.ensemble == "RF":
+                    top_all = pd.Series(self.all_sector_model.predict(all_data[i, :, :-1]),
+                                        all_symbol["code"]).sort_values(ascending=False)
+                    real_last_topK_stock.extend(top_all.index[:int(cnt * inter_n)].to_list())
 
-                real_last_topK_stock.extend(top_all.index[:self.final_stock_k].to_list())  # 최종 상위 k 개의 주식을 선택 및 추가
+                elif self.ensemble == "agg3":
+                    model = self.all_sector_model
+                    if not isinstance(all_data, torch.Tensor):
+                        all_data = torch.Tensor(all_data).to(self.device)
+                    top_all = model.predict_agg3(all_data[i, :, :-1], all_symbol["code"])
+                    real_last_topK_stock.extend(top_all)
 
-            if use_all == "SectorAll" and agg == 'avg':  # SectorAll 모드에서
-                real_last_topK_stock = stocks.sort_values(ascending=False).index.to_list()[:self.final_stock_k]
-                # 개별 섹터와 전체 섹터 모델의 예측값 평균을 사용하여 종목을 결정
-            clustered_stocks_list.append([f"{idx}"] + real_last_topK_stock)
+                else:
+                    model = self.all_sector_model
+                    if not isinstance(all_data, torch.Tensor):
+                        all_data = torch.Tensor(all_data).to(self.device)
+                    top_all = model.predict(all_data[i, :, :-1], all_symbol["code"])
+                    cnt = len(top_all)
+                    real_last_topK_stock.extend(top_all.index[:int(cnt * inter_n)].to_list())  # 최종 상위 k 개의 주식을 선택 및 추가
+
+
+
+            trade_date = self.DM.get_disclosure_date(strdate)
+            next_trade_date = self.DM.get_disclosure_date(next_strdate)
+            clustered_stocks_list.append([f"{idx}"] + [strdate, trade_date, next_trade_date] + real_last_topK_stock)
             idx += 1
-            self.final_stock_k = len(real_last_topK_stock)  # 최종적으로 선택된 주식 개수를 저장
 
             if verbose: print(real_last_topK_stock,flush=True)  # 선택된 최종 종목을 출력
             if isTest:
-                pd.DataFrame(clustered_stocks_list).to_csv(f"./result/{dir}/test_selected_stocks_{self.phase}_{testNum}.csv", index=False)
+                pd.DataFrame(clustered_stocks_list).to_csv(f"{dir}/test_selected_stocks_{self.phase}_{testNum}.csv", index=False)
             if not isTest:
                 pd.DataFrame(clustered_stocks_list).to_csv(
                     f"{dir}/train_selected_stocks_{self.phase}.csv", index=False)
@@ -329,6 +428,58 @@ class MyModel(nn.Module):
             print("----------------------",flush=True)
 
         return return_ratio, sharpe, mdd,num_of_stock, return_ratio_ks, sharpe_ks, mdd_ks
+
+        # MyModel 클래스 내부에 새로운 메서드로 추가
+
+    def backtest_BuyHold(self, verbose=True, withValidation= False):
+        test_start = self.DM.phase_list[self.phase][2 if withValidation else 1]
+        test_end = self.DM.phase_list[self.phase][3 if withValidation else 2]
+        # 테스트 시작과 종료 시점 설정
+        test_data = {}  # 섹터별 테스트 데이터를 저장할 딕셔너리
+        symbols = {}  # 각 섹터별 종목(Symbol) 정보를 저장할 딕셔너리
+
+        idx = 0
+        clustered_stocks_list = []
+        all_symbol = pd.read_csv(f"./data_kr/symbol.csv")
+        initial_portfolio_stocks = all_symbol["code"].tolist()
+
+        pf_mem = []
+        pf_mem_ks = []
+
+        for pno in range(test_start, test_end):
+            print(f"Test in {self.DM.pno2date(pno)}:")
+            # 각 날짜마다 주식을 선택하고 수익률을 계산
+            i = pno - test_start
+            strdate = self.DM.pno2date(pno)  # 현재 날짜와
+            next_strdate = self.DM.pno2date(pno + 1)  # 다음 날짜 반환
+
+            selected_stocks = initial_portfolio_stocks
+
+            # 일일 수익률 계산 (기존 로직 재사용)
+            daily_change = self.Utils.get_portfolio_memory(selected_stocks, strdate, next_strdate, False)
+            daily_change_KOSPI = self.Utils.get_portfolio_memory(selected_stocks, strdate, next_strdate, True)
+
+            pf_mem.extend(daily_change)
+            pf_mem_ks.extend(daily_change_KOSPI)
+
+        return_ratio = np.prod(np.array(pf_mem) + 1) - 1
+        mdd = self.Utils.get_MDD(np.array(pf_mem) + 1)
+        sharpe = self.Utils.get_sharpe_ratio(pf_mem)
+
+        return_ratio_ks = np.prod(np.array(pf_mem_ks) + 1) - 1
+        mdd_ks = self.Utils.get_MDD(np.array(pf_mem_ks) + 1)
+        sharpe_ks = self.Utils.get_sharpe_ratio(pf_mem_ks)
+
+        if verbose:
+            print(f"\nMDD: {mdd}\tSharpe: {sharpe}\tCAGR: {return_ratio}",flush=True)
+            print(f"KOSPI MDD: {mdd_ks}\tKOSPI Sharpe: {sharpe_ks}\tKOSPI CAGR: {return_ratio_ks}",flush=True)
+            print("----------------------",flush=True)
+
+        return return_ratio, sharpe, mdd,177, return_ratio_ks, sharpe_ks, mdd_ks
+
+
+
+
 
     def save(obj):
         return (obj.__class__, obj.__dict__)

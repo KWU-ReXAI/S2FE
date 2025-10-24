@@ -12,14 +12,18 @@ import torch
 import joblib
 import argparse
 import numpy as np
+from xai import xai, xai_plots, concat_explanations
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
 parser.add_argument('--train_dir',type=str,nargs='?',default="train_result_dir") # 결과 파일명
 parser.add_argument('--test_dir',type=str,nargs='?',default="test_result_dir") # 결과 디렉토리 명
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
+parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE")
+parser.add_argument('--use_all',type=str,nargs="?",default="SectorAll")
 parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
 parser.add_argument('--inter_n',type=float,nargs='?',default=0.1) # 0.1
+parser.add_argument('--data',type=str,nargs="?",default="All")
 args = parser.parse_args()
 
 if isinstance(args.inter_n, float) and args.inter_n.is_integer():
@@ -29,41 +33,57 @@ cluster_n = 5
 
 DM = DataManager(features_n=6,cluster_n=cluster_n) # 특징 개수 4개로 설정하여 데이터 매니저 초기화
 DM.create_date_list()
-device = torch.device('cpu')
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Impute = "SoftImpute"
 phase_list = DM.phase_list.keys()
 new_data = [{"Parameter": "inter_n", "Value": args.inter_n},{"Parameter": "aggregate", "Value": args.agg},
             {"Parameter": "Impute", "Value": Impute}]
 
+if args.data == "All":
+    folder_name = f"result_{args.ensemble}_{args.use_all}"
+else:
+    folder_name = f"result_{args.ensemble}_{args.use_all}_{args.data}"
+
 # 기존 train_parameter.csv 파일 읽어오기
-train_file_path = "./result/train_parameter.csv"
+train_file_path = f"./result/{folder_name}/train_parameter.csv"
 df_train = pd.read_csv(train_file_path)
 # 새로운 데이터를 DataFrame으로 변환 후, 기존 DataFrame과 합치기
 df_new = pd.DataFrame(new_data)
 df_combined = pd.concat([df_train, df_new], ignore_index=True)
 # 합쳐진 데이터를 test_parameter.csv로 저장하기
-test_file_path = "./result/test_parameter.csv"
+test_file_path = f"./result/{folder_name}/test_parameter.csv"
 df_combined.to_csv(test_file_path, index=False, encoding='utf-8-sig')
 
-dir = f"./result/{args.test_dir}"
+dir = f"./result/{folder_name}/{args.test_dir}"
 if os.path.isdir(dir) == False:
     os.mkdir(dir)
-dir = f"./result"
+dir = f"./result/{folder_name}/"
+test_dir = f"./result/{folder_name}/{args.test_dir}"
 
 use_all_list =["All","Sector","SectorAll"] # 모델 평가 방식
 all_results={}
 for K in range(1,args.testNum+1): # 한번만 실행
-    print(f"\nTest for Train_Model_{K}")
-    list_num_stocks = [] # 각 실험에서 선택된 주식 개수를 저장할 리스트
-    for m in range(2,3): # 20번 실행
+    list_num_stocks = []
+    xai_explanations = []
+    for m in range(2,3):
         result = {} # 백테스팅 결과를 저장할 딕셔너리
         result_ks = {}
         num_stocks = [] # 각 phase에서 선택된 주식 개수를 저장하는 리스트
         for phase in tqdm(phase_list): # 각 phase 별 진행상태를 시각적으로 출력
+            print(f"\nTest for Train_Model_{K}_{phase}: {dir}{args.train_dir}_{K}/train_result_model_{K}_{phase}/model.joblib")
             model = joblib.load(f"{dir}/{args.train_dir}_{K}/train_result_model_{K}_{phase}/model.joblib")  # 저장된 모델 불러옴
-            cagr, sharpe, mdd, num_stock_tmp,cagr_ks,sharpe_ks,mdd_ks = model.backtest(verbose=True,agg=args.agg,use_all="SectorAll",inter_n=args.inter_n,withValidation= True, isTest=True, testNum=K, dir=args.test_dir) # 백테스팅 실행
-                
-            # 상위 20% 주식만을 선택
+            if args.ensemble ==  "buyhold":
+                cagr, sharpe, mdd, num_stock_tmp,cagr_ks,sharpe_ks,mdd_ks = model.backtest_BuyHold(verbose=True,withValidation= True) # 백테스팅 실행
+            else:
+                print(f"\n[START BACKTEST]: agg={args.agg}, use_all={args.use_all}, inter_n={args.inter_n}, withValidation=True, isTest=True, testNum = {K}")
+                cagr, sharpe, mdd, num_stock_tmp, cagr_ks, sharpe_ks, mdd_ks = model.backtest(verbose=True,
+                                                                                              agg=args.agg,
+                                                                                              use_all=args.use_all,
+                                                                                              inter_n=args.inter_n,
+                                                                                              withValidation=True,
+                                                                                              isTest=True, testNum=K,
+                                                                                              dir=test_dir)  # 백테스팅 실행
+                xai_explanations.append(xai(DM, model, phase))
             num_stocks.append(num_stock_tmp) # 선택된 주식 개수를 저장
             result[phase] = {"CAGR":cagr,"Sharpe Ratio":sharpe,"MDD":mdd} # 백테스팅 결과 저장
             result_ks[phase] = {"CAGR":cagr_ks,"Sharpe Ratio":sharpe_ks,"MDD":mdd_ks}
@@ -72,13 +92,18 @@ for K in range(1,args.testNum+1): # 한번만 실행
         result_df_ks = pd.DataFrame(result_ks)
         all_results[f"Test {K}"] = result_df
         list_num_stocks.append(num_stocks) # 각 실험에서 선택된 주식 개수 저장
+        combined_xai = [
+            concat_explanations(xai_tuple)
+            for xai_tuple in zip(*xai_explanations)
+        ]
+        xai_plots(DM, combined_xai, test_dir, K)
 
 final_df = pd.concat(all_results, axis=1)
 avg_df = final_df.groupby(level=1, axis=1).mean()
 avg_df.columns = pd.MultiIndex.from_product([["Average"], avg_df.columns])
-avg_df.to_csv(f"{dir}/test_result_dir/test_result_average.csv", encoding='utf-8-sig')
+avg_df.to_csv(f"{test_dir}/test_result_average.csv", encoding='utf-8-sig')
 final_df_combined = pd.concat([final_df, avg_df], axis=1)
-final_df_combined.to_csv(f"{dir}/test_result_dir/test_result_file.csv", encoding='utf-8-sig')
+final_df_combined.to_csv(f"{test_dir}/test_result_file.csv", encoding='utf-8-sig')
 
 
 # 평가지표 리스트
@@ -90,35 +115,7 @@ phases = avg_df["Average"].columns
 # 각 평가지표마다 하나의 그래프로 나타내도록 subplot 생성 (가로로 배열)
 fig, axs = plt.subplots(nrows=1, ncols=len(metrics), figsize=(6 * len(metrics), 6))
 
-"""for i, metric in enumerate(metrics):
-    ax = axs[i] if len(metrics) > 1 else axs
 
-    # 그래프 출력: Average는 빨간 실선, KOSPI200은 노란 점선으로 표시
-    ax.plot(phases, avg_df["Average"].loc[metric], 'r-', marker='o', label='Average')
-    ax.plot(phases, result_df_ks.loc[metric], 'y--', marker='o', label='KOSPI200')
-    ax.set_title(metric)
-    ax.set_xlabel("Phase")
-    ax.set_ylabel(metric)
-    ax.grid(True)
-    ax.legend(loc='upper left')
-
-    # 소수점 4자리로 포맷팅한 값을 생성
-    avg_values = [f"{val:.4f}" for val in avg_df["Average"].loc[metric]]
-    ks_values = [f"{val:.4f}" for val in result_df_ks.loc[metric]]
-    cell_text = [avg_values, ks_values]
-
-    # bbox 인자를 사용하여 표와 그래프 사이의 간격을 넓게 조정 (bbox=[x, y, width, height])
-    table = ax.table(cellText=cell_text,
-                     rowLabels=["Average", "KOSPI200"],
-                     colLabels=phases,
-                     cellLoc='center',
-                     bbox=[0, -0.35, 1, 0.25])
-    table.auto_set_font_size(False)
-    table.set_fontsize(10)
-
-    # y축 하한값 조정하여 그래프와 표가 겹치지 않도록 함
-    lower_bound = min(min(avg_df["Average"].loc[metric]), min(result_df_ks.loc[metric]))
-    ax.set_ylim(bottom=lower_bound - 0.3 * abs(lower_bound))"""
 
 for i, metric in enumerate(metrics):
     ax = axs[i] if len(metrics) > 1 else axs
@@ -139,6 +136,8 @@ for i, metric in enumerate(metrics):
     phase_vals_ks = result_df_ks.loc[metric].values
 
     if metric == "CAGR":
+        avg_values = [f"{val * 100:.2f}%" for val in phase_vals]
+        ks_values = [f"{val * 100:.2f}%" for val in phase_vals_ks]
         # 1) 산술평균
         arith_avg = phase_vals.mean()
         arith_ks = phase_vals_ks.mean()
@@ -148,8 +147,8 @@ for i, metric in enumerate(metrics):
         geo_ks = np.prod(1 + phase_vals_ks) ** (1.0 / len(phases)) - 1
 
         # 두 개 모두 리스트에 추가
-        avg_values.extend([f"{arith_avg:.4f}", f"{geo_avg:.4f}"])
-        ks_values.extend([f"{arith_ks:.4f}", f"{geo_ks:.4f}"])
+        avg_values.extend([f"{arith_avg*100:.2f}%", f"{geo_avg*100:.2f}%"])
+        ks_values.extend([f"{arith_ks*100:.2f}%", f"{geo_ks*100:.2f}%"])
         col_labels = list(phases) + ["Average", "Total"]
     else:
         # Sharpe, MDD는 기존 산술평균만
@@ -173,7 +172,7 @@ for i, metric in enumerate(metrics):
 # 전체 서브플롯 간의 좌우 간격 및 하단 여백 조정
 plt.subplots_adjust(bottom=0.5, wspace=0.3)
 plt.tight_layout(rect=[0, 0.1, 1, 1])
-plt.savefig(f"{dir}/test_result_dir/test_result_graph.png")
+plt.savefig(f"{test_dir}/test_result_graph.png")
 
 
 

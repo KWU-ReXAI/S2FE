@@ -1,8 +1,12 @@
 import subprocess
 
-subprocess.run(f"python datapreprocessing.py --isall True", shell=True)
-subprocess.run(f"python datapreprocessing.py --isall cluster", shell=True)
-subprocess.run(f"python clustering.py", shell=True)
-subprocess.run(f"python datapreprocessing.py --isall False", shell=True)
-subprocess.run(f"python train.py --testNum 5", shell=True)
-subprocess.run(f"python test.py --testNum 5", shell=True)
+try:
+    """subprocess.run(f"python datapreprocessing.py --use_all True --isall cluster", shell=True, check=True)
+    subprocess.run(f"python clustering.py", shell=True, check=True)
+    subprocess.run(f"python datapreprocessing.py --use_all True --isall False", shell=True, check=True)
+    subprocess.run(f"python datapreprocessing.py --use_all True --isall True", shell=True, check=True)
+"""
+    subprocess.run(f"python train.py --testNum 10", shell=True, check=True)
+    subprocess.run(f"python test.py --testNum 10", shell=True, check=True)
+except subprocess.CalledProcessError as e:
+    print(f"명령어 실행 중 오류가 발생했습니다: {e}")

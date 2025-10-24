@@ -1,7 +1,5 @@
 import pandas as pd
 import numpy as np
-from FinDataLoader import FinDataLoader as fdpytgho
-from datetime import datetime
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -12,13 +10,16 @@ class DataManager:
         self.sector_list = sorted(pd.read_csv("./data_kr/symbol.csv")["sector"].unique().tolist())
         self.cluster_list = ["cluster_" + str(i) for i in range(cluster_n)]  # 클러스터 번호 부여
 
-        self.phase_list = {"p1": [1, 16, 20, 24], "p2": [5, 20, 24, 28], "p3": [9, 24, 28, 32], "p4": [13, 28, 32, 36]}
+        #self.phase_list = {"p1": [1, 16, 20, 24], "p2": [5, 20, 24, 28], "p3": [9, 24, 28, 32], "p4": [13, 28, 32, 36]}
+        self.phase_list = {"p1": [3, 19, 23, 27], "p2": [7, 23, 27, 31], "p3": [11, 27, 31, 35], "p4": [15, 31, 35, 39]}
+        #self.phase_list = {"p4": [13, 31, 35, 39]}
 
     def create_date_list(self):
         # 예시: merged 폴더의 파일 이름이 "2015_Q1.csv", "2015_Q2.csv" 등이라면
         files = os.listdir("./data_kr/date_regression")
         dates = [f.replace(".csv", "") for f in files if f.endswith(".csv")]
         dates = sorted(dates)  # 날짜 순으로 정렬 (적절한 정렬 기준을 적용)
+        dates.append("2025_Q3")  # 이 줄이 추가되었습니다.
         self.date_list = dates
         return dates
 
@@ -67,8 +68,30 @@ class DataManager:
         except IndexError:
             raise ValueError(f"pno {pno}은 date_list의 범위를 벗어났습니다. date_list 길이: {len(self.date_list)}")
 
+    def get_disclosure_date(self, strdate, folder_path="./data_kr/date_regression/"):
+        try:
+            if strdate == "2025_Q3":
+                return pd.to_datetime("2025-10-20").date()
+            else:
+                file_path = os.path.join(folder_path, f"{strdate}.csv")
+                df = pd.read_csv(file_path)
 
-    def data_phase(self, sector: str, phase: str, pandas_format=False, cluster=False, isall=False):
+                if "disclosure_date" not in df.columns:
+                    return f"{strdate}.csv 파일에 'disclosure_date' 열이 없습니다."
+
+                # 날짜 컬럼을 datetime 형식으로 변환
+                df["disclosure_date"] = pd.to_datetime(df["disclosure_date"], errors='coerce')
+                df = df.dropna(subset=["disclosure_date"])
+
+                if df.empty:
+                    return f"{strdate}.csv 파일에 유효한 disclosure_date가 없습니다."
+
+                return df["disclosure_date"].max().strftime("%Y-%m-%d")
+
+        except Exception as e:
+            return f"오류 발생: {e}"
+
+    def data_phase(self, sector: str, phase: str, pandas_format=False, cluster=False, isall=False, model="S3CE"):
         train_start = self.phase_list[phase][0]
         valid_start = self.phase_list[phase][1]
         test_start = self.phase_list[phase][2]
@@ -77,6 +100,12 @@ class DataManager:
         """print(f"train: {self.pno2date(train_start)} ~ {self.pno2date(valid_start - 1)} / valid: {self.pno2date(valid_start)} ~ {self.pno2date(test_start-1)}"
               f" / test: {self.pno2date(test_start)} ~ {self.pno2date(test_end-1)}")"""
 
+        if model=="S3CE":target_folder = f"./preprocessed_data"
+        else:
+            target_folder = f"./preprocessed_data_{model}"
+            print(f"Get Data of {model}")
+
+
         if isall:
             train_data = pd.DataFrame()
             valid_data = pd.DataFrame()
@@ -84,21 +113,21 @@ class DataManager:
 
             for pno in range(train_start, valid_start):
                 strdate = self.pno2date(pno)  # 예: "2015_Q1"
-                fp = f"./preprocessed_data/sectors/{sector}/{strdate}.csv"
+                fp = f"{target_folder}/sectors/{sector}/{strdate}.csv"
                 fs_data = pd.read_csv(fp)
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 train_data = pd.concat([train_data, fs_data], axis=0)
 
             for pno in range(valid_start, test_start):
                 strdate = self.pno2date(pno)
-                fp = f"./preprocessed_data/sectors/{sector}/{strdate}.csv"
+                fp = f"{target_folder}/sectors/{sector}/{strdate}.csv"
                 fs_data = pd.read_csv(fp)
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 valid_data = pd.concat([valid_data, fs_data], axis=0)
 
             for pno in range(test_start, test_end):
                 strdate = self.pno2date(pno)
-                fp = f"./preprocessed_data/sectors/{sector}/{strdate}.csv"
+                fp = f"{target_folder}/sectors/{sector}/{strdate}.csv"
                 fs_data = pd.read_csv(fp)
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 test_data = pd.concat([test_data, fs_data], axis=0)
@@ -140,19 +169,19 @@ class DataManager:
 
             for pno in range(train_start, valid_start):
                 strdate = self.pno2date(pno)
-                fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
+                fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv",index_col=[0])
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 train_list.append(fs_data)
 
             for pno in range(valid_start, test_start):
                 strdate = self.pno2date(pno)
-                fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv", index_col=[0])
+                fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv", index_col=[0])
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 valid_list.append(fs_data)
 
             for pno in range(test_start, test_end):
                 strdate = self.pno2date(pno)
-                fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv", index_col=[0])
+                fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv", index_col=[0])
                 fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
                 test_list.append(fs_data)
 
@@ -165,19 +194,21 @@ class DataManager:
 
         for pno in range(train_start, valid_start):
             strdate = self.pno2date(pno)  # 예: "2015_Q1"
-            fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
+            if model == "RF":
+                if strdate == "2016_Q1" or strdate == "2016_Q2" or strdate == "2016_Q3": continue
+            fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv",index_col=[0])
             fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
             train_data.append(fs_data)
 
         for pno in range(valid_start, test_start):
             strdate = self.pno2date(pno)
-            fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
+            fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv",index_col=[0])
             fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
             valid_data.append(fs_data)
 
         for pno in range(test_start, test_end):
             strdate = self.pno2date(pno)
-            fs_data = pd.read_csv(f"./preprocessed_data/{sector}/{strdate}.csv",index_col=[0])
+            fs_data = pd.read_csv(f"{target_folder}/{sector}/{strdate}.csv",index_col=[0])
             fs_data.drop(["name", "sector", "year", "quarter", "Code"], axis=1, inplace=True)
             test_data.append(fs_data)
 

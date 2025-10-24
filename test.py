@@ -12,7 +12,7 @@ import torch
 import joblib
 import argparse
 import numpy as np
-from xai import xai
+from xai import xai, xai_plots, concat_explanations
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 parser = argparse.ArgumentParser() # 입력 받을 하이퍼파라미터 설정
@@ -64,6 +64,7 @@ use_all_list =["All","Sector","SectorAll"] # 모델 평가 방식
 all_results={}
 for K in range(1,args.testNum+1): # 한번만 실행
     list_num_stocks = []
+    xai_explanations = []
     for m in range(2,3):
         result = {} # 백테스팅 결과를 저장할 딕셔너리
         result_ks = {}
@@ -82,7 +83,7 @@ for K in range(1,args.testNum+1): # 한번만 실행
                                                                                               withValidation=True,
                                                                                               isTest=True, testNum=K,
                                                                                               dir=test_dir)  # 백테스팅 실행
-                xai(DM, model, phase, test_dir=test_dir)
+                xai_explanations.append(xai(DM, model, phase))
             num_stocks.append(num_stock_tmp) # 선택된 주식 개수를 저장
             result[phase] = {"CAGR":cagr,"Sharpe Ratio":sharpe,"MDD":mdd} # 백테스팅 결과 저장
             result_ks[phase] = {"CAGR":cagr_ks,"Sharpe Ratio":sharpe_ks,"MDD":mdd_ks}
@@ -91,6 +92,11 @@ for K in range(1,args.testNum+1): # 한번만 실행
         result_df_ks = pd.DataFrame(result_ks)
         all_results[f"Test {K}"] = result_df
         list_num_stocks.append(num_stocks) # 각 실험에서 선택된 주식 개수 저장
+        combined_xai = [
+            concat_explanations(xai_tuple)
+            for xai_tuple in zip(*xai_explanations)
+        ]
+        xai_plots(DM, combined_xai, test_dir, K)
 
 final_df = pd.concat(all_results, axis=1)
 avg_df = final_df.groupby(level=1, axis=1).mean()

@@ -101,7 +101,7 @@ class Utils:
         # 1. disclosure_date 가져오기
         try:
             if f"{year}_{quarter}" == "2025_Q3":
-                current_date = pd.to_datetime("2025-09-17")
+                current_date = pd.to_datetime("2025-10-20")
             else:
                 file_path = os.path.join("./data_kr/date_regression", f"{year}_{quarter}.csv")
                 df = pd.read_csv(file_path)
@@ -206,7 +206,7 @@ class Utils:
         # 1. disclosure_date 가져오기
         try:
             if f"{year}_{quarter}" == "2025_Q3":
-                current_date = pd.to_datetime("2025-09-17")
+                current_date = pd.to_datetime("2025-10-20")
             else:
                 file_path = os.path.join("./data_kr/date_regression", f"{year}_{quarter}.csv")
                 df = pd.read_csv(file_path)

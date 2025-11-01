@@ -1,0 +1,14 @@
+fancyimpute
+finance-datareader
+joblib
+matplotlib
+numpy
+pandas
+pykrx
+python-dotenv
+scikit-learn
+shap
+statsmodels
+torch
+tqdm
+opendartreader

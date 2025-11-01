@@ -140,7 +140,7 @@ class AggregationModel:
 
 class MyModel(nn.Module):
     def __init__(self, feature_n, valid_stock_k, valid_sector_k, each_sector_stock_k, final_stock_k, phase, device,
-                 ensemble="S3CE", clustering=False, cluster_n=5, epochs_MLP = 300, epochs_anfis = 100, lr_MLP = 0.0001, lr_anfis = 0.01, hidden = 128):
+                 ensemble="S2FE", clustering=False, cluster_n=5, epochs_MLP = 300, epochs_anfis = 100, lr_MLP = 0.0001, lr_anfis = 0.01, hidden = 128):
         # 클래스 초기화
         super(MyModel, self).__init__()
         self.feature_n = feature_n  # 사용할 재무 feature 개수
@@ -194,7 +194,7 @@ class MyModel(nn.Module):
         df = pd.concat([df, pd.DataFrame(new_data)], ignore_index=True)
         df.to_csv(file_path, index=False)
 
-    def trainClusterModels(self, withValidation=False,model="S3CE"):
+    def trainClusterModels(self, withValidation=False,model="S2FE"):
         print(f"trainClusterModels ({self.phase}), with validation {withValidation}, Model {self.ensemble}:")
         train_start = self.DM.phase_list[self.phase][0]
         valid_start = self.DM.phase_list[self.phase][1]
@@ -227,7 +227,7 @@ class MyModel(nn.Module):
                 data = DataLoader(TensorDataset(train_data[:,:-1], train_data[:,-1]), batch_size=64, shuffle=True)
                 the_model.fit(data,self.lr_MLP,self.epochs_MLP)
                 self.sector_models[sector] = the_model
-        else: #S3CE
+        else: #S2FE
             for sector in self.cluster_list:
                 train_data, valid_data, _ = self.DM.data_phase(sector, self.phase, cluster=self.clustering,model=model)
                 if withValidation: train_data = np.concatenate((train_data, valid_data), axis=0)
@@ -241,7 +241,7 @@ class MyModel(nn.Module):
                               self.lr_anfis)
                 self.sector_models[sector] = the_model
 
-    def trainALLSectorModels(self, withValidation = False,model="S3CE"): # 전체 섹터를 하나의 모델로 학습
+    def trainALLSectorModels(self, withValidation = False,model="S2FE"): # 전체 섹터를 하나의 모델로 학습
         # 전체 섹터 학습 모델
         print(f"trainALLSectorModels ({self.phase}), with validation {withValidation}, Model {self.ensemble}:")
         train_start = self.DM.phase_list[self.phase][0]
@@ -284,7 +284,7 @@ class MyModel(nn.Module):
     def save_models(self,dir):
         joblib.dump(self,f"{dir}/model.joblib")
 
-    def backtest(self, verbose=True, use_all='SectorAll', agg='inter', inter_n=0.1,withValidation = False, isTest=True, testNum=0, dir="",model="S3CE"):  # 백테스팅 수행
+    def backtest(self, verbose=True, use_all='SectorAll', agg='inter', inter_n=0.1,withValidation = False, isTest=True, testNum=0, dir="",model="S2FE"):  # 백테스팅 수행
         # 선택된 섹터 및 전체 섹터 모델을 활용해 종목을 선택하고, 실제 데이터로 수익률을 평가
         # 과거 데이터를 사용하여 모델의 예측이 실제 시장에서 얼마나 잘 맞았는지를 검증하는 과정
         test_start = self.DM.phase_list[self.phase][2 if withValidation else 1]
@@ -304,7 +304,7 @@ class MyModel(nn.Module):
             _, _, data_tmp = self.DM.data_phase(sector, self.phase, cluster=self.clustering,model=model)
             test_data[sector] = data_tmp
 
-            if model == "S3CE": symbol_index = pd.read_csv(f"./preprocessed_data/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
+            if model == "S2FE": symbol_index = pd.read_csv(f"./preprocessed_data/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
             else: symbol_index = pd.read_csv(f"./preprocessed_data_{model}/{sector}/symbol_index.csv")  # 해당 섹터의 주식 종목 리스트 가져옴
             symbols[sector] = symbol_index["Code"]
 

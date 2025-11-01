@@ -1,30 +1,5 @@
 import pandas as pd
-import os
-import glob
-import re
-
-# 1) 위에서 정의한 컬럼 목록과 처리 함수
-'''COLUMNS_TO_DROP = [
-    "당기손익-공정가치측정금융자산",
-    "기타포괄손익-공정가치측정금융자산",
-    "보험계약자산",
-    "보험계약부채",
-    "파생상품자산",
-    "파생상품부채",
-    "이자수익",
-    "이자비용",
-    "영업이익(손실)",
-    "영업비용",
-    "예수부채",
-    "순이자손익",
-    "파생상품관련손익",
-    "순수수료손익",
-    "차입부채",
-    "상각후원가측정금융자산"
-]'''
-
 COLUMNS_TO_DROP = []
-
 def process_columns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.drop(columns=COLUMNS_TO_DROP, errors='ignore')
     return df

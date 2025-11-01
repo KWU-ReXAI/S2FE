@@ -23,7 +23,7 @@ parser.add_argument('--final_stock_k',type=int,nargs='?',default=10) # 최종적
 parser.add_argument('--result_name',type=str,nargs='?',default="train_result_model") # 결과 파일명
 parser.add_argument('--dir_name',type=str,nargs='?',default="train_result_dir") # 결과 디렉토리 명
 parser.add_argument('--use_all',type=str,nargs="?",default="SectorAll") # 모델을 평가하는 방식 설정
-parser.add_argument('--ensemble',type=str,nargs="?",default="S3CE")
+parser.add_argument('--ensemble',type=str,nargs="?",default="S2FE")
 parser.add_argument('--data',type=str,nargs="?",default="All")
 parser.add_argument('--clustering',action="store_true",default=True) # 클러스터링 여부
 parser.add_argument('--testNum',type=int,nargs='?',default=1) # 클러스터링 여부
@@ -34,7 +34,7 @@ parser.add_argument('--lr_MLP',type=float,nargs='?',default=0.01) # 0.01
 parser.add_argument('--lr_anfis',type=float,nargs='?',default=0.0001) # 0.0001
 parser.add_argument('--epochs_MLP',type=int,nargs='?',default=300) # 300
 parser.add_argument('--epochs_anfis',type=int,nargs='?',default=300) # 300
-parser.add_argument('--hidden',type=int,nargs='?',default=128) # 128
+parser.add_argument('--hidden',type=int,nargs='?',default=256) # 128
 
 
 parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
@@ -75,7 +75,7 @@ for trainNum in range(0, args.testNum):
         print(f"\nTrain Phase of Model {args.ensemble} {trainNum+1}: {phase}")
         if os.path.isdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}") == False:
             os.mkdir(f"{dir}/{args.result_name}_{trainNum+1}_{phase}")
-        if args.ensemble == "S3CE" or args.ensemble == "agg3":
+        if args.ensemble == "S2FE" or args.ensemble == "agg3":
             mymodel = MyModel(args.features_n, args.valid_stock_k, args.valid_sector_k, args.each_sector_stock_k,
                           args.final_stock_k, phase, device, args.ensemble, args.clustering, cluster_n=cluster_n, lr_anfis=args.lr_anfis,lr_MLP=args.lr_MLP,epochs_MLP=args.epochs_MLP,epochs_anfis=args.epochs_anfis,hidden=args.hidden)
         """elif args.ensemble == "RF":

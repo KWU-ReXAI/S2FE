@@ -91,7 +91,7 @@ class DataManager:
         except Exception as e:
             return f"오류 발생: {e}"
 
-    def data_phase(self, sector: str, phase: str, pandas_format=False, cluster=False, isall=False, model="S3CE"):
+    def data_phase(self, sector: str, phase: str, pandas_format=False, cluster=False, isall=False, model="S2FE"):
         train_start = self.phase_list[phase][0]
         valid_start = self.phase_list[phase][1]
         test_start = self.phase_list[phase][2]
@@ -100,7 +100,7 @@ class DataManager:
         """print(f"train: {self.pno2date(train_start)} ~ {self.pno2date(valid_start - 1)} / valid: {self.pno2date(valid_start)} ~ {self.pno2date(test_start-1)}"
               f" / test: {self.pno2date(test_start)} ~ {self.pno2date(test_end-1)}")"""
 
-        if model=="S3CE":target_folder = f"./preprocessed_data"
+        if model=="S2FE":target_folder = f"./preprocessed_data"
         else:
             target_folder = f"./preprocessed_data_{model}"
             print(f"Get Data of {model}")

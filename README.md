@@ -58,14 +58,14 @@ S2FE 모델은 **MLP (Multi-Layer Perceptron)**, **ANFIS (Adaptive-Network-based
     ```
     - ./data_kr/kospi200.txt에 {code,name,sector}로 이루어진 종목 정보가 사전에 존재해야 합니다.
     - ./data_kr/macro_economic/{거시경제지표명}.csv가 사전에 존재해야 merged.csv로 통합됩니다.
-4**전체 프로세스 실행**
+4. **전체 프로세스 실행**
     * `run.py` 스크립트를 실행하면 데이터 전처리, 모델 학습, 백테스팅이 순차적으로 진행됩니다.
     ```bash
     python run.py
     ```
     * 개별 스크립트(`datapreprocessing.py`, `train.py`, `test.py`)를 순서대로 직접 실행할 수도 있습니다.
 
-5**결과 확인**
+5. **결과 확인**
     * 학습된 모델과 학습 성과는 `result/{모델명}/train_result_dir_{N}/`에 저장됩니다.
     * 최종 백테스팅 결과(CSV 리포트, 그래프)는 `result/{모델명}/test_result_dir/`에 저장됩니다.
 

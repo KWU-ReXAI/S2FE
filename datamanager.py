@@ -71,7 +71,7 @@ class DataManager:
     def get_disclosure_date(self, strdate, folder_path="./data_kr/date_regression/"):
         try:
             if strdate == "2025_Q3":
-                return pd.to_datetime("2025-10-20").date()
+                return pd.to_datetime("2025-10-31").date()
             else:
                 file_path = os.path.join(folder_path, f"{strdate}.csv")
                 df = pd.read_csv(file_path)

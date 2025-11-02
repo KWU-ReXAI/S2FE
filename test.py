@@ -83,7 +83,7 @@ for K in range(1,args.testNum+1): # 한번만 실행
                                                                                               withValidation=True,
                                                                                               isTest=True, testNum=K,
                                                                                               dir=test_dir)  # 백테스팅 실행
-                xai_explanations.append(xai(DM, model, phase))
+                #xai_explanations.append(xai(DM, model, phase))
             num_stocks.append(num_stock_tmp) # 선택된 주식 개수를 저장
             result[phase] = {"CAGR":cagr,"Sharpe Ratio":sharpe,"MDD":mdd} # 백테스팅 결과 저장
             result_ks[phase] = {"CAGR":cagr_ks,"Sharpe Ratio":sharpe_ks,"MDD":mdd_ks}

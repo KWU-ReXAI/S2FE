@@ -26,9 +26,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 def set_seed(seed):
-    """
-    모든 라이브러리의 랜덤 시드를 고정하는 함수
-    """
+    print("SET SEED ",seed)
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
     np.random.seed(seed)
@@ -42,7 +40,7 @@ def set_seed(seed):
 
 
 SEED = 42
-set_seed(SEED)
+#set_seed(SEED)
 
 class MultiLayerPerceptron(nn.Module):
     def __init__(self, input_size, hidden_size, device):

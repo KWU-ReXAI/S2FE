@@ -34,7 +34,7 @@ parser.add_argument('--lr_MLP',type=float,nargs='?',default=0.01) # 0.01
 parser.add_argument('--lr_anfis',type=float,nargs='?',default=0.0001) # 0.0001
 parser.add_argument('--epochs_MLP',type=int,nargs='?',default=300) # 300
 parser.add_argument('--epochs_anfis',type=int,nargs='?',default=300) # 300
-parser.add_argument('--hidden',type=int,nargs='?',default=256) # 128
+parser.add_argument('--hidden',type=int,nargs='?',default=128) # 128
 
 
 parser.add_argument('--agg',type=str,nargs='?',default="inter") # inter
@@ -91,7 +91,7 @@ for trainNum in range(0, args.testNum):
             elif args.use_all == "Sector":
                 mymodel.trainClusterModels(withValidation=not args.Validation,model=args.ensemble)
             else:
-                print(f"Train Start: cluster_n={cluster_n}, use_all={args.use_all}, lr_anfis={args.lr_anfis}, lr_MLP={args.lr_MLP}, epochs_MLP={args.epochs_MLP}, epochs_anfis={args.epochs_anfis}, hidden={args.hidden}, withValidation={not args.Validation}")
+                print(f"Train Start: cluster_n={cluster_n}, use_all={args.use_all}, epochs_MLP={args.epochs_MLP}, epochs_anfis={args.epochs_anfis}, hidden={args.hidden}, lr_MLP={args.lr_MLP}, lr_anfis={args.lr_anfis}, withValidation={not args.Validation}")
                 mymodel.trainALLSectorModels(withValidation=not args.Validation,model=args.ensemble)
                 mymodel.trainClusterModels(withValidation=not args.Validation,model=args.ensemble)
             cagr, sharpe, mdd, _, cagr_ks, sharpe_ks, mdd_ks = mymodel.backtest(verbose=True, agg=args.agg,

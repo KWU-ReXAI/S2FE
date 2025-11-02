@@ -12,7 +12,7 @@ ticker_list = symbol_df['code'].astype(str).str.zfill(6)
 os.makedirs('./data_kr/price', exist_ok=True)
 
 start_date = '2015-01-01'
-end_date = '2025-10-20'
+end_date = '2025-10-31'
 for ticker in ticker_list:
     try:
         df_price = stock.get_market_ohlcv_by_date(fromdate=start_date,

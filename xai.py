@@ -63,7 +63,7 @@ def xai(dm, model, phase):
 
         # 데이터 추출
         cluster = False if sector == 'ALL' else True
-        train_data, valid_data, test_data = dm.data_phase(sector, phase, cluster=cluster, model="S3CE")
+        train_data, valid_data, test_data = dm.data_phase(sector, phase, cluster=cluster, model="S2FE")
         train_data = np.concatenate((train_data, valid_data), axis=0)
         a, b = train_data.shape[0], train_data.shape[1]
         train_data = train_data.reshape(a * b, -1)
@@ -130,12 +130,12 @@ if __name__ == "__main__":
     DM = DataManager(features_n=6, cluster_n=5)
     DM.create_date_list()
     xai_explanations = []
-    model = joblib.load(f"./result/result_S3CE_SectorAll/train_result_dir_1/train_result_model_1_p3/model.joblib")
+    model = joblib.load(f"./result/result_S2FE_SectorAll/train_result_dir_1/train_result_model_1_p3/model.joblib")
     xai_explanations.append(xai(DM, model, 'p3'))
-    model = joblib.load(f"./result/result_S3CE_SectorAll/train_result_dir_1/train_result_model_1_p4/model.joblib")
+    model = joblib.load(f"./result/result_S2FE_SectorAll/train_result_dir_1/train_result_model_1_p4/model.joblib")
     xai_explanations.append(xai(DM, model, 'p4'))
     combined_expl_list = [
         concat_explanations(expl_tuple)
         for expl_tuple in zip(*xai_explanations)
     ]
-    xai_plots(DM, combined_expl_list, "./result/result_S3CE_SectorAll/test_result_dir", 1)
+    xai_plots(DM, combined_expl_list, "./result/result_S2FE_SectorAll/test_result_dir", 1)

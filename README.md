@@ -6,8 +6,9 @@
 
 본 프로젝트는 KOSPI 200 종목을 대상으로 기업의 **재무제표**, **공시정보**, 그리고 **거시경제지표** 데이터를 통합적으로 분석합니다.
 
-S2FE 모델은 **MLP (Multi-Layer Perceptron)**, **ANFIS (Adaptive-Network-based Fuzzy Inference System)**, **RF (Random Forest)**를 결합한 앙상블 모델을 사용하여 주식의 미래 시장 초과 수익률을 예측하고, 우수한 성과를 내는 종목을 선별합니다.
+S2FE 모델은 **MLP (Multi-Layer Perceptron)**, **ANFIS (Adaptive-Network-based Fuzzy Inference System)**, **RF (Random Forest)** 를 결합한 앙상블 모델을 사용하여 주식의 미래 시장 초과 수익률을 예측하고, 우수한 성과를 내는 종목을 선별합니다.
 
+[KCI 등재 논문 '기본적 분석 및 머신러닝 앙상블 모델 기반의 주식 종목 선택' 링크: https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART003240018]
 ## 2. 핵심 기능
 
 * **다중 데이터 소스 통합**: 재무, 공시, 거시경제 데이터를 결합하여 기업의 내/외부적 요인을 종합적으로 고려합니다.

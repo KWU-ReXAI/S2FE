@@ -40,7 +40,7 @@ def set_seed(seed):
 
 
 SEED = 42
-set_seed(SEED)
+#set_seed(SEED)
 
 class MultiLayerPerceptron(nn.Module):
     def __init__(self, input_size, hidden_size, device):

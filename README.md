@@ -71,6 +71,7 @@ S2FE 모델은 **MLP (Multi-Layer Perceptron)**, **ANFIS (Adaptive-Network-based
     * 최종 백테스팅 결과(CSV 리포트, 그래프)는 `result/{모델명}/test_result_dir/`에 저장됩니다.
 
 ## 5. 모델 방법론 (S2FE)
+![img.png](img.png)
 
 본 프로젝트는 논문의 워크플로우를 따릅니다.
 

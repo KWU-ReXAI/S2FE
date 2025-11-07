@@ -50,7 +50,7 @@ S2FE 모델은 **MLP (Multi-Layer Perceptron)**, **ANFIS (Adaptive-Network-based
 
 2.  **필요 라이브러리 설치**
     ```bash
-    pip install -r requirement.txt
+    pip install -r requirements.txt
     ```
     - 필요에 따라 추가적인 pip install이 필요할 수도 있습니다.
 3. **Dataset 다운로드**

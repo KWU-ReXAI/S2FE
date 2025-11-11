@@ -1,10 +1,10 @@
 import subprocess
 
 try:
-    """subprocess.run(f"python datapreprocessing.py --use_all True --isall cluster", shell=True, check=True)
+    subprocess.run(f"python datapreprocessing.py --use_all True --isall cluster", shell=True, check=True)
     subprocess.run(f"python clustering.py", shell=True, check=True)
     subprocess.run(f"python datapreprocessing.py --use_all True --isall False", shell=True, check=True)
-    subprocess.run(f"python datapreprocessing.py --use_all True --isall True", shell=True, check=True)"""
+    subprocess.run(f"python datapreprocessing.py --use_all True --isall True", shell=True, check=True)
     subprocess.run(f"python train.py --testNum 10", shell=True, check=True)
     subprocess.run(f"python test.py --testNum 10", shell=True, check=True)
 except subprocess.CalledProcessError as e:
